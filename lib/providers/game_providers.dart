@@ -1,19 +1,14 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/fuba_generator.dart';
 
-/// Provider para o contador de fubá do jogador
-final fubaProvider = StateProvider.autoDispose<double>((ref) {
-  return kDebugMode ? 0 : 0;
-  // return kDebugMode ? 1000000000000000000 : 0;
+final fubaProvider = StateProvider<double>((ref) {
+  return 0;
 });
 
-/// Provider para a quantidade de geradores possuídos
-final generatorsProvider = StateProvider.autoDispose<List<int>>((ref) {
+final generatorsProvider = StateProvider<List<int>>((ref) {
   return List.filled(availableGenerators.length, 0);
 });
 
-/// Provider que calcula a produção automática total por segundo
 final autoProductionProvider = StateProvider.autoDispose<double>((ref) {
   final generators = ref.watch(generatorsProvider);
   double totalProduction = 0;

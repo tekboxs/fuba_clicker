@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 
-/// Provider para gerenciar o player de áudio
 final audioPlayerProvider = Provider<AudioPlayer>((ref) {
   final player = AudioPlayer();
   ref.onDispose(() {
@@ -11,7 +10,6 @@ final audioPlayerProvider = Provider<AudioPlayer>((ref) {
   return player;
 });
 
-/// Provider para controlar o estado do áudio
 final audioStateProvider = StateNotifierProvider<AudioStateNotifier, bool>((ref) {
   final player = ref.watch(audioPlayerProvider);
   return AudioStateNotifier(player);
@@ -29,13 +27,11 @@ class AudioStateNotifier extends StateNotifier<bool> {
     if (_isInitialized) return;
     
     try {
-      await _player.setAsset('assets/song/tek-tema.ogg');
-      await _player.setLoopMode(LoopMode.all);
+      await _player.setReleaseMode(ReleaseMode.loop);
       await _player.setVolume(0.1);
+      await _player.play(AssetSource('song/tek-tema.mp3'));
       _isInitialized = true;
       state = true;
-      
-      await _player.play();
     } catch (e) {
       debugPrint('Erro ao inicializar áudio: $e');
       state = false;
@@ -49,11 +45,11 @@ class AudioStateNotifier extends StateNotifier<bool> {
     }
 
     try {
-      if (_player.playing) {
+      if (_player.state == PlayerState.playing) {
         await _player.pause();
         state = false;
       } else {
-        await _player.play();
+        await _player.resume();
         state = true;
       }
     } catch (e) {

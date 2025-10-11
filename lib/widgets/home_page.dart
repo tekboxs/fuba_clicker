@@ -5,9 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../gen/assets.gen.dart';
 import '../providers/game_providers.dart';
 import '../providers/audio_provider.dart';
+import '../providers/accessory_provider.dart';
+import '../models/cake_accessory.dart';
 import '../utils/constants.dart';
 import 'generator_section.dart';
 import 'parallax_background.dart';
+import 'loot_box_shop.dart';
+import 'floating_accessories.dart';
 
 /// Página principal do jogo
 class HomePage extends ConsumerStatefulWidget {
@@ -93,6 +97,7 @@ class _HomePageState extends ConsumerState<HomePage>
             ParallaxBackground(parallaxController: _parallaxController),
             _buildMainContent(),
             _buildAudioButton(),
+            _buildShopButton(),
           ],
         ),
       ),
@@ -168,27 +173,41 @@ class _HomePageState extends ConsumerState<HomePage>
   /// Constrói o botão do bolo clicável
   Widget _buildCakeButton() {
     final isMobile = GameConstants.isMobile(context);
+    final equippedIds = ref.watch(equippedAccessoriesProvider);
+    final equippedAccessories = equippedIds
+        .map((id) => allAccessories.firstWhere((acc) => acc.id == id))
+        .toList();
 
-    return InkWell(
-      highlightColor: Colors.transparent,
-      splashColor: Colors.transparent,
-      focusColor: Colors.transparent,
-      hoverColor: Colors.transparent,
-      splashFactory: NoSplash.splashFactory,
-      onTap: _handleCakeClick,
-      child: SizedBox(
-        width: isMobile ? 200 : 150,
-        height: isMobile ? 200 : 150,
-        child: Assets.images.cake
-            .image(fit: BoxFit.contain)
-            .animate(controller: _animationController)
-            .scale(
-              duration: GameConstants.cakeAnimationDuration,
-              curve: Curves.bounceInOut,
-              begin: const Offset(1.0, 1.0),
-              end: const Offset(1.1, 1.1),
-            ),
-      ),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        if (equippedAccessories.isNotEmpty)
+          FloatingAccessories(
+            accessories: equippedAccessories,
+            centerSize: isMobile ? 200 : 150,
+          ),
+        InkWell(
+          highlightColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          focusColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          splashFactory: NoSplash.splashFactory,
+          onTap: _handleCakeClick,
+          child: SizedBox(
+            width: isMobile ? 200 : 150,
+            height: isMobile ? 200 : 150,
+            child: Assets.images.cake
+                .image(fit: BoxFit.contain)
+                .animate(controller: _animationController)
+                .scale(
+                  duration: GameConstants.cakeAnimationDuration,
+                  curve: Curves.bounceInOut,
+                  begin: const Offset(1.0, 1.0),
+                  end: const Offset(1.1, 1.1),
+                ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -236,6 +255,33 @@ class _HomePageState extends ConsumerState<HomePage>
                       : 'Você não pode fazer isso, escute a musica',
                 ),
                 backgroundColor: Colors.red,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShopButton() {
+    return Positioned(
+      top: GameConstants.isMobile(context) ? 8 : 16,
+      left: GameConstants.isMobile(context) ? 8 : 16,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black.withAlpha(150),
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(color: Colors.purple.withAlpha(100)),
+        ),
+        child: IconButton(
+          icon: const Icon(
+            Icons.shopping_bag,
+            color: Colors.purple,
+          ),
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const LootBoxShopPage(),
               ),
             );
           },

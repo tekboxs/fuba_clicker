@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/fuba_generator.dart';
 import '../providers/game_providers.dart';
+import '../providers/save_provider.dart';
 import '../utils/constants.dart';
 import 'particle_system.dart';
 
@@ -81,6 +82,7 @@ class GeneratorSection extends ConsumerWidget {
     final generators = List<int>.from(ref.read(generatorsProvider));
     generators[index]++;
     ref.read(generatorsProvider.notifier).state = generators;
+    ref.read(saveNotifierProvider.notifier).saveImmediate();
   }
 
   /// Inicia a compra automática de um gerador
@@ -285,8 +287,8 @@ class _GeneratorCardState extends State<_GeneratorCard>
     return Padding(
       padding: EdgeInsets.only(
         top: GameConstants.isMobile(context) ? 3 : 5, 
-        left: GameConstants.isMobile(context) ? 8 : 16, 
-        right: GameConstants.isMobile(context) ? 8 : 16,
+        left: GameConstants.isMobile(context) ? 18 : 20, 
+        right: GameConstants.isMobile(context) ? 18 : 20,
       ),
       child: Stack(
         children: [
