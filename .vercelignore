@@ -1,0 +1,16 @@
+android/
+ios/
+windows/
+macos/
+linux/
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+test/
+*.lock
+*.log
+.DS_Store
+Thumbs.db
