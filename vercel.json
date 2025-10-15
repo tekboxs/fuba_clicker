@@ -1,18 +1,11 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "**",
-        "use": "@vercel/static"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/index.html"
-      }
-    ],
-    "buildCommand": "flutter build web --release --web-renderer html",
-    "outputDirectory": "build/web",
-    "installCommand": "if cd flutter; then git pull && cd .. ; else git clone https://github.com/flutter/flutter.git; fi && ls && flutter/bin/flutter doctor && flutter/bin/flutter clean && flutter/bin/flutter config --enable-web && flutter/bin/flutter pub get"
-  }
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "buildCommand": "flutter build web --release --web-renderer html --base-href /",
+  "outputDirectory": "build/web",
+  "installCommand": "flutter config --enable-web && flutter pub get"
+}
