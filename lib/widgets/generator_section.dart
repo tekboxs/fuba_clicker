@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/fuba_generator.dart';
 import '../providers/game_providers.dart';
+import '../providers/achievement_provider.dart';
+import '../providers/secret_provider.dart';
 import '../providers/save_provider.dart';
 import '../utils/constants.dart';
 import 'particle_system.dart';
@@ -15,6 +17,7 @@ class GeneratorSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final generators = ref.watch(generatorsProvider);
     final fuba = ref.watch(fubaProvider);
+    final unlockedSecrets = ref.watch(unlockedSecretsProvider);
 
     return Container(
       padding: EdgeInsets.all(GameConstants.getCardPadding(context)),
@@ -48,7 +51,7 @@ class GeneratorSection extends ConsumerWidget {
                 final generator = availableGenerators[index];
                 final owned = generators[index];
                 final cost = generator.getCost(owned);
-                final isUnlocked = generator.isUnlocked(generators);
+                final isUnlocked = generator.isUnlocked(generators, unlockedSecrets);
                 final canAfford = fuba >= cost && isUnlocked;
 
                 return _GeneratorCard(
@@ -82,6 +85,13 @@ class GeneratorSection extends ConsumerWidget {
     final generators = List<int>.from(ref.read(generatorsProvider));
     generators[index]++;
     ref.read(generatorsProvider.notifier).state = generators;
+    
+    final differentGenerators = generators.where((count) => count > 0).length;
+    ref.read(achievementNotifierProvider).updateStat(
+      'different_generators',
+      differentGenerators.toDouble(),
+    );
+    
     ref.read(saveNotifierProvider.notifier).saveImmediate();
   }
 

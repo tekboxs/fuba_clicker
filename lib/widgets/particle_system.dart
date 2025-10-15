@@ -1,5 +1,7 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../utils/constants.dart';
 
 class Particle {
   double x;
@@ -76,7 +78,8 @@ class _ParticleSystemState extends State<ParticleSystem>
 
   void _generateParticles() {
     _particles.clear();
-    for (int i = 0; i < 15; i++) {
+    final particleCount = GameConstants.particleCount;
+    for (int i = 0; i < particleCount; i++) {
       _particles.add(Particle(
         x: 50 + _random.nextDouble() * 100,
         y: 50 + _random.nextDouble() * 100,
@@ -101,15 +104,17 @@ class _ParticleSystemState extends State<ParticleSystem>
       return const SizedBox.shrink();
     }
 
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        _updateParticles();
-        return CustomPaint(
-          painter: ParticlePainter(_particles),
-          size: const Size(200, 200),
-        );
-      },
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          _updateParticles();
+          return CustomPaint(
+            painter: ParticlePainter(_particles),
+            size: const Size(200, 200),
+          );
+        },
+      ),
     );
   }
 

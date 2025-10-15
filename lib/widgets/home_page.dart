@@ -2,16 +2,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../gen/assets.gen.dart';
 import '../providers/game_providers.dart';
 import '../providers/audio_provider.dart';
 import '../providers/accessory_provider.dart';
+import '../providers/achievement_provider.dart';
+import '../providers/rebirth_upgrade_provider.dart';
 import '../models/cake_accessory.dart';
 import '../utils/constants.dart';
 import 'generator_section.dart';
 import 'parallax_background.dart';
 import 'loot_box_shop.dart';
 import 'floating_accessories.dart';
+import 'cake_display.dart';
+import 'rebirth_page.dart';
+import 'achievements_page.dart';
+import 'rebirth_upgrades_page.dart';
 
 /// Página principal do jogo
 class HomePage extends ConsumerStatefulWidget {
@@ -25,6 +30,7 @@ class _HomePageState extends ConsumerState<HomePage>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late AnimationController _parallaxController;
+  Timer? _autoProductionTimer;
 
   @override
   void initState() {
@@ -69,20 +75,41 @@ class _HomePageState extends ConsumerState<HomePage>
 
   /// Inicia a produção automática de fubá
   void _startAutoProduction() {
-    Timer.periodic(GameConstants.autoProductionInterval, (timer) {
-      if (mounted) {
-        final autoProduction = ref.read(autoProductionProvider);
-        if (autoProduction > 0) {
-          ref.read(fubaProvider.notifier).update((state) {
-            return double.parse((state + autoProduction).toStringAsFixed(1));
-          });
+    _autoProductionTimer = Timer.periodic(
+      GameConstants.autoProductionInterval,
+      (timer) {
+        if (mounted) {
+          final autoProduction = ref.read(autoProductionProvider);
+          final autoClickerRate = ref
+              .read(upgradeNotifierProvider)
+              .getAutoClickerRate();
+
+          double totalProduction = autoProduction;
+
+          if (autoClickerRate > 0) {
+            final clickMultiplier = ref
+                .read(upgradeNotifierProvider)
+                .getClickMultiplier();
+            totalProduction += autoClickerRate * clickMultiplier;
+          }
+
+          if (totalProduction > 0) {
+            ref.read(fubaProvider.notifier).update((state) {
+              return double.parse((state + totalProduction).toStringAsFixed(1));
+            });
+
+            ref
+                .read(achievementNotifierProvider)
+                .incrementStat('total_production', totalProduction);
+          }
         }
-      }
-    });
+      },
+    );
   }
 
   @override
   void dispose() {
+    _autoProductionTimer?.cancel();
     _animationController.dispose();
     _parallaxController.dispose();
     super.dispose();
@@ -96,8 +123,9 @@ class _HomePageState extends ConsumerState<HomePage>
           children: [
             ParallaxBackground(parallaxController: _parallaxController),
             _buildMainContent(),
-            _buildAudioButton(),
-            _buildShopButton(),
+
+            _buildTopRightButtons(),
+            _buildTopLeftButtons(),
           ],
         ),
       ),
@@ -112,28 +140,81 @@ class _HomePageState extends ConsumerState<HomePage>
       width: double.infinity,
       child: Padding(
         padding: EdgeInsets.all(GameConstants.getDefaultPadding(context)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isMobile) const SizedBox(height: 8),
-            _buildTitle(),
-            SizedBox(height: isMobile ? 3 : 16),
-            _buildCounter(),
-            SizedBox(height: isMobile ? 4 : 8),
-            Text(
-              '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
-              style: TextStyle(
-                fontSize: isMobile ? 16 : 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: isMobile ? 8 : 16),
-            _buildCakeButton(),
-            SizedBox(height: isMobile ? 12 : 20),
-            Expanded(child: GeneratorSection()),
-          ],
-        ),
+        child: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
       ),
+    );
+  }
+
+  /// Layout para mobile (coluna)
+  Widget _buildMobileLayout() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 8),
+        _buildTitle(),
+        const SizedBox(height: 3),
+        _buildCounter(),
+        const SizedBox(height: 4),
+        Text(
+          '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          'Multiplicador: x${ref.watch(totalMultiplierProvider).toStringAsFixed(2)}',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.amber,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _buildCakeButton(),
+        const SizedBox(height: 12),
+        Expanded(child: GeneratorSection()),
+      ],
+    );
+  }
+
+  /// Layout para desktop (row)
+  Widget _buildDesktopLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Lado esquerdo - Fubá e bolo
+        Expanded(
+          flex: 2,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildTitle(),
+              const SizedBox(height: 16),
+              _buildCounter(),
+              const SizedBox(height: 8),
+              Text(
+                '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (ref.watch(totalMultiplierProvider) > 1)
+                Text(
+                  'Multiplicador: x${ref.watch(totalMultiplierProvider).toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              const SizedBox(height: 20),
+              _buildCakeButton(),
+            ],
+          ),
+        ),
+        const SizedBox(width: 20),
+        // Lado direito - Geradores
+        Expanded(flex: 3, child: GeneratorSection()),
+      ],
     );
   }
 
@@ -196,15 +277,11 @@ class _HomePageState extends ConsumerState<HomePage>
           child: SizedBox(
             width: isMobile ? 200 : 150,
             height: isMobile ? 200 : 150,
-            child: Assets.images.cake
-                .image(fit: BoxFit.contain)
-                .animate(controller: _animationController)
-                .scale(
-                  duration: GameConstants.cakeAnimationDuration,
-                  curve: Curves.bounceInOut,
-                  begin: const Offset(1.0, 1.0),
-                  end: const Offset(1.1, 1.1),
-                ),
+            child: CakeDisplay(
+              accessories: equippedAccessories,
+              size: isMobile ? 200 : 150,
+              animationController: _animationController,
+            ),
           ),
         ),
       ],
@@ -214,78 +291,112 @@ class _HomePageState extends ConsumerState<HomePage>
   /// Manipula o clique no bolo
   void _handleCakeClick() {
     _animationController.forward().then((_) => _animationController.reverse());
-    ref.read(fubaProvider.notifier).state++;
+
+    final clickMultiplier = ref
+        .read(upgradeNotifierProvider)
+        .getClickMultiplier();
+    final clickValue = 1 * clickMultiplier;
+
+    ref.read(fubaProvider.notifier).state += clickValue;
+
+    ref.read(achievementNotifierProvider).incrementStat('total_clicks');
+    ref
+        .read(achievementNotifierProvider)
+        .incrementStat('total_production', clickValue);
   }
 
-  /// Constrói o botão de controle de áudio
   int counter = 0;
-  Widget _buildAudioButton() {
-    final isAudioPlaying = ref.watch(audioStateProvider);
-    return Positioned(
-      top: GameConstants.isMobile(context) ? 8 : 16,
-      right: GameConstants.isMobile(context) ? 8 : 16,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black.withAlpha(150),
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: Colors.orange.withAlpha(100)),
-        ),
-        child: IconButton(
-          icon: Icon(
-            isAudioPlaying ? Icons.volume_up : Icons.volume_off,
-            color: isAudioPlaying ? Colors.orange : Colors.grey,
-          ),
-          onPressed: () {
-            counter++;
-            if (counter == 9) {
-              ref.read(audioStateProvider.notifier).toggleAudio();
-              return;
-            }
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                duration: Duration(seconds: 1),
-                content: Text(
-                  counter > 3
-                      ? counter > 6
-                            ? counter > 9
-                                  ? 'Agora fica sem musica tmb infeliz >:('
-                                  : 'Aproveita a obra de arte'
-                            : 'Tem certeza que vai perder a obra de arte?'
-                      : 'Você não pode fazer isso, escute a musica',
-                ),
-                backgroundColor: Colors.red,
-              ),
+  Widget _buildTopRightButtons() {
+    final isAudioPlaying = ref.watch(audioStateProvider);
+    final isMobile = GameConstants.isMobile(context);
+
+    return Positioned(
+      top: isMobile ? 8 : 16,
+      right: isMobile ? 8 : null,
+      left: isMobile ? null : MediaQuery.of(context).size.width/2 - 250,
+      child: Row(
+        children: [
+          _buildIconButton(Icons.emoji_events, Colors.amber, () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const AchievementsPage()),
             );
-          },
-        ),
+          }),
+          const SizedBox(width: 8),
+          _buildIconButton(
+            isAudioPlaying ? Icons.volume_up : Icons.volume_off,
+            isAudioPlaying ? Colors.orange : Colors.grey,
+            () {
+              counter++;
+              if (counter == 9) {
+                ref.read(audioStateProvider.notifier).toggleAudio();
+                return;
+              }
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  duration: const Duration(seconds: 1),
+                  content: Text(
+                    counter > 3
+                        ? counter > 6
+                              ? counter > 9
+                                    ? 'Agora fica sem musica tmb infeliz >:('
+                                    : 'Aproveita a obra de arte'
+                              : 'Tem certeza que vai perder a obra de arte?'
+                        : 'Você não pode fazer isso, escute a musica',
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildShopButton() {
+  Widget _buildTopLeftButtons() {
+    final isMobile = GameConstants.isMobile(context);
+
     return Positioned(
-      top: GameConstants.isMobile(context) ? 8 : 16,
-      left: GameConstants.isMobile(context) ? 8 : 16,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black.withAlpha(150),
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: Colors.purple.withAlpha(100)),
-        ),
-        child: IconButton(
-          icon: const Icon(
-            Icons.shopping_bag,
-            color: Colors.purple,
-          ),
-          onPressed: () {
+      top: isMobile ? 8 : 16,
+      left: isMobile ? 8 : 16,
+      child: Row(
+        children: [
+          _buildIconButton(Icons.shopping_bag, Colors.purple, () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const LootBoxShopPage()),
+            );
+          }),
+          const SizedBox(width: 8),
+          _buildIconButton(Icons.auto_awesome, Colors.cyan, () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => const LootBoxShopPage(),
+                builder: (context) => const RebirthUpgradesPage(),
               ),
             );
-          },
-        ),
+          }),
+          const SizedBox(width: 8),
+          _buildIconButton(Icons.refresh, Colors.deepPurple, () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const RebirthPage()),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(150),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: color.withAlpha(100)),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: color),
+        onPressed: onPressed,
       ),
     );
   }

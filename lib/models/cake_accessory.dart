@@ -1,5 +1,25 @@
 import 'package:flutter/material.dart';
 
+enum VisualEffect {
+  none,
+  sparkle,
+  glow,
+  pulse,
+  orbit,
+  flames,
+  lightning,
+  cosmic,
+  rainbow,
+}
+
+enum SpecialAbility {
+  none,
+  criticalClick,
+  luckyBox,
+  autoClicker,
+  timeWarp,
+}
+
 enum AccessoryRarity {
   common(1),
   uncommon(2),
@@ -61,6 +81,23 @@ enum AccessoryRarity {
         return 0.005;
     }
   }
+
+  double get productionMultiplier {
+    switch (this) {
+      case AccessoryRarity.common:
+        return 1.05;
+      case AccessoryRarity.uncommon:
+        return 1.10;
+      case AccessoryRarity.rare:
+        return 1.25;
+      case AccessoryRarity.epic:
+        return 1.50;
+      case AccessoryRarity.legendary:
+        return 2.0;
+      case AccessoryRarity.mythical:
+        return 2.5;
+    }
+  }
 }
 
 class CakeAccessory {
@@ -69,6 +106,8 @@ class CakeAccessory {
   final String emoji;
   final AccessoryRarity rarity;
   final String description;
+  final VisualEffect visualEffect;
+  final SpecialAbility specialAbility;
 
   const CakeAccessory({
     required this.id,
@@ -76,7 +115,11 @@ class CakeAccessory {
     required this.emoji,
     required this.rarity,
     required this.description,
+    this.visualEffect = VisualEffect.none,
+    this.specialAbility = SpecialAbility.none,
   });
+
+  double get productionMultiplier => rarity.productionMultiplier;
 }
 
 const List<CakeAccessory> allAccessories = [
@@ -163,6 +206,7 @@ const List<CakeAccessory> allAccessories = [
     emoji: '⭐',
     rarity: AccessoryRarity.epic,
     description: 'Uma estrela brilhante',
+    visualEffect: VisualEffect.sparkle,
   ),
   CakeAccessory(
     id: 'sparkles',
@@ -170,6 +214,7 @@ const List<CakeAccessory> allAccessories = [
     emoji: '✨',
     rarity: AccessoryRarity.epic,
     description: 'Brilhos mágicos',
+    visualEffect: VisualEffect.glow,
   ),
   CakeAccessory(
     id: 'fire',
@@ -177,6 +222,8 @@ const List<CakeAccessory> allAccessories = [
     emoji: '🔥',
     rarity: AccessoryRarity.epic,
     description: 'Chamas ardentes',
+    visualEffect: VisualEffect.flames,
+    specialAbility: SpecialAbility.criticalClick,
   ),
   CakeAccessory(
     id: 'lightning',
@@ -184,6 +231,8 @@ const List<CakeAccessory> allAccessories = [
     emoji: '⚡',
     rarity: AccessoryRarity.epic,
     description: 'Energia elétrica',
+    visualEffect: VisualEffect.lightning,
+    specialAbility: SpecialAbility.timeWarp,
   ),
   CakeAccessory(
     id: 'crown',
@@ -191,6 +240,8 @@ const List<CakeAccessory> allAccessories = [
     emoji: '👑',
     rarity: AccessoryRarity.legendary,
     description: 'Uma coroa real',
+    visualEffect: VisualEffect.pulse,
+    specialAbility: SpecialAbility.autoClicker,
   ),
   CakeAccessory(
     id: 'diamond',
@@ -198,6 +249,8 @@ const List<CakeAccessory> allAccessories = [
     emoji: '💎',
     rarity: AccessoryRarity.legendary,
     description: 'Um diamante precioso',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.luckyBox,
   ),
   CakeAccessory(
     id: 'rainbow',
@@ -205,6 +258,7 @@ const List<CakeAccessory> allAccessories = [
     emoji: '🌈',
     rarity: AccessoryRarity.legendary,
     description: 'Um arco-íris colorido',
+    visualEffect: VisualEffect.rainbow,
   ),
   CakeAccessory(
     id: 'galaxy',
@@ -212,6 +266,8 @@ const List<CakeAccessory> allAccessories = [
     emoji: '🌌',
     rarity: AccessoryRarity.mythical,
     description: 'Uma galáxia inteira',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.timeWarp,
   ),
   CakeAccessory(
     id: 'universe',
@@ -219,6 +275,8 @@ const List<CakeAccessory> allAccessories = [
     emoji: '🌍',
     rarity: AccessoryRarity.mythical,
     description: 'O universo completo',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.criticalClick,
   ),
   CakeAccessory(
     id: 'portal',
@@ -226,6 +284,8 @@ const List<CakeAccessory> allAccessories = [
     emoji: '🌀',
     rarity: AccessoryRarity.mythical,
     description: 'Um portal dimensional',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.autoClicker,
   ),
 ];
 

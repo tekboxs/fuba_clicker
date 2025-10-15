@@ -26,6 +26,8 @@ class FubaGenerator {
   final String description;
   final int unlockRequirement;
   final GeneratorTier tier;
+  final bool isSecret;
+  final String? secretUnlockCondition;
 
   const FubaGenerator({
     required this.name,
@@ -35,6 +37,8 @@ class FubaGenerator {
     required this.description,
     this.unlockRequirement = 0,
     this.tier = GeneratorTier.common,
+    this.isSecret = false,
+    this.secretUnlockCondition,
   });
 
   /// Calcula o custo baseado na quantidade já possuída (crescimento exponencial)
@@ -48,7 +52,13 @@ class FubaGenerator {
   }
 
   /// Verifica se o gerador está desbloqueado baseado na quantidade do gerador anterior
-  bool isUnlocked(List<int> generatorsOwned) {
+  bool isUnlocked(List<int> generatorsOwned, [Set<String>? unlockedSecrets]) {
+    if (isSecret) {
+      if (secretUnlockCondition == null) return false;
+      if (unlockedSecrets == null) return false;
+      return unlockedSecrets.contains(secretUnlockCondition);
+    }
+    
     if (unlockRequirement == 0) return true;
     if (unlockRequirement > generatorsOwned.length) return false;
     return generatorsOwned[unlockRequirement - 1] > 0;
@@ -365,5 +375,38 @@ const availableGenerators = [
     description: 'A verdade final: tudo sempre foi fubá',
     unlockRequirement: 30,
     tier: GeneratorTier.truth,
+  ),
+  FubaGenerator(
+    name: 'Bolo Desperto',
+    emoji: '🎂',
+    baseCost: 5000000000,
+    baseProduction: 25000000,
+    description: 'O bolo ganhou vida e produz fubá',
+    unlockRequirement: 13,
+    tier: GeneratorTier.godly,
+    isSecret: true,
+    secretUnlockCondition: 'cake_awakened',
+  ),
+  FubaGenerator(
+    name: 'Padeiro Divino',
+    emoji: '👨‍🍳',
+    baseCost: 100000000000000,
+    baseProduction: 500000000000,
+    description: 'O padeiro dos deuses trabalha para você',
+    unlockRequirement: 23,
+    tier: GeneratorTier.divine,
+    isSecret: true,
+    secretUnlockCondition: 'divine_baker',
+  ),
+  FubaGenerator(
+    name: 'Anomalia Temporal',
+    emoji: '⏱️',
+    baseCost: 1000000000,
+    baseProduction: 5000000,
+    description: 'Uma falha no espaço-tempo produz fubá infinito',
+    unlockRequirement: 10,
+    tier: GeneratorTier.legendary,
+    isSecret: true,
+    secretUnlockCondition: 'temporal_anomaly',
   ),
 ];

@@ -26,10 +26,10 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
   Future<void> _loadGameData() async {
     await Future.delayed(const Duration(milliseconds: 100));
-    
+
     final saveNotifier = ref.read(saveNotifierProvider.notifier);
     await saveNotifier.loadGame();
-    
+
     setState(() {
       _isLoading = false;
     });
@@ -56,21 +56,13 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              '🌽',
-              style: TextStyle(fontSize: 80),
-            ),
+            Text('🌽', style: TextStyle(fontSize: 80)),
             SizedBox(height: 24),
-            CircularProgressIndicator(
-              color: Colors.orange,
-            ),
+            CircularProgressIndicator(color: Colors.orange),
             SizedBox(height: 16),
             Text(
               'Carregando...',
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.orange,
-              ),
+              style: TextStyle(fontSize: 20, color: Colors.orange),
             ),
           ],
         ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Constantes do jogo
@@ -49,6 +50,15 @@ class GameConstants {
     return MediaQuery.of(context).size.width < 768;
   }
   
+  /// Detecta se está rodando na web
+  static bool get isWeb => kIsWeb;
+  
+  /// Retorna o número de partículas baseado na plataforma
+  static int get particleCount => isWeb ? 8 : 15;
+  
+  /// Retorna o número de camadas de paralaxe baseado na plataforma
+  static int get parallaxLayerCount => isWeb ? 4 : 8;
+  
   /// Retorna o tamanho de fonte responsivo
   static double getTitleFontSize(BuildContext context) {
     return isMobile(context) ? titleFontSizeMobile : titleFontSizeDesktop;
@@ -92,6 +102,14 @@ class GameConstants {
   
   /// Formata números grandes para melhor legibilidade
   static String formatNumber(double number) {
+    if (number.isInfinite || number.isNaN) {
+      return 'Infinity';
+    }
+    
+    if (number >= 1e100) {
+      return 'Infinity';
+    }
+    
     if (number >= 1e33) {
       return '${(number / 1e33).toStringAsFixed(1)}Dc';
     } else if (number >= 1e30) {

@@ -1,0 +1,112 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../gen/assets.gen.dart';
+import '../models/cake_visual_tier.dart';
+import '../models/cake_accessory.dart';
+
+class CakeDisplay extends StatelessWidget {
+  const CakeDisplay({
+    super.key,
+    required this.accessories,
+    required this.size,
+    required this.animationController,
+  });
+
+  final List<CakeAccessory> accessories;
+  final double size;
+  final AnimationController animationController;
+
+  @override
+  Widget build(BuildContext context) {
+    final tier = CakeVisualTierExtension.fromAccessories(accessories);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInOut,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (tier.glowIntensity > 0) _buildGlow(tier),
+          _buildCake(tier),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlow(CakeVisualTier tier) {
+    return Container(
+      width: size + tier.glowIntensity * 2,
+      height: size + tier.glowIntensity * 2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: tier.primaryColor.withAlpha(100),
+            blurRadius: tier.glowIntensity,
+            spreadRadius: tier.glowIntensity / 2,
+          ),
+          BoxShadow(
+            color: tier.secondaryColor.withAlpha(80),
+            blurRadius: tier.glowIntensity * 1.5,
+            spreadRadius: tier.glowIntensity / 3,
+          ),
+        ],
+      ),
+    )
+        .animate(
+          autoPlay: true,
+          onComplete: (controller) => controller.repeat(reverse: true),
+        )
+        .fadeIn(
+          duration: Duration(milliseconds: tier.pulseSpeed),
+        )
+        .fadeOut(
+          duration: Duration(milliseconds: tier.pulseSpeed),
+        );
+  }
+
+  Widget _buildCake(CakeVisualTier tier) {
+    return AnimatedScale(
+      scale: tier.scaleBonus,
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeInOut,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: tier.glowIntensity > 0
+              ? Border.all(
+                  color: tier.primaryColor.withAlpha(150),
+                  width: 3,
+                )
+              : null,
+        ),
+        child: ColorFiltered(
+          colorFilter: _getColorFilter(tier),
+          child: Assets.images.cake
+              .image(fit: BoxFit.contain)
+              .animate(controller: animationController)
+              .scale(
+                duration: const Duration(milliseconds: 100),
+                curve: Curves.bounceInOut,
+                begin: const Offset(1.0, 1.0),
+                end: const Offset(1.1, 1.1),
+              ),
+        ),
+      ),
+    );
+  }
+
+  ColorFilter _getColorFilter(CakeVisualTier tier) {
+    if (tier == CakeVisualTier.normal) {
+      return const ColorFilter.mode(Colors.transparent, BlendMode.multiply);
+    }
+
+    return ColorFilter.mode(
+      tier.primaryColor.withAlpha(30),
+      BlendMode.modulate,
+    );
+  }
+}
+

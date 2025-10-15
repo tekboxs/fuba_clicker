@@ -59,9 +59,42 @@ class AccessoryNotifier {
         .where((id) => id == accessoryId)
         .length;
   }
+
+  double getTotalProductionMultiplier() {
+    final equipped = ref.read(equippedAccessoriesProvider);
+    if (equipped.isEmpty) return 1.0;
+
+    double totalMultiplier = 1.0;
+    for (final id in equipped) {
+      final accessory = allAccessories.firstWhere((acc) => acc.id == id);
+      totalMultiplier *= accessory.productionMultiplier;
+    }
+    return totalMultiplier;
+  }
+
+  List<CakeAccessory> getActiveEffects() {
+    final equipped = ref.read(equippedAccessoriesProvider);
+    return equipped
+        .map((id) => allAccessories.firstWhere((acc) => acc.id == id))
+        .where((acc) => acc.visualEffect != VisualEffect.none)
+        .toList();
+  }
+
+  List<SpecialAbility> getActiveAbilities() {
+    final equipped = ref.read(equippedAccessoriesProvider);
+    return equipped
+        .map((id) => allAccessories.firstWhere((acc) => acc.id == id))
+        .where((acc) => acc.specialAbility != SpecialAbility.none)
+        .map((acc) => acc.specialAbility)
+        .toList();
+  }
 }
 
 final accessoryNotifierProvider = Provider<AccessoryNotifier>((ref) {
   return AccessoryNotifier(ref);
+});
+
+final accessoryMultiplierProvider = Provider<double>((ref) {
+  return ref.watch(accessoryNotifierProvider).getTotalProductionMultiplier();
 });
 
