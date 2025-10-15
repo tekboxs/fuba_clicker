@@ -16,6 +16,7 @@ export PATH="$PATH:$(pwd)/flutter/bin"
 # Configure Flutter
 flutter doctor
 flutter config --enable-web
+flutter create . --platforms web
 flutter pub get
 
 # Build the project
