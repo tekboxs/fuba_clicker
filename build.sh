@@ -19,6 +19,6 @@ flutter config --enable-web
 flutter pub get
 
 # Build the project
-flutter build web --release --web-renderer html --base-href /
+flutter build web --release --base-href /
 
 echo "Build completed successfully!"
