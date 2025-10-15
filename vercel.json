@@ -1,7 +1,7 @@
 {
   "builds": [
     {
-      "src": "pubspec.yaml",
+      "src": "build.sh",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build/web"
@@ -14,6 +14,5 @@
       "destination": "/index.html"
     }
   ],
-  "buildCommand": "chmod +x build.sh && ./build.sh",
   "installCommand": "echo 'Install command handled in build script'"
 }
