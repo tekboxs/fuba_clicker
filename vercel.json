@@ -1,11 +1,19 @@
 {
+  "builds": [
+    {
+      "src": "pubspec.yaml",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build/web"
+      }
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
-  "buildCommand": "flutter build web --release --web-renderer html --base-href /",
-  "outputDirectory": "build/web",
-  "installCommand": "flutter config --enable-web && flutter pub get"
+  "buildCommand": "if cd flutter; then git pull && cd .. ; else git clone https://github.com/flutter/flutter.git; fi && export PATH=\"$PATH:$(pwd)/flutter/bin\" && flutter doctor && flutter config --enable-web && flutter pub get && flutter build web --release --web-renderer html --base-href /",
+  "installCommand": "echo 'Install command handled in buildCommand'"
 }
