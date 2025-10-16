@@ -19,7 +19,9 @@ class AudioStateNotifier extends StateNotifier<bool> {
   final AudioPlayer _player;
   bool _isInitialized = false;
 
-  AudioStateNotifier(this._player) : super(false);
+  AudioStateNotifier(this._player) : super(true) {
+    _initializeAudio();
+  }
 
   Future<void> _initializeAudio() async {
     if (_isInitialized) return;

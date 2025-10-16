@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fuba_clicker/utils/constants.dart';
 import '../models/rebirth_upgrade.dart';
 import '../providers/rebirth_upgrade_provider.dart';
 import '../providers/rebirth_provider.dart';
@@ -37,7 +38,7 @@ class RebirthUpgradesPage extends ConsumerWidget {
                   crossAxisCount: _getCrossAxisCount(context),
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 0.75,
+                  childAspectRatio: GameConstants.isMobile(context) ? 0.75 : 1.2,
                 ),
                 itemCount: allUpgrades.length,
                 itemBuilder: (context, index) {

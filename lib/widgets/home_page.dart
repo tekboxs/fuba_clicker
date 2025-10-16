@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import '../providers/audio_provider.dart';
 import '../providers/accessory_provider.dart';
 import '../providers/achievement_provider.dart';
 import '../providers/rebirth_upgrade_provider.dart';
+import '../providers/rebirth_provider.dart';
 import '../models/cake_accessory.dart';
 import '../utils/constants.dart';
 import 'generator_section.dart';
@@ -90,7 +92,19 @@ class _HomePageState extends ConsumerState<HomePage>
             final clickMultiplier = ref
                 .read(upgradeNotifierProvider)
                 .getClickMultiplier();
-            totalProduction += autoClickerRate * clickMultiplier;
+            final achievementMultiplier = ref.read(
+              achievementMultiplierProvider,
+            );
+            final accessoryMultiplier = ref.read(accessoryMultiplierProvider);
+            final rebirthMultiplier = ref.read(rebirthMultiplierProvider);
+
+            final totalClickMultiplier =
+                clickMultiplier *
+                achievementMultiplier *
+                accessoryMultiplier *
+                rebirthMultiplier;
+
+            totalProduction += autoClickerRate * totalClickMultiplier;
           }
 
           if (totalProduction > 0) {
@@ -129,6 +143,7 @@ class _HomePageState extends ConsumerState<HomePage>
           ],
         ),
       ),
+      floatingActionButton: _buildSupporterButton(),
     );
   }
 
@@ -159,14 +174,7 @@ class _HomePageState extends ConsumerState<HomePage>
           '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-        Text(
-          'Multiplicador: x${ref.watch(totalMultiplierProvider).toStringAsFixed(2)}',
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.amber,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        _buildDetailedMultipliers(ref),
         const SizedBox(height: 8),
         _buildCakeButton(),
         const SizedBox(height: 12),
@@ -197,15 +205,7 @@ class _HomePageState extends ConsumerState<HomePage>
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              if (ref.watch(totalMultiplierProvider) > 1)
-                Text(
-                  'Multiplicador: x${ref.watch(totalMultiplierProvider).toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              _buildDetailedMultipliers(ref),
               const SizedBox(height: 20),
               _buildCakeButton(),
             ],
@@ -295,7 +295,17 @@ class _HomePageState extends ConsumerState<HomePage>
     final clickMultiplier = ref
         .read(upgradeNotifierProvider)
         .getClickMultiplier();
-    final clickValue = 1 * clickMultiplier;
+    final achievementMultiplier = ref.read(achievementMultiplierProvider);
+    final accessoryMultiplier = ref.read(accessoryMultiplierProvider);
+    final rebirthMultiplier = ref.read(rebirthMultiplierProvider);
+
+    final totalClickMultiplier =
+        clickMultiplier *
+        achievementMultiplier *
+        accessoryMultiplier *
+        rebirthMultiplier;
+
+    final clickValue = 1 * totalClickMultiplier;
 
     ref.read(fubaProvider.notifier).state += clickValue;
 
@@ -303,6 +313,129 @@ class _HomePageState extends ConsumerState<HomePage>
     ref
         .read(achievementNotifierProvider)
         .incrementStat('total_production', clickValue);
+  }
+
+  Widget _buildDetailedMultipliers(WidgetRef ref) {
+    final totalMultiplier = ref.watch(totalMultiplierProvider);
+    final achievementMultiplier = ref.watch(achievementMultiplierProvider);
+    final rebirthMultiplier = ref.watch(rebirthMultiplierProvider);
+    final upgradeMultiplier = ref.watch(upgradeProductionMultiplierProvider);
+    final accessoryMultiplier = ref.watch(accessoryMultiplierProvider);
+    final equippedIds = ref.watch(equippedAccessoriesProvider);
+
+    // Debug: calcular multiplicador manualmente
+    final manualTotal =
+        accessoryMultiplier *
+        rebirthMultiplier *
+        upgradeMultiplier *
+        achievementMultiplier;
+
+    return Column(
+      children: [
+        const SizedBox(height: 5),
+
+        Text(
+          'Multiplicador Total: x${totalMultiplier.toStringAsFixed(2)}',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.amber,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (kDebugMode) ...[
+          Text(
+            'Debug Manual: x${manualTotal.toStringAsFixed(2)}',
+            style: const TextStyle(
+              fontSize: 10,
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            'Acessórios: x${accessoryMultiplier.toStringAsFixed(2)} | Rebirth: x${rebirthMultiplier.toStringAsFixed(2)} | Upgrade: x${upgradeMultiplier.toStringAsFixed(2)} | Conquistas: x${achievementMultiplier.toStringAsFixed(2)}',
+            style: const TextStyle(fontSize: 8, color: Colors.grey),
+          ),
+          Text(
+            'IDs Equipados: ${equippedIds.join(", ")}',
+            style: const TextStyle(fontSize: 8, color: Colors.yellow),
+          ),
+        ],
+        const SizedBox(height: 5),
+        if (totalMultiplier > 1) ...[
+          const SizedBox(height: 4),
+          _buildEquippedAccessories(equippedIds),
+          const SizedBox(height: 4),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 2,
+            children: [
+              if (achievementMultiplier > 1)
+                Text(
+                  '🏆 x${achievementMultiplier.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              if (rebirthMultiplier > 1)
+                Text(
+                  '🔄 x${rebirthMultiplier.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              if (upgradeMultiplier > 1)
+                Text(
+                  '⚡ x${upgradeMultiplier.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildEquippedAccessories(List<String> equippedIds) {
+    if (equippedIds.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 6,
+      runSpacing: 2,
+      children: equippedIds.map((id) {
+        final accessory = allAccessories.firstWhere((acc) => acc.id == id);
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: accessory.rarity.color.withAlpha(50),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: accessory.rarity.color.withAlpha(150),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            '${accessory.emoji} x${accessory.productionMultiplier.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 10,
+              color: accessory.rarity.color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 
   int counter = 0;
@@ -314,7 +447,7 @@ class _HomePageState extends ConsumerState<HomePage>
     return Positioned(
       top: isMobile ? 8 : 16,
       right: isMobile ? 8 : null,
-      left: isMobile ? null : MediaQuery.of(context).size.width/2 - 250,
+      left: isMobile ? null : MediaQuery.of(context).size.width / 2 - 250,
       child: Row(
         children: [
           _buildIconButton(Icons.emoji_events, Colors.amber, () {
@@ -328,7 +461,7 @@ class _HomePageState extends ConsumerState<HomePage>
             isAudioPlaying ? Colors.orange : Colors.grey,
             () {
               counter++;
-              if (counter == 9) {
+              if (counter == 0 || counter == 4) {
                 ref.read(audioStateProvider.notifier).toggleAudio();
                 return;
               }
@@ -337,14 +470,16 @@ class _HomePageState extends ConsumerState<HomePage>
                 SnackBar(
                   duration: const Duration(seconds: 1),
                   content: Text(
-                    counter > 3
-                        ? counter > 6
-                              ? counter > 9
+                    counter > 1
+                        ? counter > 2
+                              ? counter > 3
                                     ? 'Agora fica sem musica tmb infeliz >:('
                                     : 'Aproveita a obra de arte'
                               : 'Tem certeza que vai perder a obra de arte?'
-                        : 'Você não pode fazer isso, escute a musica',
+                        : 'Escute a musica do bolo de fuba ;-;',
+                    style: TextStyle(color: Colors.white),
                   ),
+
                   backgroundColor: Colors.red,
                 ),
               );
@@ -397,6 +532,170 @@ class _HomePageState extends ConsumerState<HomePage>
       child: IconButton(
         icon: Icon(icon, color: color),
         onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget _buildSupporterButton() {
+    return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.purple, Colors.deepPurple, Colors.indigo],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.purple.withAlpha(100),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: _showSupporterDialog,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: Icon(Icons.favorite, color: Colors.white, size: 28),
+          ),
+        )
+        .animate(
+          autoPlay: true,
+          onComplete: (controller) => controller.repeat(),
+        )
+        .shimmer(duration: 3.seconds, color: Colors.white.withAlpha(100));
+  }
+
+  void _showSupporterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black.withAlpha(240),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.purple.withAlpha(150), width: 2),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.favorite, color: Colors.pink, size: 28),
+            SizedBox(width: 8),
+            Text(
+              'Apoie o Fubá',
+              style: TextStyle(
+                color: Colors.purple,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Se você está gostando do Fubá Clicker, considere apoiar o desenvolvimento!',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            SizedBox(height: 20),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.green.withAlpha(100),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.qr_code, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Chave PIX:',
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () {
+                      // Aqui você pode implementar a funcionalidade de copiar
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Chave PIX copiada!'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withAlpha(100),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.green.withAlpha(150),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        'tekboxs@gmail.com',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withAlpha(30),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info, color: Colors.blue, size: 16),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Qualquer valor é bem-vindo e ajuda muito no desenvolvimento!\nEntre em contato para receber conteudo excluivo caso deseje se tornar um apoiador',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Fechar',
+              style: TextStyle(
+                color: Colors.purple,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

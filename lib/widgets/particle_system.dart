@@ -52,8 +52,12 @@ class _ParticleSystemState extends State<ParticleSystem>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+  }
 
-    if (widget.shouldAnimate) {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.shouldAnimate && _particles.isEmpty) {
       _generateParticles();
       _controller.forward().then((_) {
         if (widget.onComplete != null) {
@@ -67,6 +71,7 @@ class _ParticleSystemState extends State<ParticleSystem>
   void didUpdateWidget(ParticleSystem oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.shouldAnimate && !oldWidget.shouldAnimate) {
+      _particles.clear();
       _generateParticles();
       _controller.forward().then((_) {
         if (widget.onComplete != null) {
@@ -78,7 +83,7 @@ class _ParticleSystemState extends State<ParticleSystem>
 
   void _generateParticles() {
     _particles.clear();
-    final particleCount = GameConstants.particleCount;
+    final particleCount = GameConstants.getParticleCount(context);
     for (int i = 0; i < particleCount; i++) {
       _particles.add(Particle(
         x: 50 + _random.nextDouble() * 100,

@@ -14,7 +14,7 @@ class ParallaxBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final layerCount = GameConstants.parallaxLayerCount;
+    final layerCount = GameConstants.getParallaxLayerCount(context);
     final layers = <Widget>[];
     
     if (layerCount >= 1) layers.add(_buildContinuousLayer('🌽', 8.3, 30, 0.3));

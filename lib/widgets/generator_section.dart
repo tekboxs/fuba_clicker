@@ -13,6 +13,8 @@ import 'particle_system.dart';
 class GeneratorSection extends ConsumerWidget {
   const GeneratorSection({super.key});
 
+  static final Map<int, Timer?> _autoBuyTimers = {};
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final generators = ref.watch(generatorsProvider);
@@ -54,22 +56,26 @@ class GeneratorSection extends ConsumerWidget {
                 final isUnlocked = generator.isUnlocked(generators, unlockedSecrets);
                 final canAfford = fuba >= cost && isUnlocked;
 
-                return _GeneratorCard(
-                  key: ValueKey('generator_$index'),
-                  generator: generator,
-                  owned: owned,
-                  cost: cost,
-                  canAfford: canAfford,
-                  isUnlocked: isUnlocked,
+                return InkWell(
                   onTap: canAfford
                       ? () => _buyGenerator(ref, index, cost)
                       : null,
-                  onLongPressStart: canAfford
-                      ? () => _startAutoBuyForGenerator(ref, index, cost)
-                      : null,
-                  onLongPressEnd: canAfford
-                      ? () => _stopAutoBuyForGenerator(ref, index)
-                      : null,
+                  child: GestureDetector(
+                    onLongPressStart: canAfford
+                        ? (_) => _startAutoBuyForGenerator(ref, index, cost)
+                        : null,
+                    onLongPressEnd: canAfford
+                        ? (_) => _stopAutoBuyForGenerator(ref, index)
+                        : null,
+                    child: _GeneratorCard(
+                    key: ValueKey('generator_$index'),
+                    generator: generator,
+                    owned: owned,
+                    cost: cost,
+                    canAfford: canAfford,
+                    isUnlocked: isUnlocked,
+                  ),
+                    ),
                 );
               },
             ),
@@ -97,12 +103,26 @@ class GeneratorSection extends ConsumerWidget {
 
   /// Inicia a compra automática de um gerador
   void _startAutoBuyForGenerator(WidgetRef ref, int index, double cost) {
-    // A lógica de compra automática será implementada no _GeneratorCard
+    _autoBuyTimers[index]?.cancel();
+    _autoBuyTimers[index] = Timer.periodic(const Duration(milliseconds: 150), (timer) {
+      final generators = ref.read(generatorsProvider);
+      final fuba = ref.read(fubaProvider);
+      final generator = availableGenerators[index];
+      final owned = generators[index];
+      final currentCost = generator.getCost(owned);
+      
+      if (fuba >= currentCost) {
+        _buyGenerator(ref, index, currentCost);
+      } else {
+        _stopAutoBuyForGenerator(ref, index);
+      }
+    });
   }
 
   /// Para a compra automática de um gerador
   void _stopAutoBuyForGenerator(WidgetRef ref, int index) {
-    // A lógica de parar compra automática será implementada no _GeneratorCard
+    _autoBuyTimers[index]?.cancel();
+    _autoBuyTimers[index] = null;
   }
 }
 
@@ -113,9 +133,6 @@ class _GeneratorCard extends StatefulWidget {
   final double cost;
   final bool canAfford;
   final bool isUnlocked;
-  final VoidCallback? onTap;
-  final VoidCallback? onLongPressStart;
-  final VoidCallback? onLongPressEnd;
 
   const _GeneratorCard({
     super.key,
@@ -124,9 +141,6 @@ class _GeneratorCard extends StatefulWidget {
     required this.cost,
     required this.canAfford,
     required this.isUnlocked,
-    this.onTap,
-    this.onLongPressStart,
-    this.onLongPressEnd,
   });
 
   @override
@@ -144,8 +158,6 @@ class _GeneratorCardState extends State<_GeneratorCard>
   bool _showParticles = false;
   bool _showMilestone = false;
   int _lastOwned = 0;
-  Timer? _autoBuyTimer;
-  bool _isAutoBuying = false;
 
   @override
   void initState() {
@@ -193,9 +205,6 @@ class _GeneratorCardState extends State<_GeneratorCard>
     }
     _lastOwned = widget.owned;
 
-    if (!widget.canAfford && _isAutoBuying) {
-      _stopAutoBuy();
-    }
 
     if (widget.owned > 0 && !_glowController.isAnimating) {
       _glowController.repeat(reverse: true);
@@ -226,37 +235,10 @@ class _GeneratorCardState extends State<_GeneratorCard>
     }
   }
 
-  void _startAutoBuy() {
-    if (!widget.canAfford || _isAutoBuying) return;
-    
-    widget.onLongPressStart?.call();
-    
-    setState(() {
-      _isAutoBuying = true;
-    });
-    
-    _autoBuyTimer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
-      if (mounted && widget.canAfford) {
-        widget.onTap?.call();
-      } else {
-        _stopAutoBuy();
-      }
-    });
-  }
-
-  void _stopAutoBuy() {
-    _autoBuyTimer?.cancel();
-    _autoBuyTimer = null;
-    widget.onLongPressEnd?.call();
-    setState(() {
-      _isAutoBuying = false;
-    });
-  }
 
 
   @override
   void dispose() {
-    _autoBuyTimer?.cancel();
     _purchaseController.dispose();
     _glowController.dispose();
     _milestoneController.dispose();
@@ -271,13 +253,6 @@ class _GeneratorCardState extends State<_GeneratorCard>
     if (!widget.isUnlocked) {
       backgroundColor = Colors.grey.withAlpha(GameConstants.affordColorAlpha);
       borderColor = Colors.grey.withAlpha(GameConstants.affordBorderAlpha);
-    } else if (_isAutoBuying) {
-      backgroundColor = Colors.orange.withAlpha(
-        GameConstants.affordColorAlpha + 50,
-      );
-      borderColor = Colors.orange.withAlpha(
-        GameConstants.affordBorderAlpha + 50,
-      );
     } else if (widget.canAfford) {
       backgroundColor = widget.generator.tierColor.withAlpha(
         GameConstants.affordColorAlpha,
@@ -297,8 +272,8 @@ class _GeneratorCardState extends State<_GeneratorCard>
     return Padding(
       padding: EdgeInsets.only(
         top: GameConstants.isMobile(context) ? 3 : 5, 
-        left: GameConstants.isMobile(context) ? 18 : 20, 
-        right: GameConstants.isMobile(context) ? 18 : 20,
+        left: GameConstants.isMobile(context) ? 18 : 30, 
+        right: GameConstants.isMobile(context) ? 18 : 30,
       ),
       child: Stack(
         children: [
@@ -335,13 +310,7 @@ class _GeneratorCardState extends State<_GeneratorCard>
                           ]
                         : null,
                   ),
-                  child: GestureDetector(
-                    onTap: widget.onTap,
-                    onLongPressStart: widget.canAfford ? (_) => _startAutoBuy() : null,
-                    onLongPressEnd: widget.canAfford ? (_) => _stopAutoBuy() : null,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: Padding(
+                  child: Padding(
                         padding: EdgeInsets.all(GameConstants.isMobile(context) ? 8 : 16),
                         child: Row(
                         children: [
@@ -421,9 +390,7 @@ class _GeneratorCardState extends State<_GeneratorCard>
                         ],
                       ),
                     ),
-                    ),
                   ),
-                ),
               );
             },
           ),

@@ -25,9 +25,6 @@ class AccessoryNotifier {
     if (equipped.length >= 8) {
       return;
     }
-    if (equipped.contains(accessoryId)) {
-      return;
-    }
     final inventory = ref.read(inventoryProvider);
     if ((inventory[accessoryId] ?? 0) <= 0) {
       return;
@@ -41,12 +38,28 @@ class AccessoryNotifier {
 
   void unequipAccessory(String accessoryId) {
     final equipped = ref.read(equippedAccessoriesProvider);
+    final index = equipped.indexOf(accessoryId);
+    if (index != -1) {
+      final newEquipped = List<String>.from(equipped);
+      newEquipped.removeAt(index);
+      ref.read(equippedAccessoriesProvider.notifier).state = newEquipped;
+    }
+  }
+
+  void unequipAllOfType(String accessoryId) {
+    final equipped = ref.read(equippedAccessoriesProvider);
     ref.read(equippedAccessoriesProvider.notifier).state =
         equipped.where((id) => id != accessoryId).toList();
   }
 
   bool isEquipped(String accessoryId) {
     return ref.read(equippedAccessoriesProvider).contains(accessoryId);
+  }
+
+  bool canEquip(String accessoryId) {
+    final equipped = ref.read(equippedAccessoriesProvider);
+    final inventory = ref.read(inventoryProvider);
+    return equipped.length < 8 && (inventory[accessoryId] ?? 0) > getEquippedCount(accessoryId);
   }
 
   int getInventoryCount(String accessoryId) {

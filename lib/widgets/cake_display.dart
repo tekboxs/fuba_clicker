@@ -35,34 +35,30 @@ class CakeDisplay extends StatelessWidget {
 
   Widget _buildGlow(CakeVisualTier tier) {
     return Container(
-      width: size + tier.glowIntensity * 2,
-      height: size + tier.glowIntensity * 2,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: tier.primaryColor.withAlpha(100),
-            blurRadius: tier.glowIntensity,
-            spreadRadius: tier.glowIntensity / 2,
+          width: size + tier.glowIntensity * 2,
+          height: size + tier.glowIntensity * 2,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: tier.primaryColor.withAlpha(100),
+                blurRadius: tier.glowIntensity,
+                spreadRadius: tier.glowIntensity / 2,
+              ),
+              BoxShadow(
+                color: tier.secondaryColor.withAlpha(80),
+                blurRadius: tier.glowIntensity * 1.5,
+                spreadRadius: tier.glowIntensity / 3,
+              ),
+            ],
           ),
-          BoxShadow(
-            color: tier.secondaryColor.withAlpha(80),
-            blurRadius: tier.glowIntensity * 1.5,
-            spreadRadius: tier.glowIntensity / 3,
-          ),
-        ],
-      ),
-    )
+        )
         .animate(
           autoPlay: true,
           onComplete: (controller) => controller.repeat(reverse: true),
         )
-        .fadeIn(
-          duration: Duration(milliseconds: tier.pulseSpeed),
-        )
-        .fadeOut(
-          duration: Duration(milliseconds: tier.pulseSpeed),
-        );
+        .fadeIn(duration: Duration(milliseconds: tier.pulseSpeed))
+        .fadeOut(duration: Duration(milliseconds: tier.pulseSpeed));
   }
 
   Widget _buildCake(CakeVisualTier tier) {
@@ -76,14 +72,18 @@ class CakeDisplay extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: tier.glowIntensity > 0
-              ? Border.all(
-                  color: tier.primaryColor.withAlpha(150),
-                  width: 3,
-                )
+              ? Border.all(color: tier.primaryColor.withAlpha(150), width: 3)
               : null,
         ),
-        child: ColorFiltered(
-          colorFilter: _getColorFilter(tier),
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: tier == CakeVisualTier.normal
+                ? Colors.transparent
+                : tier.primaryColor.withAlpha(80),
+          ),
           child: Assets.images.cake
               .image(fit: BoxFit.contain)
               .animate(controller: animationController)
@@ -97,16 +97,4 @@ class CakeDisplay extends StatelessWidget {
       ),
     );
   }
-
-  ColorFilter _getColorFilter(CakeVisualTier tier) {
-    if (tier == CakeVisualTier.normal) {
-      return const ColorFilter.mode(Colors.transparent, BlendMode.multiply);
-    }
-
-    return ColorFilter.mode(
-      tier.primaryColor.withAlpha(30),
-      BlendMode.modulate,
-    );
-  }
 }
-

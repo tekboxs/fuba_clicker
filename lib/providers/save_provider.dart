@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/save_service.dart';
 import '../models/fuba_generator.dart';
@@ -39,7 +40,7 @@ class SaveNotifier extends StateNotifier<bool> {
       final secrets = ref.read(unlockedSecretsProvider);
 
       await _saveService.saveGame(
-        fuba: fuba,
+        fuba: kDebugMode? 100000 : fuba,
         generators: generators,
         inventory: inventory,
         equipped: equipped,
