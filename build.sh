@@ -20,6 +20,6 @@ flutter create . --platforms web
 flutter pub get
 
 # Build the project
-flutter build web --release --base-href /
+flutter build web --release --wasm --base-href /
 
 echo "Build completed successfully!"
