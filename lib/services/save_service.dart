@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:crypto/crypto.dart';
 import '../models/rebirth_data.dart';
+import 'save_validation_service.dart';
 
 class SaveService {
   static const String _fubaKey = 'fuba_count';
@@ -95,7 +98,7 @@ class SaveService {
         ? Set<String>.from(jsonDecode(_decompress(secretsJson)))
         : <String>{};
 
-    return GameSaveData(
+    final saveData = GameSaveData(
       fuba: fuba,
       generators: generators,
       inventory: inventory,
@@ -106,6 +109,16 @@ class SaveService {
       upgrades: upgrades,
       secrets: secrets,
     );
+
+    // Validar consistência dos dados
+    final validation = SaveValidationService.validateSaveData(saveData);
+    if (!validation.isValid) {
+      // Se dados são críticos inválidos, limpar save
+      await clearSave();
+      return _getDefaultSaveData();
+    }
+
+    return saveData;
   }
 
   Future<bool> hasSaveData() async {
@@ -126,18 +139,115 @@ class SaveService {
     await prefs.remove(_secretsKey);
   }
 
+  String generateBackupCode({
+    required double fuba,
+    required List<int> generators,
+    required Map<String, int> inventory,
+    required List<String> equipped,
+    required RebirthData rebirthData,
+    required Set<String> achievements,
+    required Map<String, double> achievementStats,
+    required Map<String, int> upgrades,
+    required Set<String> secrets,
+  }) {
+    final saveData = GameSaveData(
+      fuba: fuba,
+      generators: generators,
+      inventory: inventory,
+      equipped: equipped,
+      rebirthData: rebirthData,
+      achievements: achievements,
+      achievementStats: achievementStats,
+      upgrades: upgrades,
+      secrets: secrets,
+    );
+    
+    return SaveValidationService.generateBackupCode(saveData);
+  }
+
+  GameSaveData? restoreFromBackupCode(String code) {
+    return SaveValidationService.restoreFromBackupCode(code);
+  }
+
+  GameSaveData _getDefaultSaveData() {
+    return GameSaveData(
+      fuba: 0.0,
+      generators: <int>[],
+      inventory: <String, int>{},
+      equipped: <String>[],
+      rebirthData: const RebirthData(),
+      achievements: <String>{},
+      achievementStats: <String, double>{},
+      upgrades: <String, int>{},
+      secrets: <String>{},
+    );
+  }
+
   String _compress(String data) {
     try {
-      final bytes = utf8.encode(data);
-      final compressed = gzip.encode(bytes);
-      final encoded = base64Encode(compressed);
-      return _obfuscate(encoded);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final timestampBytes = utf8.encode(timestamp.toString().padLeft(8, '0'));
+      
+      final checksum = _generateChecksum(data);
+      final checksumBytes = utf8.encode(checksum);
+      
+      final random = Random();
+      final salt = List.generate(16, (_) => random.nextInt(256));
+      
+      final payload = [
+        ...timestampBytes,
+        ...utf8.encode(data),
+        ...checksumBytes,
+        ...salt,
+      ];
+      
+      final compressed = gzip.encode(payload);
+      final encoded1 = base64Encode(compressed);
+      final obfuscated = _obfuscate(encoded1);
+      final encoded2 = base64Encode(utf8.encode(obfuscated));
+      final shuffled = _shuffleBytes(utf8.encode(encoded2));
+      
+      return base64Encode(shuffled);
     } catch (e) {
       return data;
     }
   }
 
   String _decompress(String compressedData) {
+    try {
+      final shuffled = base64Decode(compressedData);
+      final unshuffled = _unshuffleBytes(shuffled);
+      final encoded2 = utf8.decode(unshuffled);
+      final obfuscated = utf8.decode(base64Decode(encoded2));
+      final encoded1 = _deobfuscate(obfuscated);
+      final bytes = base64Decode(encoded1);
+      final decompressed = gzip.decode(bytes);
+      
+      final decompressedString = utf8.decode(decompressed);
+      final timestampLength = 8;
+      final checksumLength = 64;
+      final saltLength = 16;
+      
+      if (decompressedString.length < timestampLength + checksumLength + saltLength) {
+        return _decompressLegacy(compressedData);
+      }
+      
+      decompressedString.substring(0, timestampLength);
+      final data = decompressedString.substring(timestampLength, decompressedString.length - checksumLength - saltLength);
+      final checksum = decompressedString.substring(decompressedString.length - checksumLength - saltLength, decompressedString.length - saltLength);
+      
+      final expectedChecksum = _generateChecksum(data);
+      if (checksum != expectedChecksum) {
+        return _decompressLegacy(compressedData);
+      }
+      
+      return data;
+    } catch (e) {
+      return _decompressLegacy(compressedData);
+    }
+  }
+  
+  String _decompressLegacy(String compressedData) {
     try {
       final deobfuscated = _deobfuscate(compressedData);
       final bytes = base64Decode(deobfuscated);
@@ -173,29 +283,36 @@ class SaveService {
     
     return utf8.decode(result);
   }
+
+  String _generateChecksum(String data) {
+    final bytes = utf8.encode(data);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  List<int> _shuffleBytes(List<int> bytes) {
+    final result = List<int>.from(bytes);
+    const key = 'fuba_shuffle_2024';
+    for (int i = 0; i < result.length; i++) {
+      final j = (i + key.codeUnitAt(i % key.length)) % result.length;
+      final temp = result[i];
+      result[i] = result[j];
+      result[j] = temp;
+    }
+    return result;
+  }
+
+  List<int> _unshuffleBytes(List<int> bytes) {
+    final result = List<int>.from(bytes);
+    const key = 'fuba_shuffle_2024';
+    for (int i = result.length - 1; i >= 0; i--) {
+      final j = (i + key.codeUnitAt(i % key.length)) % result.length;
+      final temp = result[i];
+      result[i] = result[j];
+      result[j] = temp;
+    }
+    return result;
+  }
 }
 
-class GameSaveData {
-  final double fuba;
-  final List<int> generators;
-  final Map<String, int> inventory;
-  final List<String> equipped;
-  final RebirthData rebirthData;
-  final Set<String> achievements;
-  final Map<String, double> achievementStats;
-  final Map<String, int> upgrades;
-  final Set<String> secrets;
-
-  GameSaveData({
-    required this.fuba,
-    required this.generators,
-    required this.inventory,
-    required this.equipped,
-    required this.rebirthData,
-    required this.achievements,
-    required this.achievementStats,
-    required this.upgrades,
-    required this.secrets,
-  });
-}
 
