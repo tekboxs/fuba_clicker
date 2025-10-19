@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/achievement_provider.dart';
 import 'providers/save_provider.dart';
 import 'widgets/home_page.dart';
 
@@ -37,6 +38,10 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(appContextProvider.notifier).state = context;
+    });
+
     return MaterialApp(
       title: 'Fuba Clicker',
       home: _isLoading ? _buildLoadingScreen() : const HomePage(),

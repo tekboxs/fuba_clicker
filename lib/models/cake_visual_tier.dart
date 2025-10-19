@@ -147,7 +147,10 @@ extension CakeVisualTierExtension on CakeVisualTier {
         return CakeVisualTier.legendary;
       case AccessoryRarity.mythical:
         return CakeVisualTier.mythical;
+      case AccessoryRarity.divine:
+        return CakeVisualTier.cosmic;
+      case AccessoryRarity.transcendent:
+        return CakeVisualTier.cosmic;
     }
   }
 }
-

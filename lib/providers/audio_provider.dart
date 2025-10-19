@@ -10,7 +10,17 @@ final audioPlayerProvider = Provider<AudioPlayer>((ref) {
   return player;
 });
 
-final audioStateProvider = StateNotifierProvider<AudioStateNotifier, bool>((ref) {
+final clickSoundPlayerProvider = Provider<AudioPlayer>((ref) {
+  final player = AudioPlayer();
+  ref.onDispose(() {
+    player.dispose();
+  });
+  return player;
+});
+
+final audioStateProvider = StateNotifierProvider<AudioStateNotifier, bool>((
+  ref,
+) {
   final player = ref.watch(audioPlayerProvider);
   return AudioStateNotifier(player);
 });
@@ -24,8 +34,9 @@ class AudioStateNotifier extends StateNotifier<bool> {
   }
 
   Future<void> _initializeAudio() async {
+    if (kDebugMode) return;
     if (_isInitialized) return;
-    
+
     try {
       await _player.setReleaseMode(ReleaseMode.loop);
       await _player.setVolume(0.1);
@@ -65,3 +76,24 @@ class AudioStateNotifier extends StateNotifier<bool> {
     }
   }
 }
+
+class ClickSoundNotifier {
+  final AudioPlayer _clickPlayer;
+
+  ClickSoundNotifier(this._clickPlayer);
+
+  Future<void> playClickSound() async {
+    try {
+      await _clickPlayer.stop();
+      await _clickPlayer.setVolume(0.3);
+      await _clickPlayer.play(AssetSource('song/click.mp3'));
+    } catch (e) {
+      debugPrint('Erro ao tocar som de click: $e');
+    }
+  }
+}
+
+final clickSoundNotifierProvider = Provider<ClickSoundNotifier>((ref) {
+  final player = ref.watch(clickSoundPlayerProvider);
+  return ClickSoundNotifier(player);
+});

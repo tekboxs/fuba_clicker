@@ -7,6 +7,8 @@ enum UpgradeType {
   offlineProduction,
   startingFuba,
   productionMultiplier,
+  animationSpeed,
+  accessoryCapacity,
 }
 
 class RebirthUpgrade {
@@ -43,7 +45,7 @@ class RebirthUpgrade {
       case UpgradeType.luckyBoxes:
         return level * 0.05;
       case UpgradeType.clickPower:
-        return 1.0 + (level * 0.5);
+        return 1.0 + (level * 2.0);
       case UpgradeType.generatorDiscount:
         return level * 0.02;
       case UpgradeType.offlineProduction:
@@ -52,6 +54,10 @@ class RebirthUpgrade {
         return level * 1000.0;
       case UpgradeType.productionMultiplier:
         return 1.0 + (level * 0.1);
+      case UpgradeType.animationSpeed:
+        return 1.0 - (level * 0.1);
+      case UpgradeType.accessoryCapacity:
+        return 3.0 + (level * 1.0);
     }
   }
 
@@ -73,6 +79,10 @@ class RebirthUpgrade {
         return '+${getEffectValue(level).toStringAsFixed(0)} fubá inicial';
       case UpgradeType.productionMultiplier:
         return 'x${getEffectValue(level).toStringAsFixed(1)} produção total';
+      case UpgradeType.animationSpeed:
+        return 'x${getEffectValue(level).toStringAsFixed(1)} velocidade animação';
+      case UpgradeType.accessoryCapacity:
+        return '${getEffectValue(level).toInt()} slots de acessórios';
     }
   }
 }
@@ -84,6 +94,15 @@ const List<RebirthUpgrade> allUpgrades = [
     emoji: '👆',
     description: 'Clica no bolo automaticamente',
     type: UpgradeType.autoClicker,
+    baseTokenCost: 1,
+    maxLevel: 20,
+  ),
+  RebirthUpgrade(
+    id: 'click_power',
+    name: 'Poder do Clique',
+    emoji: '💪',
+    description: 'Multiplica fubá por clique',
+    type: UpgradeType.clickPower,
     baseTokenCost: 1,
     maxLevel: 20,
   ),
@@ -106,15 +125,6 @@ const List<RebirthUpgrade> allUpgrades = [
     maxLevel: 10,
   ),
   RebirthUpgrade(
-    id: 'click_power',
-    name: 'Poder do Clique',
-    emoji: '💪',
-    description: 'Multiplica fubá por clique',
-    type: UpgradeType.clickPower,
-    baseTokenCost: 2,
-    maxLevel: 15,
-  ),
-  RebirthUpgrade(
     id: 'generator_discount',
     name: 'Desconto de Geradores',
     emoji: '💰',
@@ -124,26 +134,26 @@ const List<RebirthUpgrade> allUpgrades = [
     maxLevel: 10,
     ascensionRequirement: 1,
   ),
-  RebirthUpgrade(
-    id: 'offline_production',
-    name: 'Produção Offline',
-    emoji: '⏰',
-    description: 'Produz fubá enquanto offline',
-    type: UpgradeType.offlineProduction,
-    baseTokenCost: 5,
-    maxLevel: 12,
-    ascensionRequirement: 2,
-  ),
-  RebirthUpgrade(
-    id: 'starting_fuba',
-    name: 'Fubá Inicial',
-    emoji: '🌽',
-    description: 'Começa com mais fubá',
-    type: UpgradeType.startingFuba,
-    baseTokenCost: 3,
-    maxLevel: 20,
-    ascensionRequirement: 1,
-  ),
+  // RebirthUpgrade(
+  //   id: 'offline_production',
+  //   name: 'Produção Offline',
+  //   emoji: '⏰',
+  //   description: 'Produz fubá enquanto offline',
+  //   type: UpgradeType.offlineProduction,
+  //   baseTokenCost: 5,
+  //   maxLevel: 12,
+  //   ascensionRequirement: 2,
+  // ),
+  // RebirthUpgrade(
+  //   id: 'starting_fuba',
+  //   name: 'Fubá Inicial',
+  //   emoji: '🌽',
+  //   description: 'Começa com mais fubá',
+  //   type: UpgradeType.startingFuba,
+  //   baseTokenCost: 3,
+  //   maxLevel: 20,
+  //   ascensionRequirement: 1,
+  // ),
   RebirthUpgrade(
     id: 'production_multiplier',
     name: 'Super Produção',
@@ -153,6 +163,26 @@ const List<RebirthUpgrade> allUpgrades = [
     baseTokenCost: 10,
     maxLevel: 10,
     ascensionRequirement: 3,
+  ),
+  RebirthUpgrade(
+    id: 'animation_speed',
+    name: 'Velocidade Celestial',
+    emoji: '⚡',
+    description: 'Acelera animações de abertura de caixas',
+    type: UpgradeType.animationSpeed,
+    baseTokenCost: 5,
+    maxLevel: 10,
+    ascensionRequirement: 1,
+  ),
+  RebirthUpgrade(
+    id: 'accessory_capacity',
+    name: 'Capacidade Expandida',
+    emoji: '🎒',
+    description: 'Aumenta capacidade de acessórios equipados',
+    type: UpgradeType.accessoryCapacity,
+    baseTokenCost: 8,
+    maxLevel: 12,
+    ascensionRequirement: 2,
   ),
 ];
 

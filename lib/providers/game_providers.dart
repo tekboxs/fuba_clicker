@@ -1,21 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../models/fuba_generator.dart';
 import 'accessory_provider.dart';
 import 'rebirth_provider.dart';
 import 'rebirth_upgrade_provider.dart';
 import 'achievement_provider.dart';
 
-final fubaProvider = StateProvider<double>((ref) {
-  return 0;
+final fubaProvider = StateProvider<BigDecimal>((ref) {
+  return BigDecimal.zero;
 });
 
 final generatorsProvider = StateProvider<List<int>>((ref) {
   return List.filled(availableGenerators.length, 0);
 });
 
-final baseAutoProductionProvider = Provider<double>((ref) {
+final baseAutoProductionProvider = Provider<BigDecimal>((ref) {
   final generators = ref.watch(generatorsProvider);
-  double totalProduction = 0;
+  BigDecimal totalProduction = BigDecimal.zero;
 
   for (int i = 0; i < availableGenerators.length; i++) {
     totalProduction += availableGenerators[i].getProduction(generators[i]);
@@ -24,25 +25,25 @@ final baseAutoProductionProvider = Provider<double>((ref) {
   return totalProduction;
 });
 
-final autoProductionProvider = Provider<double>((ref) {
+final autoProductionProvider = Provider<BigDecimal>((ref) {
   final baseProduction = ref.watch(baseAutoProductionProvider);
-  if (baseProduction == 0) return 0;
+  if (baseProduction.compareTo(BigDecimal.zero) == 0) return BigDecimal.zero;
 
-  double totalProduction = baseProduction;
+  BigDecimal totalProduction = baseProduction;
 
   final accessoryMultiplier = ref.watch(accessoryMultiplierProvider);
-  totalProduction *= accessoryMultiplier;
+  totalProduction *= BigDecimal.parse(accessoryMultiplier.toString());
 
   final rebirthMultiplier = ref.watch(rebirthMultiplierProvider);
-  totalProduction *= rebirthMultiplier;
+  totalProduction *= BigDecimal.parse(rebirthMultiplier.toString());
 
   final upgradeMultiplier = ref.watch(upgradeProductionMultiplierProvider);
-  totalProduction *= upgradeMultiplier;
+  totalProduction *= BigDecimal.parse(upgradeMultiplier.toString());
 
   final achievementMultiplier = ref.watch(achievementMultiplierProvider);
-  totalProduction *= achievementMultiplier;
+  totalProduction *= BigDecimal.parse(achievementMultiplier.toString());
 
-  return double.parse(totalProduction.toStringAsFixed(1));
+  return totalProduction;
 });
 
 final totalMultiplierProvider = Provider<double>((ref) {

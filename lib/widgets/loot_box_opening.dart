@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/cake_accessory.dart';
 import '../models/loot_box.dart';
+import '../providers/rebirth_upgrade_provider.dart';
 import 'dart:math';
 
-class LootBoxOpeningAnimation extends StatefulWidget {
+class LootBoxOpeningAnimation extends ConsumerStatefulWidget {
   const LootBoxOpeningAnimation({
     super.key,
     required this.lootBoxTier,
@@ -17,11 +19,11 @@ class LootBoxOpeningAnimation extends StatefulWidget {
   final VoidCallback onComplete;
 
   @override
-  State<LootBoxOpeningAnimation> createState() =>
+  ConsumerState<LootBoxOpeningAnimation> createState() =>
       _LootBoxOpeningAnimationState();
 }
 
-class _LootBoxOpeningAnimationState extends State<LootBoxOpeningAnimation>
+class _LootBoxOpeningAnimationState extends ConsumerState<LootBoxOpeningAnimation>
     with TickerProviderStateMixin {
   late AnimationController _shakeController;
   late AnimationController _openController;
@@ -32,31 +34,35 @@ class _LootBoxOpeningAnimationState extends State<LootBoxOpeningAnimation>
   @override
   void initState() {
     super.initState();
+    final speedMultiplier = ref.read(upgradeNotifierProvider).getAnimationSpeedMultiplier();
+    
     _shakeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: Duration(milliseconds: (1500 * speedMultiplier).round()),
     );
     _openController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: Duration(milliseconds: (500 * speedMultiplier).round()),
     );
     _revealController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: Duration(milliseconds: (800 * speedMultiplier).round()),
     );
 
     _startAnimation();
   }
 
   void _startAnimation() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    final speedMultiplier = ref.read(upgradeNotifierProvider).getAnimationSpeedMultiplier();
+    
+    await Future.delayed(Duration(milliseconds: (500 * speedMultiplier).round()));
     await _shakeController.forward();
 
     setState(() {
       _showBox = false;
     });
 
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(Duration(milliseconds: (300 * speedMultiplier).round()));
 
     setState(() {
       _showReward = true;
@@ -64,7 +70,7 @@ class _LootBoxOpeningAnimationState extends State<LootBoxOpeningAnimation>
 
     await _revealController.forward();
 
-    await Future.delayed(const Duration(milliseconds: 2000));
+    await Future.delayed(Duration(milliseconds: (2000 * speedMultiplier).round()));
     widget.onComplete();
   }
 
@@ -186,7 +192,7 @@ class _LootBoxOpeningAnimationState extends State<LootBoxOpeningAnimation>
   }
 }
 
-class MultipleLootBoxOpeningAnimation extends StatefulWidget {
+class MultipleLootBoxOpeningAnimation extends ConsumerStatefulWidget {
   const MultipleLootBoxOpeningAnimation({
     super.key,
     required this.lootBoxTier,
@@ -199,11 +205,11 @@ class MultipleLootBoxOpeningAnimation extends StatefulWidget {
   final VoidCallback onComplete;
 
   @override
-  State<MultipleLootBoxOpeningAnimation> createState() =>
+  ConsumerState<MultipleLootBoxOpeningAnimation> createState() =>
       _MultipleLootBoxOpeningAnimationState();
 }
 
-class _MultipleLootBoxOpeningAnimationState extends State<MultipleLootBoxOpeningAnimation>
+class _MultipleLootBoxOpeningAnimationState extends ConsumerState<MultipleLootBoxOpeningAnimation>
     with TickerProviderStateMixin {
   late AnimationController _shakeController;
   late AnimationController _openController;
@@ -217,17 +223,19 @@ class _MultipleLootBoxOpeningAnimationState extends State<MultipleLootBoxOpening
   @override
   void initState() {
     super.initState();
+    final speedMultiplier = ref.read(upgradeNotifierProvider).getAnimationSpeedMultiplier();
+    
     _shakeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: Duration(milliseconds: (2000 * speedMultiplier).round()),
     );
     _openController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: Duration(milliseconds: (800 * speedMultiplier).round()),
     );
     _revealController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: Duration(milliseconds: (1200 * speedMultiplier).round()),
     );
   }
 
@@ -278,14 +286,16 @@ class _MultipleLootBoxOpeningAnimationState extends State<MultipleLootBoxOpening
   }
 
   void _startAnimation() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    final speedMultiplier = ref.read(upgradeNotifierProvider).getAnimationSpeedMultiplier();
+    
+    await Future.delayed(Duration(milliseconds: (500 * speedMultiplier).round()));
     await _shakeController.forward();
 
     setState(() {
       _showBoxes = false;
     });
 
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(Duration(milliseconds: (400 * speedMultiplier).round()));
 
     setState(() {
       _showRewards = true;
@@ -293,7 +303,7 @@ class _MultipleLootBoxOpeningAnimationState extends State<MultipleLootBoxOpening
 
     await _revealController.forward();
 
-    await Future.delayed(const Duration(milliseconds: 3000));
+    await Future.delayed(Duration(milliseconds: (3000 * speedMultiplier).round()));
     widget.onComplete();
   }
 

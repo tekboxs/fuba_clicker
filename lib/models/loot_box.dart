@@ -1,12 +1,15 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:big_decimal/big_decimal.dart';
 import 'cake_accessory.dart';
 
 enum LootBoxTier {
   basic(1),
   advanced(2),
   premium(3),
-  ultimate(4);
+  ultimate(4),
+  divine(5),
+  transcendent(6);
 
   final int value;
   const LootBoxTier(this.value);
@@ -21,6 +24,10 @@ enum LootBoxTier {
         return 'Caixa Premium';
       case LootBoxTier.ultimate:
         return 'Caixa Suprema';
+      case LootBoxTier.divine:
+        return 'Caixa Divina';
+      case LootBoxTier.transcendent:
+        return 'Caixa Transcendente';
     }
   }
 
@@ -34,6 +41,10 @@ enum LootBoxTier {
         return '✨';
       case LootBoxTier.ultimate:
         return '👑';
+      case LootBoxTier.divine:
+        return '💎';
+      case LootBoxTier.transcendent:
+        return '🌟';
     }
   }
 
@@ -47,19 +58,27 @@ enum LootBoxTier {
         return Colors.purple;
       case LootBoxTier.ultimate:
         return Colors.orange;
+      case LootBoxTier.divine:
+        return Colors.cyan;
+      case LootBoxTier.transcendent:
+        return Colors.white;
     }
   }
 
-  double get cost {
+  BigDecimal get cost {
     switch (this) {
       case LootBoxTier.basic:
-        return 100;
+        return BigDecimal.parse('1000');
       case LootBoxTier.advanced:
-        return 1000;
+        return BigDecimal.parse('25000');
       case LootBoxTier.premium:
-        return 10000;
+        return BigDecimal.parse('500000');
       case LootBoxTier.ultimate:
-        return 100000;
+        return BigDecimal.parse('10000000');
+      case LootBoxTier.divine:
+        return BigDecimal.parse('500000000');
+      case LootBoxTier.transcendent:
+        return BigDecimal.parse('50000000000');
     }
   }
 
@@ -72,6 +91,10 @@ enum LootBoxTier {
       case LootBoxTier.premium:
         return 'Itens até épicos';
       case LootBoxTier.ultimate:
+        return 'Itens até lendários';
+      case LootBoxTier.divine:
+        return 'Itens até míticos';
+      case LootBoxTier.transcendent:
         return 'Itens de todas as raridades';
     }
   }
@@ -86,6 +109,8 @@ enum LootBoxTier {
           AccessoryRarity.epic: 0.0,
           AccessoryRarity.legendary: 0.0,
           AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.0,
+          AccessoryRarity.transcendent: 0.0,
         };
       case LootBoxTier.advanced:
         return {
@@ -95,6 +120,8 @@ enum LootBoxTier {
           AccessoryRarity.epic: 0.0,
           AccessoryRarity.legendary: 0.0,
           AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.0,
+          AccessoryRarity.transcendent: 0.0,
         };
       case LootBoxTier.premium:
         return {
@@ -104,6 +131,8 @@ enum LootBoxTier {
           AccessoryRarity.epic: 0.10,
           AccessoryRarity.legendary: 0.0,
           AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.0,
+          AccessoryRarity.transcendent: 0.0,
         };
       case LootBoxTier.ultimate:
         return {
@@ -113,6 +142,30 @@ enum LootBoxTier {
           AccessoryRarity.epic: 0.20,
           AccessoryRarity.legendary: 0.08,
           AccessoryRarity.mythical: 0.02,
+          AccessoryRarity.divine: 0.0,
+          AccessoryRarity.transcendent: 0.0,
+        };
+      case LootBoxTier.divine:
+        return {
+          AccessoryRarity.common: 0.15,
+          AccessoryRarity.uncommon: 0.20,
+          AccessoryRarity.rare: 0.25,
+          AccessoryRarity.epic: 0.20,
+          AccessoryRarity.legendary: 0.15,
+          AccessoryRarity.mythical: 0.04,
+          AccessoryRarity.divine: 0.01,
+          AccessoryRarity.transcendent: 0.0,
+        };
+      case LootBoxTier.transcendent:
+        return {
+          AccessoryRarity.common: 0.10,
+          AccessoryRarity.uncommon: 0.15,
+          AccessoryRarity.rare: 0.20,
+          AccessoryRarity.epic: 0.20,
+          AccessoryRarity.legendary: 0.20,
+          AccessoryRarity.mythical: 0.10,
+          AccessoryRarity.divine: 0.04,
+          AccessoryRarity.transcendent: 0.01,
         };
     }
   }

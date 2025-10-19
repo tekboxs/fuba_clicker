@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/loot_box.dart';
 import '../models/cake_accessory.dart';
@@ -8,6 +9,8 @@ import '../providers/accessory_provider.dart';
 import '../providers/achievement_provider.dart';
 import '../providers/save_provider.dart';
 import '../utils/constants.dart';
+import '../utils/difficulty_barriers.dart';
+import '../models/fuba_generator.dart';
 import 'loot_box_opening.dart';
 
 class LootBoxShopPage extends ConsumerStatefulWidget {
@@ -31,6 +34,48 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  bool _isLootBoxTierUnlocked(
+    LootBoxTier tier,
+    BigDecimal fuba,
+    List<int> generatorsOwned,
+  ) {
+    final barriers = DifficultyBarrierManager.getBarriersForCategory('lootbox');
+
+    switch (tier) {
+      case LootBoxTier.basic:
+        return true;
+      case LootBoxTier.advanced:
+        return barriers[1].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.premium:
+        return barriers[2].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.ultimate:
+        return barriers[3].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.divine:
+        return barriers[4].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.transcendent:
+        return barriers[5].isUnlocked(fuba, generatorsOwned);
+    }
+  }
+
+  DifficultyBarrier? _getBarrierForTier(LootBoxTier tier) {
+    final barriers = DifficultyBarrierManager.getBarriersForCategory('lootbox');
+
+    switch (tier) {
+      case LootBoxTier.basic:
+        return null;
+      case LootBoxTier.advanced:
+        return barriers[1];
+      case LootBoxTier.premium:
+        return barriers[2];
+      case LootBoxTier.ultimate:
+        return barriers[3];
+      case LootBoxTier.divine:
+        return barriers[4];
+      case LootBoxTier.transcendent:
+        return barriers[5];
+    }
   }
 
   @override
@@ -89,9 +134,9 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
           SizedBox(height: isMobile ? 24 : 32),
           Expanded(
             child: GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: isMobile ? 2 : 3,
-                childAspectRatio: isMobile ? 0.8 : 1.2,
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 400,
+                mainAxisExtent: 450,
                 crossAxisSpacing: isMobile ? 16 : 20,
                 mainAxisSpacing: isMobile ? 16 : 20,
               ),
@@ -107,19 +152,33 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     );
   }
 
-  Widget _buildLootBoxCard(LootBoxTier tier, double fuba) {
-    final canAfford = fuba >= tier.cost;
-    final canAfford5 = fuba >= (tier.cost * 5);
-    final canAfford10 = fuba >= (tier.cost * 10);
-    final canAfford30 = fuba >= (tier.cost * 30);
+  Widget _buildLootBoxCard(LootBoxTier tier, BigDecimal fuba) {
+    final generatorsOwned = ref.watch(generatorsProvider);
+    final isUnlocked = _isLootBoxTierUnlocked(tier, fuba, generatorsOwned);
+    final canAfford = isUnlocked && fuba.compareTo(tier.cost) >= 0;
+    final canAfford5 =
+        isUnlocked && fuba.compareTo(tier.cost * BigDecimal.parse('5')) >= 0;
+    final canAfford10 =
+        isUnlocked && fuba.compareTo(tier.cost * BigDecimal.parse('10')) >= 0;
+    final canAfford30 =
+        isUnlocked && fuba.compareTo(tier.cost * BigDecimal.parse('30')) >= 0;
     final isMobile = GameConstants.isMobile(context);
+
+    final barrier = _getBarrierForTier(tier);
+    final isLocked = !isUnlocked;
 
     return Container(
       decoration: BoxDecoration(
-        color: tier.color.withAlpha(30),
+        color: tier.color.withAlpha(isLocked ? 10 : 30),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: tier.color.withAlpha(canAfford ? 150 : 50),
+          color: tier.color.withAlpha(
+            canAfford
+                ? 150
+                : isLocked
+                ? 30
+                : 50,
+          ),
           width: 2,
         ),
       ),
@@ -128,41 +187,97 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(tier.emoji, style: TextStyle(fontSize: isMobile ? 64 : 80))
-                .animate(
-                  autoPlay: canAfford,
-                  onComplete: (controller) => controller.repeat(),
-                )
-                .shimmer(duration: 2.seconds, color: tier.color.withAlpha(100)),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Text(tier.emoji, style: TextStyle(fontSize: isMobile ? 64 : 80))
+                    .animate(
+                      autoPlay: canAfford,
+                      onComplete: (controller) => controller.repeat(),
+                    )
+                    .shimmer(
+                      duration: 2.seconds,
+                      color: tier.color.withAlpha(100),
+                    ),
+                if (isLocked)
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(150),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.lock,
+                      color: Colors.grey,
+                      size: isMobile ? 32 : 40,
+                    ),
+                  ),
+              ],
+            ),
             SizedBox(height: isMobile ? 12 : 16),
             Text(
               tier.displayName,
               style: TextStyle(
                 fontSize: isMobile ? 18 : 22,
                 fontWeight: FontWeight.bold,
-                color: canAfford ? tier.color : Colors.grey,
+                color: isLocked
+                    ? Colors.grey
+                    : (canAfford ? tier.color : Colors.grey),
               ),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: isMobile ? 8 : 12),
-            Text(
-              tier.description,
-              style: TextStyle(
-                fontSize: isMobile ? 12 : 14,
-                color: canAfford ? Colors.white70 : Colors.grey[700],
+            if (isLocked && barrier != null) ...[
+              Text(
+                '🔒 ${barrier.description}',
+                style: TextStyle(
+                  fontSize: isMobile ? 12 : 14,
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
+              SizedBox(height: isMobile ? 8 : 12),
+              _buildBarrierProgress(barrier, fuba, generatorsOwned, isMobile),
+            ] else ...[
+              Text(
+                tier.description,
+                style: TextStyle(
+                  fontSize: isMobile ? 12 : 14,
+                  color: canAfford ? Colors.white70 : Colors.grey[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
             SizedBox(height: isMobile ? 12 : 16),
-            _buildPurchaseButtons(
-              tier,
-              fuba,
-              canAfford,
-              canAfford5,
-              canAfford10,
-              canAfford30,
-              isMobile,
-            ),
+            if (isLocked)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withAlpha(50),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.withAlpha(100)),
+                ),
+                child: Text(
+                  'BLOQUEADO',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                    fontSize: isMobile ? 12 : 14,
+                  ),
+                ),
+              )
+            else
+              _buildPurchaseButtons(
+                tier,
+                fuba,
+                canAfford,
+                canAfford5,
+                canAfford10,
+                canAfford30,
+                isMobile,
+              ),
           ],
         ),
       ),
@@ -171,7 +286,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   Widget _buildPurchaseButtons(
     LootBoxTier tier,
-    double fuba,
+    BigDecimal fuba,
     bool canAfford,
     bool canAfford5,
     bool canAfford10,
@@ -203,7 +318,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   Widget _buildSinglePurchaseButton(
     LootBoxTier tier,
-    double fuba,
+    BigDecimal fuba,
     bool canAfford,
     bool isMobile,
   ) {
@@ -254,9 +369,10 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     bool canAfford,
     bool isMobile,
   ) {
-    final totalCost = tier.cost * quantity;
+    final totalCost = tier.cost * BigDecimal.parse(quantity.toString());
     final discount = 0;
-    final discountedCost = totalCost * (1 - discount);
+    final discountedCost =
+        totalCost * BigDecimal.parse((1 - discount).toString());
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -314,34 +430,95 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     );
   }
 
-  double _getBulkDiscount(int quantity) {
-    switch (quantity) {
-      case 5:
-        return 0.05; // 5% discount
-      case 10:
-        return 0.10; // 10% discount
-      case 30:
-        return 0.15; // 15% discount
-      default:
-        return 0.0;
-    }
+  Widget _buildBarrierProgress(
+    DifficultyBarrier barrier,
+    BigDecimal fuba,
+    List<int> generatorsOwned,
+    bool isMobile,
+  ) {
+    final progress = barrier.getProgress(fuba, generatorsOwned);
+
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.orange.withAlpha(30),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange.withAlpha(100)),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Requisitos:',
+                style: TextStyle(
+                  fontSize: isMobile ? 10 : 12,
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '🌽 ${GameConstants.formatNumber(barrier.requiredFuba)} fubá',
+                style: TextStyle(
+                  fontSize: isMobile ? 9 : 11,
+                  color: Colors.white70,
+                ),
+              ),
+              if (barrier.requiredGeneratorTier < generatorsOwned.length)
+                Text(
+                  '${availableGenerators[barrier.requiredGeneratorTier].emoji} ${barrier.requiredGeneratorCount}x ${availableGenerators[barrier.requiredGeneratorTier].name}',
+                  style: TextStyle(
+                    fontSize: isMobile ? 9 : 11,
+                    color: Colors.white70,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 12,
+            backgroundColor: Colors.grey.shade800,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '${(progress * 100).toStringAsFixed(1)}%',
+          style: TextStyle(
+            fontSize: isMobile ? 10 : 12,
+            color: Colors.grey.shade400,
+          ),
+        ),
+      ],
+    );
   }
 
   void _openLootBox(LootBoxTier tier) {
     final fuba = ref.read(fubaProvider);
-    if (fuba < tier.cost) return;
+    if (fuba.compareTo(tier.cost) < 0) return;
 
     ref.read(fubaProvider.notifier).state -= tier.cost;
 
     final lootBox = LootBox(tier: tier);
     final reward = lootBox.openBox();
 
-    ref.read(achievementNotifierProvider).incrementStat('lootboxes_opened');
+    ref
+        .read(achievementNotifierProvider)
+        .incrementStat('lootboxes_opened', 1, context);
 
     if (reward.rarity == AccessoryRarity.legendary) {
-      ref.read(achievementNotifierProvider).incrementStat('legendary_count');
+      ref
+          .read(achievementNotifierProvider)
+          .incrementStat('legendary_count', 1, context);
     } else if (reward.rarity == AccessoryRarity.mythical) {
-      ref.read(achievementNotifierProvider).incrementStat('mythical_count');
+      ref
+          .read(achievementNotifierProvider)
+          .incrementStat('mythical_count', 1, context);
     }
 
     ref.read(saveNotifierProvider.notifier).saveImmediate();
@@ -363,10 +540,12 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   void _openMultipleLootBoxes(LootBoxTier tier, int quantity) {
     final fuba = ref.read(fubaProvider);
-    final discount = _getBulkDiscount(quantity);
-    final totalCost = (tier.cost * quantity) * (1 - discount);
 
-    if (fuba < totalCost) return;
+    final totalCost = BigDecimal.parse(
+      (tier.cost * BigDecimal.parse(quantity.toString())).toString(),
+    );
+
+    if (fuba.compareTo(totalCost) < 0) return;
 
     ref.read(fubaProvider.notifier).state -= totalCost;
 
@@ -379,13 +558,17 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
     ref
         .read(achievementNotifierProvider)
-        .incrementStat('lootboxes_opened', quantity.toDouble());
+        .incrementStat('lootboxes_opened', quantity.toDouble(), context);
 
     for (final reward in rewards) {
       if (reward.rarity == AccessoryRarity.legendary) {
-        ref.read(achievementNotifierProvider).incrementStat('legendary_count');
+        ref
+            .read(achievementNotifierProvider)
+            .incrementStat('legendary_count', 1, context);
       } else if (reward.rarity == AccessoryRarity.mythical) {
-        ref.read(achievementNotifierProvider).incrementStat('mythical_count');
+        ref
+            .read(achievementNotifierProvider)
+            .incrementStat('mythical_count', 1, context);
       }
     }
 
@@ -411,6 +594,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   Widget _buildInventoryTab() {
     final inventory = ref.watch(inventoryProvider);
     final equipped = ref.watch(equippedAccessoriesProvider);
+    final maxCapacity = ref.watch(accessoryCapacityProvider);
     final isMobile = GameConstants.isMobile(context);
 
     if (inventory.isEmpty) {
@@ -521,10 +705,25 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
                 ),
                 SizedBox(height: isMobile ? 4 : 8),
                 Text(
-                  '${equipped.length}/8 slots usados',
+                  '${equipped.length}/$maxCapacity slots usados',
                   style: TextStyle(
                     fontSize: isMobile ? 12 : 14,
                     color: Colors.white70,
+                  ),
+                ),
+                SizedBox(height: isMobile ? 8 : 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    _unequipAllAccessories(ref);
+                  },
+                  icon: const Icon(Icons.remove_circle, color: Colors.red),
+                  label: const Text(
+                    'Desequipar Todos',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.withAlpha(30),
+                    side: BorderSide(color: Colors.red.withAlpha(100)),
                   ),
                 ),
               ],
@@ -598,6 +797,12 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     bool isEquipped,
     int equippedCount,
   ) {
+    final canEquip = ref
+        .watch(accessoryNotifierProvider)
+        .canEquip(accessory.id);
+    final maxCapacity = ref.watch(accessoryCapacityProvider);
+    final equipped = ref.watch(equippedAccessoriesProvider);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -641,40 +846,54 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
                   fontWeight: FontWeight.bold,
                 ),
               ),
+            Text(
+              'Slots: ${equipped.length}/$maxCapacity',
+              style: TextStyle(fontSize: 11, color: Colors.blue.shade300),
+            ),
           ],
         ),
-        trailing: IconButton(
-          icon: Icon(
-            isEquipped ? Icons.check_circle : Icons.circle_outlined,
-            color: isEquipped ? Colors.green : Colors.grey,
-          ),
-          onPressed: () {
-            final notifier = ref.read(accessoryNotifierProvider);
-            if (isEquipped) {
-              notifier.unequipAccessory(accessory.id);
-              final newEquipped = ref.read(equippedAccessoriesProvider);
-              ref
-                  .read(achievementNotifierProvider)
-                  .updateStat('equipped_count', newEquipped.length.toDouble());
-              ref.read(saveNotifierProvider.notifier).saveImmediate();
-            } else {
-              if (!notifier.canEquip(accessory.id)) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Não é possível equipar mais acessórios!'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              notifier.equipAccessory(accessory.id);
-              final newEquipped = ref.read(equippedAccessoriesProvider);
-              ref
-                  .read(achievementNotifierProvider)
-                  .updateStat('equipped_count', newEquipped.length.toDouble());
-              ref.read(saveNotifierProvider.notifier).saveImmediate();
-            }
-          },
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (equippedCount > 0)
+              IconButton(
+                icon: const Icon(Icons.remove_circle, color: Colors.red),
+                onPressed: () {
+                  final notifier = ref.read(accessoryNotifierProvider);
+                  notifier.unequipAccessory(accessory.id);
+                  final newEquipped = ref.read(equippedAccessoriesProvider);
+                  ref
+                      .read(achievementNotifierProvider)
+                      .updateStat(
+                        'equipped_count',
+                        newEquipped.length.toDouble(),
+                        context,
+                      );
+                  ref.read(saveNotifierProvider.notifier).saveImmediate();
+                },
+              ),
+            IconButton(
+              icon: Icon(
+                isEquipped ? Icons.add_circle : Icons.circle_outlined,
+                color: canEquip ? Colors.green : Colors.grey,
+              ),
+              onPressed: canEquip
+                  ? () {
+                      final notifier = ref.read(accessoryNotifierProvider);
+                      notifier.equipAccessory(accessory.id);
+                      final newEquipped = ref.read(equippedAccessoriesProvider);
+                      ref
+                          .read(achievementNotifierProvider)
+                          .updateStat(
+                            'equipped_count',
+                            newEquipped.length.toDouble(),
+                            context,
+                          );
+                      ref.read(saveNotifierProvider.notifier).saveImmediate();
+                    }
+                  : null,
+            ),
+          ],
         ),
       ),
     );
@@ -686,6 +905,12 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     bool isEquipped,
     int equippedCount,
   ) {
+    final canEquip = ref
+        .watch(accessoryNotifierProvider)
+        .canEquip(accessory.id);
+    // 1    final maxCapacity = ref.watch(accessoryCapacityProvider);
+    //     final equipped = ref.watch(equippedAccessoriesProvider);
+
     return Container(
       decoration: BoxDecoration(
         color: accessory.rarity.color.withAlpha(20),
@@ -698,33 +923,21 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            final notifier = ref.read(accessoryNotifierProvider);
-            if (isEquipped) {
-              notifier.unequipAccessory(accessory.id);
-              final newEquipped = ref.read(equippedAccessoriesProvider);
-              ref
-                  .read(achievementNotifierProvider)
-                  .updateStat('equipped_count', newEquipped.length.toDouble());
-              ref.read(saveNotifierProvider.notifier).saveImmediate();
-            } else {
-              if (!notifier.canEquip(accessory.id)) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Não é possível equipar mais acessórios!'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              notifier.equipAccessory(accessory.id);
-              final newEquipped = ref.read(equippedAccessoriesProvider);
-              ref
-                  .read(achievementNotifierProvider)
-                  .updateStat('equipped_count', newEquipped.length.toDouble());
-              ref.read(saveNotifierProvider.notifier).saveImmediate();
-            }
-          },
+          onTap: canEquip
+              ? () {
+                  final notifier = ref.read(accessoryNotifierProvider);
+                  notifier.equipAccessory(accessory.id);
+                  final newEquipped = ref.read(equippedAccessoriesProvider);
+                  ref
+                      .read(achievementNotifierProvider)
+                      .updateStat(
+                        'equipped_count',
+                        newEquipped.length.toDouble(),
+                        context,
+                      );
+                  ref.read(saveNotifierProvider.notifier).saveImmediate();
+                }
+              : null,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -773,15 +986,69 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
                     ],
                   ),
                 ),
-                Icon(
-                  isEquipped ? Icons.check_circle : Icons.circle_outlined,
-                  color: isEquipped ? Colors.green : Colors.grey,
-                  size: 32,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (equippedCount > 0)
+                      IconButton(
+                        icon: const Icon(
+                          Icons.remove_circle,
+                          color: Colors.red,
+                          size: 24,
+                        ),
+                        onPressed: () {
+                          final notifier = ref.read(accessoryNotifierProvider);
+                          notifier.unequipAccessory(accessory.id);
+                          final newEquipped = ref.read(
+                            equippedAccessoriesProvider,
+                          );
+                          ref
+                              .read(achievementNotifierProvider)
+                              .updateStat(
+                                'equipped_count',
+                                newEquipped.length.toDouble(),
+                                context,
+                              );
+                          ref
+                              .read(saveNotifierProvider.notifier)
+                              .saveImmediate();
+                        },
+                      ),
+                    Icon(
+                      isEquipped ? Icons.add_circle : Icons.circle_outlined,
+                      color: isEquipped ? Colors.green : Colors.grey,
+                      size: 32,
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _unequipAllAccessories(WidgetRef ref) {
+    final equipped = ref.read(equippedAccessoriesProvider);
+    if (equipped.isEmpty) return;
+
+    // Remove todos os acessórios equipados
+    ref.read(equippedAccessoriesProvider.notifier).state = [];
+
+    // Atualiza estatísticas
+    ref
+        .read(achievementNotifierProvider)
+        .updateStat('equipped_count', 0.0, context);
+
+    // Salva o estado
+    ref.read(saveNotifierProvider.notifier).saveImmediate();
+
+    // Mostra feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Todos os acessórios foram desequipados!'),
+        backgroundColor: Colors.orange,
       ),
     );
   }

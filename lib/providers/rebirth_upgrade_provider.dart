@@ -61,6 +61,14 @@ class UpgradeNotifier {
   double getAutoClickerRate() {
     return getUpgradeEffect(UpgradeType.autoClicker);
   }
+
+  double getAnimationSpeedMultiplier() {
+    return getUpgradeEffect(UpgradeType.animationSpeed);
+  }
+
+  int getAccessoryCapacity() {
+    return getUpgradeEffect(UpgradeType.accessoryCapacity).toInt();
+  }
 }
 
 final upgradeNotifierProvider = Provider<UpgradeNotifier>((ref) {

@@ -1,12 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../models/rebirth_data.dart';
 import '../providers/rebirth_provider.dart';
 import '../providers/game_providers.dart';
 import '../utils/constants.dart';
+import '../utils/difficulty_barriers.dart';
+import '../models/fuba_generator.dart';
 
 class RebirthPage extends ConsumerWidget {
   const RebirthPage({super.key});
+
+  bool _isRebirthTierUnlocked(
+    RebirthTier tier,
+    BigDecimal fuba,
+    List<int> generatorsOwned,
+  ) {
+    final barriers = DifficultyBarrierManager.getBarriersForCategory('rebirth');
+
+    switch (tier) {
+      case RebirthTier.rebirth:
+        return barriers[0].isUnlocked(fuba, generatorsOwned);
+      case RebirthTier.ascension:
+        return barriers[1].isUnlocked(fuba, generatorsOwned);
+      case RebirthTier.transcendence:
+        return barriers[2].isUnlocked(fuba, generatorsOwned);
+    }
+  }
+
+  DifficultyBarrier? _getBarrierForTier(RebirthTier tier) {
+    final barriers = DifficultyBarrierManager.getBarriersForCategory('rebirth');
+
+    switch (tier) {
+      case RebirthTier.rebirth:
+        return barriers[0];
+      case RebirthTier.ascension:
+        return barriers[1];
+      case RebirthTier.transcendence:
+        return barriers[2];
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,10 +53,7 @@ class RebirthPage extends ConsumerWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.deepPurple.shade900.withAlpha(200),
-              Colors.black,
-            ],
+            colors: [Colors.deepPurple.shade900.withAlpha(200), Colors.black],
           ),
         ),
         child: SafeArea(
@@ -58,14 +88,11 @@ class RebirthPage extends ConsumerWidget {
           children: [
             const Text(
               'Multiplicador Total',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'x${GameConstants.formatNumber(multiplier)}',
+              'x${GameConstants.formatNumber(BigDecimal.parse(multiplier.toString()))}',
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -76,14 +103,8 @@ class RebirthPage extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatChip(
-                  '🔄 ${rebirthData.rebirthCount}',
-                  'Rebirths',
-                ),
-                _buildStatChip(
-                  '✨ ${rebirthData.ascensionCount}',
-                  'Ascensões',
-                ),
+                _buildStatChip('🔄 ${rebirthData.rebirthCount}', 'Rebirths'),
+                _buildStatChip('✨ ${rebirthData.ascensionCount}', 'Ascensões'),
                 _buildStatChip(
                   '🌟 ${rebirthData.transcendenceCount}',
                   'Transcendências',
@@ -118,17 +139,11 @@ class RebirthPage extends ConsumerWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade400,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
         ),
       ],
     );
@@ -142,6 +157,7 @@ class RebirthPage extends ConsumerWidget {
     final rebirthData = ref.watch(rebirthDataProvider);
     final canRebirth = ref.watch(canRebirthProvider(tier));
     final fuba = ref.watch(fubaProvider);
+    final generatorsOwned = ref.watch(generatorsProvider);
 
     final currentCount = switch (tier) {
       RebirthTier.rebirth => rebirthData.rebirthCount,
@@ -153,16 +169,32 @@ class RebirthPage extends ConsumerWidget {
     final multiplierGain = tier.getMultiplierGain(currentCount);
     final tokenReward = tier.getTokenReward(currentCount);
 
-    final progress = (fuba / requirement).clamp(0.0, 1.0);
+    final isUnlocked = _isRebirthTierUnlocked(tier, fuba, generatorsOwned);
+    final progress =
+        (fuba
+                .divide(
+                  BigDecimal.parse(requirement.toString()),
+                  scale: 10,
+                  roundingMode: RoundingMode.HALF_UP,
+                )
+                .toDouble())
+            .clamp(0.0, 1.0);
+
+    final barrier = _getBarrierForTier(tier);
+    final isLocked = !isUnlocked;
 
     return Card(
-      color: canRebirth
-          ? _getTierColor(tier).withAlpha(100)
-          : Colors.grey.shade900.withAlpha(150),
+      color: isLocked
+          ? Colors.grey.shade800.withAlpha(150)
+          : (canRebirth
+                ? _getTierColor(tier).withAlpha(100)
+                : Colors.grey.shade900.withAlpha(150)),
       child: InkWell(
-        onTap: canRebirth
-            ? () => _showRebirthConfirmation(context, ref, tier)
-            : null,
+        onTap: isLocked
+            ? null
+            : (canRebirth
+                  ? () => _showRebirthConfirmation(context, ref, tier)
+                  : null),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -170,9 +202,21 @@ class RebirthPage extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  Text(
-                    tier.emoji,
-                    style: const TextStyle(fontSize: 32),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Text(tier.emoji, style: const TextStyle(fontSize: 32)),
+                      if (isLocked)
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(150),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Icon(Icons.lock, color: Colors.grey, size: 20),
+                        ),
+                    ],
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -181,42 +225,80 @@ class RebirthPage extends ConsumerWidget {
                       children: [
                         Text(
                           tier.displayName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            color: isLocked ? Colors.grey : null,
                           ),
                         ),
-                        Text(
-                          tier.description,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade400,
+                        if (isLocked && barrier != null) ...[
+                          Text(
+                            '🔒 ${barrier.description}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
+                        ] else ...[
+                          Text(
+                            tier.description,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              _buildRequirementBar(requirement, progress),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildRewardChip(
-                    'x${multiplierGain.toStringAsFixed(1)} Multiplicador',
-                    Icons.trending_up,
-                    Colors.orange,
+              if (isLocked && barrier != null) ...[
+                _buildBarrierProgress(barrier, fuba, generatorsOwned),
+                const SizedBox(height: 12),
+              ] else ...[
+                _buildRequirementBar(requirement, progress),
+                const SizedBox(height: 12),
+              ],
+              if (isLocked)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                  if (tokenReward > 0)
-                    _buildRewardChip(
-                      '+$tokenReward 💎',
-                      Icons.star,
-                      Colors.cyan,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withAlpha(50),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey.withAlpha(100)),
+                  ),
+                  child: Text(
+                    'BLOQUEADO',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
-                ],
-              ),
+                  ),
+                )
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildRewardChip(
+                      'x${multiplierGain.toStringAsFixed(1)} Multiplicador',
+                      Icons.trending_up,
+                      Colors.orange,
+                    ),
+                    if (tokenReward > 0)
+                      _buildRewardChip(
+                        '+$tokenReward 💎',
+                        Icons.star,
+                        Colors.cyan,
+                      ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -229,7 +311,7 @@ class RebirthPage extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Requisito: ${GameConstants.formatNumber(requirement)} fubá',
+          'Requisito: ${GameConstants.formatNumber(BigDecimal.parse(requirement.toString()))} fubá',
           style: const TextStyle(fontSize: 14),
         ),
         const SizedBox(height: 4),
@@ -247,10 +329,7 @@ class RebirthPage extends ConsumerWidget {
         const SizedBox(height: 4),
         Text(
           '${(progress * 100).toStringAsFixed(1)}%',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade400,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
         ),
       ],
     );
@@ -279,6 +358,64 @@ class RebirthPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBarrierProgress(
+    DifficultyBarrier barrier,
+    BigDecimal fuba,
+    List<int> generatorsOwned,
+  ) {
+    final progress = barrier.getProgress(fuba, generatorsOwned);
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.orange.withAlpha(30),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange.withAlpha(100)),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Requisitos:',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '🌽 ${GameConstants.formatNumber(barrier.requiredFuba)} fubá',
+                style: TextStyle(fontSize: 11, color: Colors.white70),
+              ),
+              if (barrier.requiredGeneratorTier < generatorsOwned.length)
+                Text(
+                  '${availableGenerators[barrier.requiredGeneratorTier].emoji} ${barrier.requiredGeneratorCount}x ${availableGenerators[barrier.requiredGeneratorTier].name}',
+                  style: TextStyle(fontSize: 11, color: Colors.white70),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 12,
+            backgroundColor: Colors.grey.shade800,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.orange),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${(progress * 100).toStringAsFixed(1)}%',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+        ),
+      ],
     );
   }
 
@@ -317,10 +454,7 @@ class RebirthPage extends ConsumerWidget {
             const SizedBox(height: 16),
             const Text(
               'Você perderá:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
             ),
             const SizedBox(height: 8),
             const Text('• Todo o fubá'),
@@ -338,13 +472,9 @@ class RebirthPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              '• x${tier.getMultiplierGain(0)} multiplicador permanente',
-            ),
+            Text('• x${tier.getMultiplierGain(0)} multiplicador permanente'),
             if (tier.getTokenReward(0) > 0)
-              Text(
-                '• ${tier.getTokenReward(0)} tokens celestiais',
-              ),
+              Text('• ${tier.getTokenReward(0)} tokens celestiais'),
           ],
         ),
         actions: [
@@ -374,4 +504,3 @@ class RebirthPage extends ConsumerWidget {
     );
   }
 }
-

@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/cake_accessory.dart';
+import '../models/rebirth_upgrade.dart';
+import 'rebirth_upgrade_provider.dart';
+import 'achievement_provider.dart';
 
 final inventoryProvider = StateProvider<Map<String, int>>((ref) {
   return {};
@@ -18,15 +21,21 @@ class AccessoryNotifier {
     final newInventory = Map<String, int>.from(inventory);
     newInventory[accessory.id] = (newInventory[accessory.id] ?? 0) + 1;
     ref.read(inventoryProvider.notifier).state = newInventory;
+    
+    _updateInventoryStats();
   }
 
   void equipAccessory(String accessoryId) {
     final equipped = ref.read(equippedAccessoriesProvider);
-    if (equipped.length >= 8) {
+    final maxCapacity = ref.read(accessoryCapacityProvider);
+    if (equipped.length >= maxCapacity) {
       return;
     }
     final inventory = ref.read(inventoryProvider);
-    if ((inventory[accessoryId] ?? 0) <= 0) {
+    final availableCount = inventory[accessoryId] ?? 0;
+    final equippedCount = getEquippedCount(accessoryId);
+    
+    if (availableCount <= equippedCount) {
       return;
     }
 
@@ -34,22 +43,28 @@ class AccessoryNotifier {
       ...equipped,
       accessoryId
     ];
+    
+    _checkMythicalAchievement();
   }
 
   void unequipAccessory(String accessoryId) {
     final equipped = ref.read(equippedAccessoriesProvider);
-    final index = equipped.indexOf(accessoryId);
+    final index = equipped.lastIndexOf(accessoryId);
     if (index != -1) {
       final newEquipped = List<String>.from(equipped);
       newEquipped.removeAt(index);
       ref.read(equippedAccessoriesProvider.notifier).state = newEquipped;
     }
+    
+    _checkMythicalAchievement();
   }
 
   void unequipAllOfType(String accessoryId) {
     final equipped = ref.read(equippedAccessoriesProvider);
     ref.read(equippedAccessoriesProvider.notifier).state =
         equipped.where((id) => id != accessoryId).toList();
+    
+    _checkMythicalAchievement();
   }
 
   bool isEquipped(String accessoryId) {
@@ -58,8 +73,11 @@ class AccessoryNotifier {
 
   bool canEquip(String accessoryId) {
     final equipped = ref.read(equippedAccessoriesProvider);
+    final maxCapacity = ref.read(accessoryCapacityProvider);
     final inventory = ref.read(inventoryProvider);
-    return equipped.length < 8 && (inventory[accessoryId] ?? 0) > getEquippedCount(accessoryId);
+    final availableCount = inventory[accessoryId] ?? 0;
+    final equippedCount = getEquippedCount(accessoryId);
+    return equipped.length < maxCapacity && availableCount > equippedCount;
   }
 
   int getInventoryCount(String accessoryId) {
@@ -101,6 +119,53 @@ class AccessoryNotifier {
         .map((acc) => acc.specialAbility)
         .toList();
   }
+
+  Map<String, int> getEquippedCounts() {
+    final equipped = ref.read(equippedAccessoriesProvider);
+    final counts = <String, int>{};
+    for (final id in equipped) {
+      counts[id] = (counts[id] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  int getRemainingInventory(String accessoryId) {
+    final inventory = ref.read(inventoryProvider);
+    final availableCount = inventory[accessoryId] ?? 0;
+    final equippedCount = getEquippedCount(accessoryId);
+    return availableCount - equippedCount;
+  }
+
+  void _checkMythicalAchievement() {
+    final equipped = ref.read(equippedAccessoriesProvider);
+    if (equipped.isEmpty) {
+      ref.read(achievementNotifierProvider).updateAllMythicalEquipped(0);
+      return;
+    }
+
+    final equippedAccessories = equipped
+        .map((id) => allAccessories.firstWhere((acc) => acc.id == id))
+        .toList();
+
+    final allMythical = equippedAccessories
+        .every((accessory) => accessory.rarity == AccessoryRarity.mythical);
+
+    if (allMythical) {
+      ref.read(achievementNotifierProvider).updateAllMythicalEquipped(
+        equippedAccessories.length.toDouble(),
+      );
+    } else {
+      ref.read(achievementNotifierProvider).updateAllMythicalEquipped(0);
+    }
+  }
+
+  void _updateInventoryStats() {
+    final inventory = ref.read(inventoryProvider);
+    final totalAccessories = inventory.values.fold(0, (sum, count) => sum + count);
+    ref.read(achievementNotifierProvider).updateTotalInventoryAccessories(
+      totalAccessories.toDouble(),
+    );
+  }
 }
 
 final accessoryNotifierProvider = Provider<AccessoryNotifier>((ref) {
@@ -108,6 +173,21 @@ final accessoryNotifierProvider = Provider<AccessoryNotifier>((ref) {
 });
 
 final accessoryMultiplierProvider = Provider<double>((ref) {
-  return ref.watch(accessoryNotifierProvider).getTotalProductionMultiplier();
+  final equipped = ref.watch(equippedAccessoriesProvider);
+  if (equipped.isEmpty) return 1.0;
+
+  double totalMultiplier = 1.0;
+  for (final id in equipped) {
+    final accessory = allAccessories.firstWhere((acc) => acc.id == id);
+    totalMultiplier *= accessory.productionMultiplier;
+  }
+  return totalMultiplier;
+});
+
+final accessoryCapacityProvider = Provider<int>((ref) {
+  final upgradeLevels = ref.watch(upgradesLevelProvider);
+  final upgrade = allUpgrades.firstWhere((u) => u.type == UpgradeType.accessoryCapacity);
+  final level = upgradeLevels[upgrade.id] ?? 0;
+  return upgrade.getEffectValue(level).toInt();
 });
 

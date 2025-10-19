@@ -27,7 +27,7 @@ class SaveService {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     
-    await prefs.setDouble(_fubaKey, fuba);
+    await prefs.setString(_fubaKey, _compress(fuba.toString()));
     await prefs.setString(_generatorsKey, _compress(jsonEncode(generators)));
     await prefs.setString(_inventoryKey, _compress(jsonEncode(inventory)));
     await prefs.setString(_equippedKey, _compress(jsonEncode(equipped)));
@@ -41,7 +41,19 @@ class SaveService {
   Future<GameSaveData> loadGame() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final fuba = prefs.getDouble(_fubaKey) ?? 0.0;
+    double fuba = 0.0;
+    
+    final fubaString = prefs.getString(_fubaKey);
+    if (fubaString != null) {
+      fuba = double.tryParse(_decompress(fubaString)) ?? 0.0;
+    } else {
+      final fubaDouble = prefs.getDouble(_fubaKey);
+      if (fubaDouble != null) {
+        fuba = fubaDouble;
+        await prefs.remove(_fubaKey);
+        await prefs.setString(_fubaKey, _compress(fuba.toString()));
+      }
+    }
     
     final generatorsJson = prefs.getString(_generatorsKey);
     final generators = generatorsJson != null
@@ -118,7 +130,8 @@ class SaveService {
     try {
       final bytes = utf8.encode(data);
       final compressed = gzip.encode(bytes);
-      return base64Encode(compressed);
+      final encoded = base64Encode(compressed);
+      return _obfuscate(encoded);
     } catch (e) {
       return data;
     }
@@ -126,12 +139,39 @@ class SaveService {
 
   String _decompress(String compressedData) {
     try {
-      final bytes = base64Decode(compressedData);
+      final deobfuscated = _deobfuscate(compressedData);
+      final bytes = base64Decode(deobfuscated);
       final decompressed = gzip.decode(bytes);
       return utf8.decode(decompressed);
     } catch (e) {
       return compressedData;
     }
+  }
+
+  String _obfuscate(String data) {
+    const key = 'fuba_secret_key_2024';
+    final keyBytes = utf8.encode(key);
+    final dataBytes = utf8.encode(data);
+    final result = <int>[];
+    
+    for (int i = 0; i < dataBytes.length; i++) {
+      result.add(dataBytes[i] ^ keyBytes[i % keyBytes.length]);
+    }
+    
+    return base64Encode(result);
+  }
+
+  String _deobfuscate(String obfuscatedData) {
+    const key = 'fuba_secret_key_2024';
+    final keyBytes = utf8.encode(key);
+    final dataBytes = base64Decode(obfuscatedData);
+    final result = <int>[];
+    
+    for (int i = 0; i < dataBytes.length; i++) {
+      result.add(dataBytes[i] ^ keyBytes[i % keyBytes.length]);
+    }
+    
+    return utf8.decode(result);
   }
 }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../services/save_service.dart';
 import '../models/fuba_generator.dart';
 import 'game_providers.dart';
@@ -21,7 +22,7 @@ class SaveNotifier extends StateNotifier<bool> {
 
   void _startPeriodicSave() {
     _periodicTimer = Timer.periodic(
-      const Duration(seconds: 30),
+      const Duration(seconds: 15),
       (_) => saveGame(),
     );
   }
@@ -40,7 +41,7 @@ class SaveNotifier extends StateNotifier<bool> {
       final secrets = ref.read(unlockedSecretsProvider);
 
       await _saveService.saveGame(
-        fuba: kDebugMode? 100000 : fuba,
+        fuba: fuba.toDouble(),
         generators: generators,
         inventory: inventory,
         equipped: equipped,
@@ -64,15 +65,17 @@ class SaveNotifier extends StateNotifier<bool> {
     try {
       final data = await _saveService.loadGame();
 
-      ref.read(fubaProvider.notifier).state = data.fuba;
+      ref.read(fubaProvider.notifier).state = BigDecimal.parse(
+        data.fuba.toString(),
+      );
 
       if (data.generators.isNotEmpty) {
         final loadedGenerators = List<int>.from(data.generators);
-        
+
         while (loadedGenerators.length < availableGenerators.length) {
           loadedGenerators.add(0);
         }
-        
+
         ref.read(generatorsProvider.notifier).state = loadedGenerators;
       }
 
@@ -98,4 +101,3 @@ class SaveNotifier extends StateNotifier<bool> {
 final saveNotifierProvider = StateNotifierProvider<SaveNotifier, bool>((ref) {
   return SaveNotifier(ref);
 });
-

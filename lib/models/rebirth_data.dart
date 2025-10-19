@@ -43,22 +43,22 @@ extension RebirthTierExtension on RebirthTier {
   double getRequirement(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return 1e6 * pow(10, currentCount * 0.5);
+        return 1e15 * pow(10, currentCount * 0.8);
       case RebirthTier.ascension:
-        return 1e12 * pow(100, currentCount);
+        return 1e30 * pow(500, currentCount);
       case RebirthTier.transcendence:
-        return 1e24 * pow(1000, currentCount);
+        return 1e45 * pow(5000, currentCount);
     }
   }
 
   double getMultiplierGain(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return 1.5;
+        return 0.2;
       case RebirthTier.ascension:
-        return 3.0;
+        return 2.0;
       case RebirthTier.transcendence:
-        return 10.0;
+        return 4.5;
     }
   }
 

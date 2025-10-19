@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../models/fuba_generator.dart';
 import '../providers/game_providers.dart';
 import '../providers/achievement_provider.dart';
@@ -36,7 +37,7 @@ class GeneratorSection extends ConsumerWidget {
           Align(
             alignment: Alignment.center,
             child: Text(
-              'JOJINHA',
+              'FUGERADORES',
               style: TextStyle(
                 fontSize: GameConstants.getTitleFontSize(context),
                 fontWeight: FontWeight.bold,
@@ -54,15 +55,15 @@ class GeneratorSection extends ConsumerWidget {
                 final owned = generators[index];
                 final cost = generator.getCost(owned);
                 final isUnlocked = generator.isUnlocked(generators, unlockedSecrets);
-                final canAfford = fuba >= cost && isUnlocked;
+                final canAfford = fuba.compareTo(cost) >= 0 && isUnlocked;
 
                 return InkWell(
                   onTap: canAfford
-                      ? () => _buyGenerator(ref, index, cost)
+                      ? () => _buyGenerator(ref, index, cost, context)
                       : null,
                   child: GestureDetector(
                     onLongPressStart: canAfford
-                        ? (_) => _startAutoBuyForGenerator(ref, index, cost)
+                        ? (_) => _startAutoBuyForGenerator(ref, index, cost, context)
                         : null,
                     onLongPressEnd: canAfford
                         ? (_) => _stopAutoBuyForGenerator(ref, index)
@@ -86,8 +87,11 @@ class GeneratorSection extends ConsumerWidget {
   }
 
   /// Compra um gerador
-  void _buyGenerator(WidgetRef ref, int index, double cost) {
-    ref.read(fubaProvider.notifier).state -= cost;
+  void _buyGenerator(WidgetRef ref, int index, BigDecimal cost, BuildContext context) {
+    final currentFuba = ref.read(fubaProvider);
+    if (currentFuba.compareTo(cost) < 0) return;
+    
+    ref.read(fubaProvider.notifier).state = currentFuba - cost;
     final generators = List<int>.from(ref.read(generatorsProvider));
     generators[index]++;
     ref.read(generatorsProvider.notifier).state = generators;
@@ -96,25 +100,27 @@ class GeneratorSection extends ConsumerWidget {
     ref.read(achievementNotifierProvider).updateStat(
       'different_generators',
       differentGenerators.toDouble(),
+      context,
     );
     
     ref.read(saveNotifierProvider.notifier).saveImmediate();
   }
 
   /// Inicia a compra automática de um gerador
-  void _startAutoBuyForGenerator(WidgetRef ref, int index, double cost) {
+  void _startAutoBuyForGenerator(WidgetRef ref, int index, BigDecimal cost, BuildContext context) {
     _autoBuyTimers[index]?.cancel();
-    _autoBuyTimers[index] = Timer.periodic(const Duration(milliseconds: 150), (timer) {
+    _autoBuyTimers[index] = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       final generators = ref.read(generatorsProvider);
       final fuba = ref.read(fubaProvider);
       final generator = availableGenerators[index];
       final owned = generators[index];
       final currentCost = generator.getCost(owned);
       
-      if (fuba >= currentCost) {
-        _buyGenerator(ref, index, currentCost);
+      if (fuba.compareTo(currentCost) >= 0) {
+        _buyGenerator(ref, index, currentCost, context);
       } else {
-        _stopAutoBuyForGenerator(ref, index);
+        timer.cancel();
+        _autoBuyTimers[index] = null;
       }
     });
   }
@@ -130,7 +136,7 @@ class GeneratorSection extends ConsumerWidget {
 class _GeneratorCard extends StatefulWidget {
   final FubaGenerator generator;
   final int owned;
-  final double cost;
+  final BigDecimal cost;
   final bool canAfford;
   final bool isUnlocked;
 
@@ -265,15 +271,20 @@ class _GeneratorCardState extends State<_GeneratorCard>
       borderColor = Colors.grey.withAlpha(GameConstants.affordBorderAlpha);
     }
 
+    if (widget.generator.tier == GeneratorTier.absolute) {
+      backgroundColor = Colors.black.withAlpha(120);
+      borderColor = Colors.white.withAlpha(200);
+    }
+
     // double scale = 1.0 + (widget.owned * 0.01).clamp(0.0, 0.2);
     double scale = 1.0;
     double glowIntensity = (widget.owned * 0.05).clamp(0.0, 1.0);
 
     return Padding(
       padding: EdgeInsets.only(
-        top: GameConstants.isMobile(context) ? 3 : 5, 
-        left: GameConstants.isMobile(context) ? 18 : 30, 
-        right: GameConstants.isMobile(context) ? 18 : 30,
+        top: GameConstants.isMobile(context) ? 2 : 5, 
+        left: GameConstants.isMobile(context) ? 8 : 30, 
+        right: GameConstants.isMobile(context) ? 8 : 30,
       ),
       child: Stack(
         children: [
@@ -296,26 +307,32 @@ class _GeneratorCardState extends State<_GeneratorCard>
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: borderColor,
-                      width: widget.owned > 0 ? 2.0 : 1.0,
+                      width: widget.owned > 0 || widget.generator.tier == GeneratorTier.absolute ? 2.0 : 1.0,
                     ),
-                    boxShadow: widget.owned > 5
+                    boxShadow: widget.owned > 5 || widget.generator.tier == GeneratorTier.absolute
                         ? [
                             BoxShadow(
-                              color: widget.generator.tierColor.withAlpha(
-                                (255 * glowIntensity * 0.3).toInt(),
-                              ),
-                              blurRadius: 8 + (widget.owned * 0.5),
-                              spreadRadius: 2 + (widget.owned * 0.1),
+                              color: widget.generator.tier == GeneratorTier.absolute
+                                  ? Colors.white.withAlpha(100)
+                                  : widget.generator.tierColor.withAlpha(
+                                      (255 * glowIntensity * 0.3).toInt(),
+                                    ),
+                              blurRadius: widget.generator.tier == GeneratorTier.absolute 
+                                  ? 15 
+                                  : 8 + (widget.owned * 0.5),
+                              spreadRadius: widget.generator.tier == GeneratorTier.absolute 
+                                  ? 3 
+                                  : 2 + (widget.owned * 0.1),
                             ),
                           ]
                         : null,
                   ),
                   child: Padding(
-                        padding: EdgeInsets.all(GameConstants.isMobile(context) ? 8 : 16),
+                        padding: EdgeInsets.all(GameConstants.isMobile(context) ? 6 : 16),
                         child: Row(
                         children: [
                           _buildGeneratorVisual(),
-                          SizedBox(width: GameConstants.isMobile(context) ? 8 : 12),
+                          SizedBox(width: GameConstants.isMobile(context) ? 6 : 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,7 +346,9 @@ class _GeneratorCardState extends State<_GeneratorCard>
                                         GameConstants.getGeneratorNameFontSize(context),
                                     fontWeight: FontWeight.bold,
                                     color: widget.isUnlocked
-                                        ? widget.generator.tierColor
+                                        ? (widget.generator.tier == GeneratorTier.absolute 
+                                            ? Colors.white 
+                                            : widget.generator.tierColor)
                                         : Colors.grey,
                                   ),
                                 ),
@@ -351,7 +370,9 @@ class _GeneratorCardState extends State<_GeneratorCard>
                                     style: TextStyle(
                                       fontSize: GameConstants
                                           .getGeneratorProductionFontSize(context),
-                                      color: widget.generator.tierColor,
+                                      color: widget.generator.tier == GeneratorTier.absolute 
+                                          ? Colors.white 
+                                          : widget.generator.tierColor,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -381,7 +402,9 @@ class _GeneratorCardState extends State<_GeneratorCard>
                                     style: TextStyle(
                                       fontSize:
                                           GameConstants.getGeneratorOwnedFontSize(context),
-                                      color: widget.generator.tierColor,
+                                      color: widget.generator.tier == GeneratorTier.absolute 
+                                          ? Colors.white 
+                                          : widget.generator.tierColor,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),

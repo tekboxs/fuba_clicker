@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../models/rebirth_data.dart';
 import '../models/fuba_generator.dart';
 import 'game_providers.dart';
 import 'accessory_provider.dart';
+import 'save_provider.dart';
 
 final rebirthDataProvider = StateProvider<RebirthData>((ref) {
   return const RebirthData();
@@ -23,7 +25,7 @@ final canRebirthProvider = Provider.family<bool, RebirthTier>((ref, tier) {
       tier.getRequirement(rebirthData.transcendenceCount),
   };
 
-  return fuba >= requirement;
+  return fuba.compareTo(BigDecimal.parse(requirement.toString())) >= 0;
 });
 
 class RebirthNotifier {
@@ -62,7 +64,7 @@ class RebirthNotifier {
   }
 
   void _resetProgress(RebirthTier tier) {
-    ref.read(fubaProvider.notifier).state = 0;
+    ref.read(fubaProvider.notifier).state = BigDecimal.zero;
     ref.read(generatorsProvider.notifier).state =
         List.filled(availableGenerators.length, 0);
 
@@ -78,6 +80,8 @@ class RebirthNotifier {
         ref.read(equippedAccessoriesProvider.notifier).state = [];
         break;
     }
+    
+    ref.read(saveNotifierProvider.notifier).saveImmediate();
   }
 
   void spendTokens(int amount) {

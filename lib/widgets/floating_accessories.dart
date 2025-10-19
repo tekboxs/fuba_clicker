@@ -3,6 +3,125 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/cake_accessory.dart';
 
+class AccessoryShapePainter extends CustomPainter {
+  final AccessoryShape shape;
+  final Color color;
+  final double size;
+
+  AccessoryShapePainter({
+    required this.shape,
+    required this.color,
+    required this.size,
+  });
+
+  @override
+  void paint(Canvas canvas, Size canvasSize) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final strokePaint = Paint()
+      ..color = color.withAlpha(100)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
+    final radius = size / 2;
+
+    switch (shape) {
+      case AccessoryShape.circle:
+        canvas.drawCircle(center, radius, paint);
+        canvas.drawCircle(center, radius, strokePaint);
+        break;
+      case AccessoryShape.triangle:
+        _drawTriangle(canvas, center, radius, paint, strokePaint);
+        break;
+      case AccessoryShape.square:
+        _drawSquare(canvas, center, radius, paint, strokePaint);
+        break;
+      case AccessoryShape.pentagon:
+        _drawPolygon(canvas, center, radius, 5, paint, strokePaint);
+        break;
+      case AccessoryShape.hexagon:
+        _drawPolygon(canvas, center, radius, 6, paint, strokePaint);
+        break;
+      case AccessoryShape.octagon:
+        _drawPolygon(canvas, center, radius, 8, paint, strokePaint);
+        break;
+    }
+  }
+
+  void _drawTriangle(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Paint fillPaint,
+    Paint strokePaint,
+  ) {
+    final path = Path();
+    final angle = -pi / 2;
+    for (int i = 0; i < 3; i++) {
+      final x = center.dx + cos(angle + (i * 2 * pi / 3)) * radius;
+      final y = center.dy + sin(angle + (i * 2 * pi / 3)) * radius;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, fillPaint);
+    canvas.drawPath(path, strokePaint);
+  }
+
+  void _drawSquare(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Paint fillPaint,
+    Paint strokePaint,
+  ) {
+    final rect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: radius * 2, height: radius * 2),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(rect, fillPaint);
+    canvas.drawRRect(rect, strokePaint);
+  }
+
+  void _drawPolygon(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    int sides,
+    Paint fillPaint,
+    Paint strokePaint,
+  ) {
+    final path = Path();
+    final angle = -pi / 2;
+    for (int i = 0; i < sides; i++) {
+      final x = center.dx + cos(angle + (i * 2 * pi / sides)) * radius;
+      final y = center.dy + sin(angle + (i * 2 * pi / sides)) * radius;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, fillPaint);
+    canvas.drawPath(path, strokePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return oldDelegate is AccessoryShapePainter &&
+        (oldDelegate.shape != shape ||
+            oldDelegate.color != color ||
+            oldDelegate.size != size);
+  }
+}
+
 class FloatingAccessories extends StatefulWidget {
   const FloatingAccessories({
     super.key,
@@ -120,30 +239,29 @@ class _FloatingAccessoriesState extends State<FloatingAccessories>
         final x = cos(radians) * distance;
         final y = sin(radians) * distance;
 
-        return Transform.translate(
-          offset: Offset(x, y),
-          child: child,
-        );
+        return Transform.translate(offset: Offset(x, y), child: child);
       },
       child:
-          Container(
+          SizedBox(
                 width: 50,
                 height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: widget.accessories[index].rarity.color.withAlpha(30),
-                  border: Border.all(
-                    color: widget.accessories[index].rarity.color.withAlpha(
-                      100,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CustomPaint(
+                      painter: AccessoryShapePainter(
+                        shape: widget.accessories[index].shape,
+                        color: widget.accessories[index].rarity.color.withAlpha(
+                          90,
+                        ),
+                        size: 53,
+                      ),
                     ),
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    widget.accessories[index].emoji,
-                    style: const TextStyle(fontSize: 28),
-                  ),
+                    Text(
+                      widget.accessories[index].emoji,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ],
                 ),
               )
               .animate(

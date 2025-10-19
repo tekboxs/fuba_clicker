@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/achievement.dart';
 import '../providers/achievement_provider.dart';
+import '../utils/constants.dart';
+import 'hexagonal_achievement_badge.dart';
 
 class AchievementsPage extends ConsumerWidget {
   const AchievementsPage({super.key});
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,7 +46,7 @@ class AchievementsPage extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final achievement = allAchievements[index];
                   final isUnlocked = unlocked.contains(achievement.id);
-                  return _buildAchievementCard(achievement, isUnlocked);
+                  return _buildAchievementCard(achievement, isUnlocked, false, context, ref);
                 },
               ),
             ),
@@ -52,6 +55,7 @@ class AchievementsPage extends ConsumerWidget {
       ),
     );
   }
+
 
   int _getCrossAxisCount(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -121,51 +125,125 @@ class AchievementsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildAchievementCard(Achievement achievement, bool isUnlocked) {
-    return Card(
-      color: isUnlocked
-          ? _getCategoryColor(achievement.category).withAlpha(100)
-          : Colors.grey.shade900.withAlpha(150),
+  Widget _buildAchievementCard(Achievement achievement, bool isUnlocked, bool isBarrierLocked, BuildContext context, WidgetRef ref) {
+    final difficultyColor = _getDifficultyColor(achievement.difficulty);
+    final isMobile = GameConstants.isMobile(context);
+    final cardSize = _getCardSizeForDifficulty(achievement.difficulty, isMobile);
+
+    return Container(
+      height: cardSize.height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isUnlocked
+              ? [
+                  difficultyColor.withAlpha(80),
+                  Colors.black.withAlpha(200),
+                ]
+              : [
+                  Colors.grey.shade800.withAlpha(100),
+                  Colors.black.withAlpha(200),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isUnlocked
+              ? difficultyColor.withAlpha(120)
+              : Colors.grey.shade600.withAlpha(80),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isUnlocked
+                ? difficultyColor.withAlpha(60)
+                : Colors.grey.withAlpha(30),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              isUnlocked || !achievement.isSecret ? achievement.emoji : '❓',
-              style: TextStyle(
-                fontSize: 48,
-                color: isUnlocked ? null : Colors.grey.shade700,
-              ),
+            HexagonalAchievementBadge(
+              difficulty: achievement.difficulty,
+              emoji: isUnlocked || !achievement.isSecret ? achievement.emoji : '❓',
+              isUnlocked: isUnlocked,
+              size: isMobile ? 50 : 60,
+              enableAnimations: isUnlocked,
             ),
-            const SizedBox(height: 8),
-            Text(
-              isUnlocked || !achievement.isSecret ? achievement.name : '???',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: isUnlocked ? null : Colors.grey.shade600,
+            const SizedBox(height: 12),
+            if (isUnlocked || !achievement.isSecret) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: difficultyColor.withAlpha(80),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _getDifficultyLabel(achievement.difficulty),
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: difficultyColor,
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              isUnlocked || !achievement.isSecret
-                  ? achievement.description
-                  : 'Segredo',
-              style: TextStyle(
-                fontSize: 10,
-                color: isUnlocked ? Colors.grey.shade400 : Colors.grey.shade700,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (isUnlocked) ...[
               const SizedBox(height: 8),
-              _buildRewardChip(achievement.reward),
+              Text(
+                achievement.name,
+                style: TextStyle(
+                  fontSize: isMobile ? 12 : 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                achievement.description,
+                style: TextStyle(
+                  fontSize: isMobile ? 9 : 10,
+                  color: Colors.grey.shade400,
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (isUnlocked) ...[
+                const SizedBox(height: 8),
+                _buildRewardChip(achievement.reward),
+              ],
+            ] else ...[
+              Text(
+                '???',
+                style: TextStyle(
+                  fontSize: isMobile ? 12 : 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Segredo',
+                style: TextStyle(
+                  fontSize: isMobile ? 9 : 10,
+                  color: Colors.grey.shade700,
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ],
         ),
@@ -210,23 +288,41 @@ class AchievementsPage extends ConsumerWidget {
     );
   }
 
-  Color _getCategoryColor(AchievementCategory category) {
-    switch (category) {
-      case AchievementCategory.production:
+  Color _getDifficultyColor(AchievementDifficulty difficulty) {
+    switch (difficulty) {
+      case AchievementDifficulty.common:
         return Colors.green;
-      case AchievementCategory.clicks:
+      case AchievementDifficulty.uncommon:
         return Colors.blue;
-      case AchievementCategory.generators:
+      case AchievementDifficulty.rare:
         return Colors.purple;
-      case AchievementCategory.accessories:
-        return Colors.pink;
-      case AchievementCategory.lootBoxes:
+      case AchievementDifficulty.epic:
         return Colors.orange;
-      case AchievementCategory.rebirth:
-        return Colors.cyan;
-      case AchievementCategory.secret:
-        return Colors.deepPurple;
+      case AchievementDifficulty.legendary:
+        return Colors.red;
     }
   }
+
+  String _getDifficultyLabel(AchievementDifficulty difficulty) {
+    switch (difficulty) {
+      case AchievementDifficulty.common:
+        return 'COMUM';
+      case AchievementDifficulty.uncommon:
+        return 'INCOMUM';
+      case AchievementDifficulty.rare:
+        return 'RARO';
+      case AchievementDifficulty.epic:
+        return 'ÉPICO';
+      case AchievementDifficulty.legendary:
+        return 'LENDÁRIO';
+    }
+  }
+
+  Size _getCardSizeForDifficulty(AchievementDifficulty difficulty, bool isMobile) {
+    final baseHeight = isMobile ? 200.0 : 240.0;
+    final heightMultiplier = difficulty.index >= AchievementDifficulty.epic.index ? 1.2 : 1.0;
+    return Size(double.infinity, baseHeight * heightMultiplier);
+  }
+
 }
 

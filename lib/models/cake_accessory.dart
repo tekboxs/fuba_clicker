@@ -12,13 +12,9 @@ enum VisualEffect {
   rainbow,
 }
 
-enum SpecialAbility {
-  none,
-  criticalClick,
-  luckyBox,
-  autoClicker,
-  timeWarp,
-}
+enum SpecialAbility { none, criticalClick, luckyBox, autoClicker, timeWarp }
+
+enum AccessoryShape { circle, triangle, square, pentagon, hexagon, octagon }
 
 enum AccessoryRarity {
   common(1),
@@ -26,7 +22,9 @@ enum AccessoryRarity {
   rare(3),
   epic(4),
   legendary(5),
-  mythical(6);
+  mythical(6),
+  divine(7),
+  transcendent(8);
 
   final int value;
   const AccessoryRarity(this.value);
@@ -45,6 +43,10 @@ enum AccessoryRarity {
         return Colors.orange;
       case AccessoryRarity.mythical:
         return Colors.pink;
+      case AccessoryRarity.divine:
+        return Colors.cyan;
+      case AccessoryRarity.transcendent:
+        return Colors.white;
     }
   }
 
@@ -62,23 +64,31 @@ enum AccessoryRarity {
         return 'Lendário';
       case AccessoryRarity.mythical:
         return 'Mítico';
+      case AccessoryRarity.divine:
+        return 'Divino';
+      case AccessoryRarity.transcendent:
+        return 'Transcendente';
     }
   }
 
   double get dropChance {
     switch (this) {
       case AccessoryRarity.common:
-        return 0.45;
+        return 0.40;
       case AccessoryRarity.uncommon:
         return 0.30;
       case AccessoryRarity.rare:
         return 0.15;
       case AccessoryRarity.epic:
-        return 0.07;
+        return 0.08;
       case AccessoryRarity.legendary:
-        return 0.025;
+        return 0.04;
       case AccessoryRarity.mythical:
-        return 0.005;
+        return 0.02;
+      case AccessoryRarity.divine:
+        return 0.007;
+      case AccessoryRarity.transcendent:
+        return 0.003;
     }
   }
 
@@ -96,6 +106,31 @@ enum AccessoryRarity {
         return 2.0;
       case AccessoryRarity.mythical:
         return 2.5;
+      case AccessoryRarity.divine:
+        return 3.0;
+      case AccessoryRarity.transcendent:
+        return 4.0;
+    }
+  }
+
+  AccessoryShape get shape {
+    switch (this) {
+      case AccessoryRarity.common:
+        return AccessoryShape.circle;
+      case AccessoryRarity.uncommon:
+        return AccessoryShape.triangle;
+      case AccessoryRarity.rare:
+        return AccessoryShape.square;
+      case AccessoryRarity.epic:
+        return AccessoryShape.pentagon;
+      case AccessoryRarity.legendary:
+        return AccessoryShape.hexagon;
+      case AccessoryRarity.mythical:
+        return AccessoryShape.octagon;
+      case AccessoryRarity.divine:
+        return AccessoryShape.hexagon;
+      case AccessoryRarity.transcendent:
+        return AccessoryShape.octagon;
     }
   }
 }
@@ -120,6 +155,7 @@ class CakeAccessory {
   });
 
   double get productionMultiplier => rarity.productionMultiplier;
+  AccessoryShape get shape => rarity.shape;
 }
 
 const List<CakeAccessory> allAccessories = [
@@ -287,5 +323,70 @@ const List<CakeAccessory> allAccessories = [
     visualEffect: VisualEffect.orbit,
     specialAbility: SpecialAbility.autoClicker,
   ),
+  // Novos acessórios míticos
+  CakeAccessory(
+    id: 'phoenix',
+    name: 'Fênix',
+    emoji: '🔥',
+    rarity: AccessoryRarity.mythical,
+    description: 'A ave lendária que renasce das cinzas',
+    visualEffect: VisualEffect.flames,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'dragon',
+    name: 'Covro',
+    emoji: '🐦‍⬛',
+    rarity: AccessoryRarity.mythical,
+    description: 'Um corvo majestoso e poderoso',
+    visualEffect: VisualEffect.glow,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  CakeAccessory(
+    id: 'crystal_ball',
+    name: 'Bola de Cristal',
+    emoji: '🔮',
+    rarity: AccessoryRarity.mythical,
+    description: 'Uma bola de cristal mística',
+    visualEffect: VisualEffect.pulse,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  // Novos acessórios divinos
+  CakeAccessory(
+    id: 'divine_crown',
+    name: 'Coroa Divina',
+    emoji: '👑',
+    rarity: AccessoryRarity.divine,
+    description: 'A coroa dos deuses do fubá',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  CakeAccessory(
+    id: 'holy_grail',
+    name: 'Café Sagrado',
+    emoji: '☕',
+    rarity: AccessoryRarity.divine,
+    description: 'O cálice sagrado da produção',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  // Novos acessórios transcendentais
+  CakeAccessory(
+    id: 'infinity_symbol',
+    name: 'Essencia da Eternidade',
+    emoji: '♾️',
+    rarity: AccessoryRarity.transcendent,
+    description: 'O símbolo da eternidade e transcendência',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  CakeAccessory(
+    id: 'quantum_core',
+    name: 'Cupcake do Infinito',
+    emoji: '🧁',
+    rarity: AccessoryRarity.transcendent,
+    description: 'Cupcake mágico que traz infinita energia',
+    visualEffect: VisualEffect.lightning,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
 ];
-

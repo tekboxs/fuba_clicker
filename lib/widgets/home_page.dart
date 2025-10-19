@@ -3,13 +3,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../providers/game_providers.dart';
 import '../providers/audio_provider.dart';
 import '../providers/accessory_provider.dart';
 import '../providers/achievement_provider.dart';
 import '../providers/rebirth_upgrade_provider.dart';
 import '../providers/rebirth_provider.dart';
+import '../providers/secret_provider.dart';
+import '../services/save_service.dart';
+import '../models/achievement.dart';
 import '../models/cake_accessory.dart';
+import '../models/fuba_generator.dart';
+import '../models/rebirth_data.dart';
 import '../utils/constants.dart';
 import 'generator_section.dart';
 import 'parallax_background.dart';
@@ -19,6 +25,7 @@ import 'cake_display.dart';
 import 'rebirth_page.dart';
 import 'achievements_page.dart';
 import 'rebirth_upgrades_page.dart';
+import 'achievement_popup.dart';
 
 /// Página principal do jogo
 class HomePage extends ConsumerStatefulWidget {
@@ -34,12 +41,26 @@ class _HomePageState extends ConsumerState<HomePage>
   late AnimationController _parallaxController;
   Timer? _autoProductionTimer;
 
+  // Variáveis para rastreamento de cliques
+  DateTime _lastClickTime = DateTime.now();
+  int _currentStreak = 0;
+  DateTime _lastStreakTime = DateTime.now();
+  
+  // Variáveis para conquistas secretas
+  final List<DateTime> _clickTimes = [];
+  Timer? _patienceTimer;
+  Timer? _playTimeTimer;
+  double _totalClickFuba = 0;
+  DateTime _lastClickTimeForZen = DateTime.now();
+  final DateTime _appStartTime = DateTime.now();
+
   @override
   void initState() {
     super.initState();
     _initializeControllers();
     _startAutoProduction();
     _initializeAudio();
+    _startPlayTimeTracking();
   }
 
   /// Inicializa o áudio do jogo
@@ -86,13 +107,13 @@ class _HomePageState extends ConsumerState<HomePage>
               .read(upgradeNotifierProvider)
               .getAutoClickerRate();
 
-          double totalProduction = autoProduction;
+          BigDecimal totalProduction = autoProduction;
 
           if (autoClickerRate > 0) {
             final clickMultiplier = ref
                 .read(upgradeNotifierProvider)
                 .getClickMultiplier();
-            final achievementMultiplier = ref.read(
+            final achievementMultiplier = ref.watch(
               achievementMultiplierProvider,
             );
             final accessoryMultiplier = ref.read(accessoryMultiplierProvider);
@@ -104,17 +125,25 @@ class _HomePageState extends ConsumerState<HomePage>
                 accessoryMultiplier *
                 rebirthMultiplier;
 
-            totalProduction += autoClickerRate * totalClickMultiplier;
+            final autoClickValue = autoClickerRate * totalClickMultiplier;
+            totalProduction += BigDecimal.parse(autoClickValue.toString());
+
+            // Contar cliques automáticos para conquistas
+            _processAutoClicks(autoClickerRate, autoClickValue);
           }
 
-          if (totalProduction > 0) {
+          if (totalProduction.compareTo(BigDecimal.zero) > 0) {
             ref.read(fubaProvider.notifier).update((state) {
-              return double.parse((state + totalProduction).toStringAsFixed(1));
+              return state + totalProduction;
             });
 
             ref
                 .read(achievementNotifierProvider)
-                .incrementStat('total_production', totalProduction);
+                .incrementStat(
+                  'total_production',
+                  totalProduction.toDouble(),
+                  context,
+                );
           }
         }
       },
@@ -124,6 +153,8 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void dispose() {
     _autoProductionTimer?.cancel();
+    _patienceTimer?.cancel();
+    _playTimeTimer?.cancel();
     _animationController.dispose();
     _parallaxController.dispose();
     super.dispose();
@@ -165,19 +196,23 @@ class _HomePageState extends ConsumerState<HomePage>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(height: 8),
-        _buildTitle(),
-        const SizedBox(height: 3),
-        _buildCounter(),
+        const SizedBox(height: 35),
         const SizedBox(height: 4),
+        _buildTitle(),
+        const SizedBox(height: 2),
+        _buildCounter(),
+        const SizedBox(height: 2),
         Text(
           '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: GameConstants.isMobile(context) ? 12 : 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         _buildDetailedMultipliers(ref),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         _buildCakeButton(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Expanded(child: GeneratorSection()),
       ],
     );
@@ -275,8 +310,8 @@ class _HomePageState extends ConsumerState<HomePage>
           splashFactory: NoSplash.splashFactory,
           onTap: _handleCakeClick,
           child: SizedBox(
-            width: isMobile ? 200 : 150,
-            height: isMobile ? 200 : 150,
+            width: isMobile ? 120 : 150,
+            height: isMobile ? 120 : 150,
             child: CakeDisplay(
               accessories: equippedAccessories,
               size: isMobile ? 200 : 150,
@@ -292,10 +327,15 @@ class _HomePageState extends ConsumerState<HomePage>
   void _handleCakeClick() {
     _animationController.forward().then((_) => _animationController.reverse());
 
+    final isAudioEnabled = ref.read(audioStateProvider);
+    if (isAudioEnabled) {
+      ref.read(clickSoundNotifierProvider).playClickSound();
+    }
+
     final clickMultiplier = ref
         .read(upgradeNotifierProvider)
         .getClickMultiplier();
-    final achievementMultiplier = ref.read(achievementMultiplierProvider);
+    final achievementMultiplier = ref.watch(achievementMultiplierProvider);
     final accessoryMultiplier = ref.read(accessoryMultiplierProvider);
     final rebirthMultiplier = ref.read(rebirthMultiplierProvider);
 
@@ -307,12 +347,138 @@ class _HomePageState extends ConsumerState<HomePage>
 
     final clickValue = 1 * totalClickMultiplier;
 
-    ref.read(fubaProvider.notifier).state += clickValue;
+    ref.read(fubaProvider.notifier).state += BigDecimal.parse(
+      clickValue.toString(),
+    );
 
-    ref.read(achievementNotifierProvider).incrementStat('total_clicks');
+    // Rastreamento de cliques para conquistas
+    _updateClickTracking(clickValue);
+    _updateSecretAchievementTracking(clickValue);
+
     ref
         .read(achievementNotifierProvider)
-        .incrementStat('total_production', clickValue);
+        .incrementStat('total_clicks', 1, context);
+    ref
+        .read(achievementNotifierProvider)
+        .incrementStat('total_production', clickValue, context);
+  }
+
+  /// Atualiza o rastreamento de cliques para conquistas
+  void _updateClickTracking(double clickValue) {
+    final now = DateTime.now();
+
+    // Calcular velocidade de cliques (cliques por segundo)
+    final timeDiff = now.difference(_lastClickTime).inMilliseconds;
+    if (timeDiff > 0) {
+      final clicksPerSecond = 1000 / timeDiff;
+      ref
+          .read(achievementNotifierProvider)
+          .updateClickSpeed(clicksPerSecond, context);
+    }
+
+    // Atualizar sequência de cliques
+    final streakTimeDiff = now.difference(_lastStreakTime).inMilliseconds;
+    if (streakTimeDiff < 2000) {
+      // 2 segundos para manter a sequência
+      _currentStreak++;
+    } else {
+      _currentStreak = 1;
+    }
+    _lastStreakTime = now;
+    ref
+        .read(achievementNotifierProvider)
+        .updateClickStreak(_currentStreak.toDouble(), context);
+
+    // Atualizar eficiência (fubá por clique)
+    ref
+        .read(achievementNotifierProvider)
+        .updateFubaPerClick(clickValue, context);
+
+    _lastClickTime = now;
+  }
+
+  /// Atualiza o rastreamento para conquistas secretas
+  void _updateSecretAchievementTracking(double clickValue) {
+    final now = DateTime.now();
+    
+    // Atualizar lista de cliques para verificar cliques em 10 segundos
+    _clickTimes.add(now);
+    _clickTimes.removeWhere((time) => now.difference(time).inSeconds > 10);
+    
+    // Atualizar estatística de cliques em 10 segundos
+    ref.read(achievementNotifierProvider).updateClicksIn10Seconds(
+      _clickTimes.length.toDouble(),
+      context,
+    );
+    
+    // Atualizar fubá total obtido por cliques
+    _totalClickFuba += clickValue;
+    ref.read(achievementNotifierProvider).updateTotalClickFuba(
+      _totalClickFuba,
+      context,
+    );
+    
+    // Atualizar tempo do último clique para conquista zen
+    _lastClickTimeForZen = now;
+    
+    // Reiniciar timer de paciência
+    _patienceTimer?.cancel();
+    _patienceTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final timeSinceClick = now.difference(_lastClickTime).inSeconds;
+      ref.read(achievementNotifierProvider).updateTimeSinceLastClick(
+        timeSinceClick.toDouble(),
+        context,
+      );
+    });
+  }
+
+  /// Inicia o rastreamento de tempo de jogo consecutivo
+  void _startPlayTimeTracking() {
+    _playTimeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final now = DateTime.now();
+      final playTime = now.difference(_appStartTime).inSeconds;
+      
+      ref.read(achievementNotifierProvider).updateConsecutivePlayTime(
+        playTime.toDouble(),
+        context,
+      );
+      
+      // Verificar tempo sem clicar para conquista zen
+      final timeSinceLastClick = now.difference(_lastClickTimeForZen).inSeconds;
+      ref.read(achievementNotifierProvider).updateTimeWithoutClicking(
+        timeSinceLastClick.toDouble(),
+        context,
+      );
+    });
+  }
+
+  /// Processa cliques automáticos para conquistas
+  void _processAutoClicks(double clickRate, double totalValue) {
+    // Incrementar contador total de cliques
+    ref
+        .read(achievementNotifierProvider)
+        .incrementStat('total_clicks', clickRate, context);
+
+    // Calcular velocidade de cliques automáticos (cliques por segundo)
+    final clicksPerSecond =
+        clickRate /
+        (GameConstants.autoProductionInterval.inMilliseconds / 1000);
+    ref
+        .read(achievementNotifierProvider)
+        .updateClickSpeed(clicksPerSecond, context);
+
+    // Atualizar sequência de cliques (auto clicks mantêm a sequência)
+    _currentStreak += clickRate.toInt();
+    _lastStreakTime = DateTime.now(); // Atualizar tempo da sequência
+    ref
+        .read(achievementNotifierProvider)
+        .updateClickStreak(_currentStreak.toDouble(), context);
+
+    // Atualizar eficiência (fubá por clique)
+    final fubaPerClick = totalValue / clickRate;
+    ref
+        .read(achievementNotifierProvider)
+        .updateFubaPerClick(fubaPerClick, context);
   }
 
   Widget _buildDetailedMultipliers(WidgetRef ref) {
@@ -323,7 +489,6 @@ class _HomePageState extends ConsumerState<HomePage>
     final accessoryMultiplier = ref.watch(accessoryMultiplierProvider);
     final equippedIds = ref.watch(equippedAccessoriesProvider);
 
-    // Debug: calcular multiplicador manualmente
     final manualTotal =
         accessoryMultiplier *
         rebirthMultiplier *
@@ -335,7 +500,7 @@ class _HomePageState extends ConsumerState<HomePage>
         const SizedBox(height: 5),
 
         Text(
-          'Multiplicador Total: x${totalMultiplier.toStringAsFixed(2)}',
+          'Multiplicador Total: x${GameConstants.formatNumber(BigDecimal.parse(totalMultiplier.toStringAsFixed(2)))}',
           style: const TextStyle(
             fontSize: 12,
             color: Colors.amber,
@@ -343,6 +508,100 @@ class _HomePageState extends ConsumerState<HomePage>
           ),
         ),
         if (kDebugMode) ...[
+          ElevatedButton(
+            onPressed: () {
+              _showTestAchievementPopup();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Test Achievement Popup'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // Mostrar diálogo de confirmação
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('⚠️ WIPE ALL DATA'),
+                  content: const Text(
+                    'Esta ação irá EXCLUIR PERMANENTEMENTE todos os seus dados do jogo!\n\n'
+                    'Isso inclui:\n'
+                    '• Todo o fubá\n'
+                    '• Todos os geradores\n'
+                    '• Todos os acessórios\n'
+                    '• Todas as conquistas\n'
+                    '• Todos os upgrades\n'
+                    '• Todos os rebirths\n\n'
+                    'Esta ação NÃO PODE ser desfeita!\n\n'
+                    'Tem certeza que deseja continuar?',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancelar'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('SIM, EXCLUIR TUDO'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true) {
+                // Limpar todos os providers
+                ref.read(fubaProvider.notifier).state = BigDecimal.zero;
+                ref.read(generatorsProvider.notifier).state = List.filled(
+                  availableGenerators.length,
+                  0,
+                );
+                ref.read(inventoryProvider.notifier).state = <String, int>{};
+                ref.read(equippedAccessoriesProvider.notifier).state =
+                    <String>[];
+                ref.read(rebirthDataProvider.notifier).state =
+                    const RebirthData();
+                ref.read(unlockedAchievementsProvider.notifier).state =
+                    <String>{};
+                ref.read(achievementStatsProvider.notifier).state =
+                    <String, double>{};
+                ref.read(upgradesLevelProvider.notifier).state =
+                    <String, int>{};
+                ref.read(unlockedSecretsProvider.notifier).state = <String>{};
+
+                // Limpar dados salvos
+                final saveService = SaveService();
+                await saveService.clearSave();
+
+                // Mostrar confirmação
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ Todos os dados foram excluídos!'),
+                      backgroundColor: Colors.red,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Wipe All Data'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(fubaProvider.notifier).state *= BigDecimal.parse('1000');
+            },
+            child: const Text('mult'),
+          ),
           Text(
             'Debug Manual: x${manualTotal.toStringAsFixed(2)}',
             style: const TextStyle(
@@ -409,12 +668,19 @@ class _HomePageState extends ConsumerState<HomePage>
       return const SizedBox.shrink();
     }
 
+    final accessoryList = equippedIds
+        .map((id) => allAccessories.firstWhere((acc) => acc.id == id))
+        .toList();
+
+    accessoryList.sort(
+      (a, b) => b.productionMultiplier.compareTo(a.productionMultiplier),
+    );
+
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 6,
       runSpacing: 2,
-      children: equippedIds.map((id) {
-        final accessory = allAccessories.firstWhere((acc) => acc.id == id);
+      children: accessoryList.map((accessory) {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
@@ -445,20 +711,28 @@ class _HomePageState extends ConsumerState<HomePage>
     final isMobile = GameConstants.isMobile(context);
 
     return Positioned(
-      top: isMobile ? 8 : 16,
-      right: isMobile ? 8 : null,
+      top: isMobile ? 4 : 16,
+      right: isMobile ? 4 : null,
       left: isMobile ? null : MediaQuery.of(context).size.width / 2 - 250,
       child: Row(
         children: [
-          _buildIconButton(Icons.emoji_events, Colors.amber, () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const AchievementsPage()),
-            );
-          }),
-          const SizedBox(width: 8),
-          _buildIconButton(
+          _buildIconButtonWithLabel(
+            Icons.emoji_events,
+            Colors.amber,
+            'Conquistas',
+            () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AchievementsPage(),
+                ),
+              );
+            },
+          ),
+          SizedBox(width: isMobile ? 4 : 8),
+          _buildIconButtonWithLabel(
             isAudioPlaying ? Icons.volume_up : Icons.volume_off,
             isAudioPlaying ? Colors.orange : Colors.grey,
+            'Som',
             () {
               counter++;
               if (counter == 0 || counter == 4) {
@@ -494,77 +768,150 @@ class _HomePageState extends ConsumerState<HomePage>
     final isMobile = GameConstants.isMobile(context);
 
     return Positioned(
-      top: isMobile ? 8 : 16,
-      left: isMobile ? 8 : 16,
-      child: Row(
+      top: isMobile ? 4 : 16,
+      left: isMobile ? 4 : 16,
+      child: Column(
         children: [
-          _buildIconButton(Icons.shopping_bag, Colors.purple, () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const LootBoxShopPage()),
-            );
-          }),
-          const SizedBox(width: 8),
-          _buildIconButton(Icons.auto_awesome, Colors.cyan, () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const RebirthUpgradesPage(),
+          Row(
+            children: [
+              _buildIconButtonWithLabel(
+                Icons.shopping_bag,
+                Colors.white,
+                'Loja',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const LootBoxShopPage(),
+                    ),
+                  );
+                },
               ),
-            );
-          }),
-          const SizedBox(width: 8),
-          _buildIconButton(Icons.refresh, Colors.deepPurple, () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const RebirthPage()),
-            );
-          }),
+              SizedBox(width: isMobile ? 4 : 8),
+              _buildIconButtonWithLabel(
+                Icons.auto_awesome,
+                const Color.fromARGB(255, 141, 157, 248),
+                'Upgrades',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const RebirthUpgradesPage(),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(width: isMobile ? 4 : 8),
+              _buildIconButtonWithLabel(
+                Icons.refresh,
+                const Color.fromARGB(255, 255, 35, 35),
+                'Rebirth',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const RebirthPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
   Widget _buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
+    final isMobile = GameConstants.isMobile(context);
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withAlpha(150),
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(isMobile ? 20 : 25),
         border: Border.all(color: color.withAlpha(100)),
       ),
       child: IconButton(
+        iconSize: isMobile ? 20 : 24,
         icon: Icon(icon, color: color),
         onPressed: onPressed,
       ),
     );
   }
 
+  Widget _buildIconButtonWithLabel(
+    IconData icon,
+    Color color,
+    String label,
+    VoidCallback onPressed,
+  ) {
+    final isMobile = GameConstants.isMobile(context);
+
+    if (isMobile) {
+      return Tooltip(
+        message: label,
+        child: _buildIconButton(icon, color, onPressed),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildIconButton(icon, color, onPressed),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSupporterButton() {
-    return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.purple, Colors.deepPurple, Colors.indigo],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.purple.withAlpha(100),
-                blurRadius: 15,
-                spreadRadius: 2,
+    return InkWell(
+      onTap: _showSupporterDialog,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.purple, Colors.deepPurple, Colors.indigo],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.purple.withAlpha(100),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Icon(Icons.favorite, color: Colors.white, size: 28),
+              )
+              .animate(
+                autoPlay: true,
+                onComplete: (controller) => controller.repeat(),
+              )
+              .shimmer(
+                delay: 3.seconds,
+                duration: 5.seconds,
+                color: Colors.white.withAlpha(100),
               ),
-            ],
+          Text(
+            'Fubádor',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          child: FloatingActionButton(
-            onPressed: _showSupporterDialog,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            child: Icon(Icons.favorite, color: Colors.white, size: 28),
-          ),
-        )
-        .animate(
-          autoPlay: true,
-          onComplete: (controller) => controller.repeat(),
-        )
-        .shimmer(duration: 3.seconds, color: Colors.white.withAlpha(100));
+        ],
+      ),
+    );
   }
 
   void _showSupporterDialog() {
@@ -698,5 +1045,25 @@ class _HomePageState extends ConsumerState<HomePage>
         ],
       ),
     );
+  }
+
+  void _showTestAchievementPopup() {
+    final achievementIds = [
+      'first_click',
+      'click_100',
+      'production_1k',
+      'first_generator',
+      'first_accessory',
+      'accessory_legendary',
+      'lootbox_10',
+      'first_rebirth',
+    ];
+
+    final randomId =
+        achievementIds[(DateTime.now().millisecondsSinceEpoch %
+            achievementIds.length)];
+    final achievement = allAchievements.firstWhere((a) => a.id == randomId);
+
+    AchievementPopupManager.showAchievementPopup(context, achievement);
   }
 }
