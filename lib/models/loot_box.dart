@@ -9,7 +9,8 @@ enum LootBoxTier {
   premium(3),
   ultimate(4),
   divine(5),
-  transcendent(6);
+  transcendent(6),
+  primordial(7);
 
   final int value;
   const LootBoxTier(this.value);
@@ -28,6 +29,8 @@ enum LootBoxTier {
         return 'Caixa Divina';
       case LootBoxTier.transcendent:
         return 'Caixa Transcendente';
+      case LootBoxTier.primordial:
+        return 'Caixa Primordial';
     }
   }
 
@@ -45,6 +48,8 @@ enum LootBoxTier {
         return '💎';
       case LootBoxTier.transcendent:
         return '🌟';
+      case LootBoxTier.primordial:
+        return '🌌';
     }
   }
 
@@ -62,6 +67,8 @@ enum LootBoxTier {
         return Colors.cyan;
       case LootBoxTier.transcendent:
         return Colors.white;
+      case LootBoxTier.primordial:
+        return Colors.deepPurple;
     }
   }
 
@@ -79,6 +86,8 @@ enum LootBoxTier {
         return BigDecimal.parse('500000000');
       case LootBoxTier.transcendent:
         return BigDecimal.parse('50000000000');
+      case LootBoxTier.primordial:
+        return BigDecimal.parse('10000000000000000000000000000');
     }
   }
 
@@ -96,6 +105,8 @@ enum LootBoxTier {
         return 'Itens até míticos';
       case LootBoxTier.transcendent:
         return 'Itens de todas as raridades';
+      case LootBoxTier.primordial:
+        return 'Acessórios ultra-raros primordiais, cósmicos e infinitos';
     }
   }
 
@@ -111,6 +122,9 @@ enum LootBoxTier {
           AccessoryRarity.mythical: 0.0,
           AccessoryRarity.divine: 0.0,
           AccessoryRarity.transcendent: 0.0,
+          AccessoryRarity.primordial: 0.0,
+          AccessoryRarity.cosmic: 0.0,
+          AccessoryRarity.infinite: 0.0,
         };
       case LootBoxTier.advanced:
         return {
@@ -122,6 +136,9 @@ enum LootBoxTier {
           AccessoryRarity.mythical: 0.0,
           AccessoryRarity.divine: 0.0,
           AccessoryRarity.transcendent: 0.0,
+          AccessoryRarity.primordial: 0.0,
+          AccessoryRarity.cosmic: 0.0,
+          AccessoryRarity.infinite: 0.0,
         };
       case LootBoxTier.premium:
         return {
@@ -133,6 +150,9 @@ enum LootBoxTier {
           AccessoryRarity.mythical: 0.0,
           AccessoryRarity.divine: 0.0,
           AccessoryRarity.transcendent: 0.0,
+          AccessoryRarity.primordial: 0.0,
+          AccessoryRarity.cosmic: 0.0,
+          AccessoryRarity.infinite: 0.0,
         };
       case LootBoxTier.ultimate:
         return {
@@ -144,6 +164,9 @@ enum LootBoxTier {
           AccessoryRarity.mythical: 0.02,
           AccessoryRarity.divine: 0.0,
           AccessoryRarity.transcendent: 0.0,
+          AccessoryRarity.primordial: 0.0,
+          AccessoryRarity.cosmic: 0.0,
+          AccessoryRarity.infinite: 0.0,
         };
       case LootBoxTier.divine:
         return {
@@ -155,6 +178,9 @@ enum LootBoxTier {
           AccessoryRarity.mythical: 0.04,
           AccessoryRarity.divine: 0.01,
           AccessoryRarity.transcendent: 0.0,
+          AccessoryRarity.primordial: 0.0,
+          AccessoryRarity.cosmic: 0.0,
+          AccessoryRarity.infinite: 0.0,
         };
       case LootBoxTier.transcendent:
         return {
@@ -166,6 +192,23 @@ enum LootBoxTier {
           AccessoryRarity.mythical: 0.10,
           AccessoryRarity.divine: 0.04,
           AccessoryRarity.transcendent: 0.01,
+          AccessoryRarity.primordial: 0.0,
+          AccessoryRarity.cosmic: 0.0,
+          AccessoryRarity.infinite: 0.0,
+        };
+      case LootBoxTier.primordial:
+        return {
+          AccessoryRarity.common: 0.0,
+          AccessoryRarity.uncommon: 0.0,
+          AccessoryRarity.rare: 0.0,
+          AccessoryRarity.epic: 0.0,
+          AccessoryRarity.legendary: 0.0,
+          AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.40,
+          AccessoryRarity.transcendent: 0.20,
+          AccessoryRarity.primordial: 0.06,
+          AccessoryRarity.cosmic: 0.03,
+          AccessoryRarity.infinite: 0.001,
         };
     }
   }

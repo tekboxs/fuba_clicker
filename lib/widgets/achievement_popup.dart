@@ -27,7 +27,7 @@ class _AchievementPopupState extends State<AchievementPopup>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  
+
   Timer? _closeTimer;
   bool _isDisposed = false;
 
@@ -74,7 +74,7 @@ class _AchievementPopupState extends State<AchievementPopup>
 
   void _startAnimation() {
     if (_isDisposed || !mounted) return;
-    
+
     _slideController.forward();
     Future.delayed(const Duration(milliseconds: 200), () {
       if (!_isDisposed && mounted) {
@@ -86,7 +86,7 @@ class _AchievementPopupState extends State<AchievementPopup>
 
   void _closePopup() async {
     if (_isDisposed || !mounted) return;
-    
+
     try {
       await _fadeController.reverse();
       if (!_isDisposed && mounted) {
@@ -160,16 +160,10 @@ class _AchievementPopupState extends State<AchievementPopup>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            difficultyColor.withAlpha(150),
-            Colors.black.withAlpha(250),
-          ],
+          colors: [difficultyColor.withAlpha(150), Colors.black.withAlpha(250)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: difficultyColor.withAlpha(180),
-          width: 2,
-        ),
+        border: Border.all(color: difficultyColor.withAlpha(180), width: 2),
         boxShadow: [
           BoxShadow(
             color: difficultyColor.withAlpha(120),
@@ -204,11 +198,16 @@ class _AchievementPopupState extends State<AchievementPopup>
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: difficultyColor.withAlpha(100),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: difficultyColor.withAlpha(150)),
+                        border: Border.all(
+                          color: difficultyColor.withAlpha(150),
+                        ),
                       ),
                       child: Text(
                         _getDifficultyLabel(widget.achievement.difficulty),
@@ -299,6 +298,7 @@ class _AchievementPopupState extends State<AchievementPopup>
         text = 'Segredo Desbloqueado!';
         color = Colors.purple;
         break;
+     
     }
 
     return Container(
@@ -348,7 +348,6 @@ class _AchievementPopupState extends State<AchievementPopup>
         return 'LENDÁRIO';
     }
   }
-
 }
 
 class AchievementPopupManager {

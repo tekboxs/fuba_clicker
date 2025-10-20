@@ -117,7 +117,7 @@ class RebirthUpgradesPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildTokenDisplay(int tokens) {
+  Widget _buildTokenDisplay(double tokens) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -158,7 +158,7 @@ class RebirthUpgradesPage extends ConsumerWidget {
                                   ref
                                       .read(rebirthDataProvider)
                                       .celestialTokens +
-                                  1000,
+                                  1000.0,
                             );
                       },
                       child: Text('+1000 tokens'),
@@ -192,7 +192,7 @@ class RebirthUpgradesPage extends ConsumerWidget {
 
     // Adiciona tokens suficientes para comprar todos os upgrades
     ref.read(rebirthDataProvider.notifier).state = rebirthData.copyWith(
-      celestialTokens: 999999,
+      celestialTokens: 999999.0,
       ascensionCount: 10, // Garante que todos os upgrades estejam desbloqueados
     );
 

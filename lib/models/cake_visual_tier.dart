@@ -151,6 +151,12 @@ extension CakeVisualTierExtension on CakeVisualTier {
         return CakeVisualTier.cosmic;
       case AccessoryRarity.transcendent:
         return CakeVisualTier.cosmic;
+      case AccessoryRarity.primordial:
+        return CakeVisualTier.cosmic;
+      case AccessoryRarity.infinite:
+        return CakeVisualTier.cosmic;
+      case AccessoryRarity.cosmic:
+        return CakeVisualTier.cosmic;
     }
   }
 }

@@ -83,7 +83,35 @@ class SaveNotifier extends StateNotifier<bool> {
       ref.read(equippedAccessoriesProvider.notifier).state = data.equipped;
       ref.read(rebirthDataProvider.notifier).state = data.rebirthData;
       ref.read(unlockedAchievementsProvider.notifier).state = data.achievements;
-      ref.read(achievementStatsProvider.notifier).state = data.achievementStats;
+      // Mesclar estatísticas salvas com valores padrão
+      final defaultStats = {
+        'total_clicks': 0,
+        'total_production': 0,
+        'different_generators': 0,
+        'lootboxes_opened': 0,
+        'legendary_count': 0,
+        'mythical_count': 0,
+        'equipped_count': 0,
+        'clicks_per_second': 0,
+        'max_clicks_per_second': 0,
+        'click_streak': 0,
+        'max_click_streak': 0,
+        'fuba_per_click': 0,
+        'max_fuba_per_click': 0,
+        'clicks_in_10_seconds': 0,
+        'time_since_last_click': 0,
+        'total_click_fuba': 0,
+        'all_mythical_equipped': 0,
+        'total_inventory_accessories': 0,
+        'legendary_lootbox_streak': 0,
+        'time_without_clicking': 0,
+        'max_time_without_clicking': 0,
+        'consecutive_play_time': 0,
+        'max_consecutive_play_time': 0,
+      };
+      
+      final mergedStats = {...defaultStats, ...data.achievementStats};
+      ref.read(achievementStatsProvider.notifier).state = Map<String, double>.from(mergedStats);
       ref.read(upgradesLevelProvider.notifier).state = data.upgrades;
       ref.read(unlockedSecretsProvider.notifier).state = data.secrets;
     } catch (e) {

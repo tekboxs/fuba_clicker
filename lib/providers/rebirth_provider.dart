@@ -89,7 +89,7 @@ class RebirthNotifier {
     ref.read(saveNotifierProvider.notifier).saveImmediate();
   }
 
-  void spendTokens(int amount) {
+  void spendTokens(double amount) {
     final currentData = ref.read(rebirthDataProvider);
     if (currentData.celestialTokens >= amount) {
       ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
@@ -127,7 +127,7 @@ class RebirthNotifier {
     
     if (actualCount == 0) return;
     
-    int totalTokenReward = 0;
+    double totalTokenReward = 0.0;
     for (int i = 0; i < actualCount; i++) {
       totalTokenReward += tier.getTokenReward(currentTierCount + i);
     }

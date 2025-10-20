@@ -8,7 +8,6 @@ import 'hexagonal_achievement_badge.dart';
 class AchievementsPage extends ConsumerWidget {
   const AchievementsPage({super.key});
 
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unlocked = ref.watch(unlockedAchievementsProvider);
@@ -24,10 +23,7 @@ class AchievementsPage extends ConsumerWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.amber.shade900.withAlpha(200),
-              Colors.black,
-            ],
+            colors: [Colors.amber.shade900.withAlpha(200), Colors.black],
           ),
         ),
         child: Column(
@@ -46,7 +42,13 @@ class AchievementsPage extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final achievement = allAchievements[index];
                   final isUnlocked = unlocked.contains(achievement.id);
-                  return _buildAchievementCard(achievement, isUnlocked, false, context, ref);
+                  return _buildAchievementCard(
+                    achievement,
+                    isUnlocked,
+                    false,
+                    context,
+                    ref,
+                  );
                 },
               ),
             ),
@@ -55,7 +57,6 @@ class AchievementsPage extends ConsumerWidget {
       ),
     );
   }
-
 
   int _getCrossAxisCount(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -89,18 +90,11 @@ class AchievementsPage extends ConsumerWidget {
               ),
               Text(
                 'Desbloqueadas',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade400,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
               ),
             ],
           ),
-          Container(
-            width: 1,
-            height: 40,
-            color: Colors.amber.withAlpha(100),
-          ),
+          Container(width: 1, height: 40, color: Colors.amber.withAlpha(100)),
           Column(
             children: [
               Text(
@@ -113,10 +107,7 @@ class AchievementsPage extends ConsumerWidget {
               ),
               Text(
                 'Multiplicador Total',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade400,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
               ),
             ],
           ),
@@ -125,10 +116,19 @@ class AchievementsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildAchievementCard(Achievement achievement, bool isUnlocked, bool isBarrierLocked, BuildContext context, WidgetRef ref) {
+  Widget _buildAchievementCard(
+    Achievement achievement,
+    bool isUnlocked,
+    bool isBarrierLocked,
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     final difficultyColor = _getDifficultyColor(achievement.difficulty);
     final isMobile = GameConstants.isMobile(context);
-    final cardSize = _getCardSizeForDifficulty(achievement.difficulty, isMobile);
+    final cardSize = _getCardSizeForDifficulty(
+      achievement.difficulty,
+      isMobile,
+    );
 
     return Container(
       height: cardSize.height,
@@ -137,10 +137,7 @@ class AchievementsPage extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isUnlocked
-              ? [
-                  difficultyColor.withAlpha(80),
-                  Colors.black.withAlpha(200),
-                ]
+              ? [difficultyColor.withAlpha(80), Colors.black.withAlpha(200)]
               : [
                   Colors.grey.shade800.withAlpha(100),
                   Colors.black.withAlpha(200),
@@ -170,80 +167,54 @@ class AchievementsPage extends ConsumerWidget {
           children: [
             HexagonalAchievementBadge(
               difficulty: achievement.difficulty,
-              emoji: isUnlocked || !achievement.isSecret ? achievement.emoji : '❓',
+              emoji: achievement.emoji,
               isUnlocked: isUnlocked,
               size: isMobile ? 50 : 60,
               enableAnimations: isUnlocked,
             ),
             const SizedBox(height: 12),
-            if (isUnlocked || !achievement.isSecret) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: difficultyColor.withAlpha(80),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _getDifficultyLabel(achievement.difficulty),
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: difficultyColor,
-                  ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: difficultyColor.withAlpha(80),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _getDifficultyLabel(achievement.difficulty),
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  color: difficultyColor,
                 ),
               ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              achievement.name,
+              style: TextStyle(
+                fontSize: isMobile ? 12 : 14,
+                fontWeight: FontWeight.bold,
+                color: isUnlocked ? Colors.white : Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              achievement.description,
+              style: TextStyle(
+                fontSize: isMobile ? 9 : 10,
+                color: isUnlocked ? Colors.grey.shade400 : Colors.grey.shade700,
+                height: 1.2,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (isUnlocked) ...[
               const SizedBox(height: 8),
-              Text(
-                achievement.name,
-                style: TextStyle(
-                  fontSize: isMobile ? 12 : 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                achievement.description,
-                style: TextStyle(
-                  fontSize: isMobile ? 9 : 10,
-                  color: Colors.grey.shade400,
-                  height: 1.2,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (isUnlocked) ...[
-                const SizedBox(height: 8),
-                _buildRewardChip(achievement.reward),
-              ],
-            ] else ...[
-              Text(
-                '???',
-                style: TextStyle(
-                  fontSize: isMobile ? 12 : 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade600,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Segredo',
-                style: TextStyle(
-                  fontSize: isMobile ? 9 : 10,
-                  color: Colors.grey.shade700,
-                  height: 1.2,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
+              _buildRewardChip(achievement.reward),
             ],
           ],
         ),
@@ -318,11 +289,13 @@ class AchievementsPage extends ConsumerWidget {
     }
   }
 
-  Size _getCardSizeForDifficulty(AchievementDifficulty difficulty, bool isMobile) {
+  Size _getCardSizeForDifficulty(
+    AchievementDifficulty difficulty,
+    bool isMobile,
+  ) {
     final baseHeight = isMobile ? 200.0 : 240.0;
-    final heightMultiplier = difficulty.index >= AchievementDifficulty.epic.index ? 1.2 : 1.0;
+    final heightMultiplier =
+        difficulty.index >= AchievementDifficulty.epic.index ? 1.2 : 1.0;
     return Size(double.infinity, baseHeight * heightMultiplier);
   }
-
 }
-

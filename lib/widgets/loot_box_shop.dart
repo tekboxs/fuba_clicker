@@ -56,6 +56,8 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
         return barriers[4].isUnlocked(fuba, generatorsOwned);
       case LootBoxTier.transcendent:
         return barriers[5].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.primordial:
+        return barriers[6].isUnlocked(fuba, generatorsOwned);
     }
   }
 
@@ -75,6 +77,8 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
         return barriers[4];
       case LootBoxTier.transcendent:
         return barriers[5];
+      case LootBoxTier.primordial:
+        return barriers[6];
     }
   }
 
@@ -519,6 +523,18 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
       ref
           .read(achievementNotifierProvider)
           .incrementStat('mythical_count', 1, context);
+    } else if (reward.rarity == AccessoryRarity.primordial) {
+      ref
+          .read(achievementNotifierProvider)
+          .incrementStat('primordial_count', 1, context);
+    } else if (reward.rarity == AccessoryRarity.cosmic) {
+      ref
+          .read(achievementNotifierProvider)
+          .incrementStat('cosmic_count', 1, context);
+    } else if (reward.rarity == AccessoryRarity.infinite) {
+      ref
+          .read(achievementNotifierProvider)
+          .incrementStat('infinite_count', 1, context);
     }
 
     ref.read(saveNotifierProvider.notifier).saveImmediate();
@@ -569,6 +585,18 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
         ref
             .read(achievementNotifierProvider)
             .incrementStat('mythical_count', 1, context);
+      } else if (reward.rarity == AccessoryRarity.primordial) {
+        ref
+            .read(achievementNotifierProvider)
+            .incrementStat('primordial_count', 1, context);
+      } else if (reward.rarity == AccessoryRarity.cosmic) {
+        ref
+            .read(achievementNotifierProvider)
+            .incrementStat('cosmic_count', 1, context);
+      } else if (reward.rarity == AccessoryRarity.infinite) {
+        ref
+            .read(achievementNotifierProvider)
+            .incrementStat('infinite_count', 1, context);
       }
     }
 

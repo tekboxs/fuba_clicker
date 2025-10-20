@@ -29,7 +29,7 @@ class UpgradeNotifier {
     final currentLevel = getUpgradeLevel(upgrade.id);
     final cost = upgrade.getTokenCost(currentLevel);
 
-    ref.read(rebirthNotifierProvider).spendTokens(cost);
+    ref.read(rebirthNotifierProvider).spendTokens(cost.toDouble());
 
     final levels = ref.read(upgradesLevelProvider);
     final newLevels = Map<String, int>.from(levels);

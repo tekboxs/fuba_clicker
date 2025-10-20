@@ -24,7 +24,10 @@ enum AccessoryRarity {
   legendary(5),
   mythical(6),
   divine(7),
-  transcendent(8);
+  transcendent(8),
+  primordial(9),
+  cosmic(10),
+  infinite(11);
 
   final int value;
   const AccessoryRarity(this.value);
@@ -47,6 +50,12 @@ enum AccessoryRarity {
         return Colors.cyan;
       case AccessoryRarity.transcendent:
         return Colors.white;
+      case AccessoryRarity.primordial:
+        return Colors.deepPurple;
+      case AccessoryRarity.cosmic:
+        return Colors.indigo;
+      case AccessoryRarity.infinite:
+        return Colors.amber;
     }
   }
 
@@ -68,6 +77,12 @@ enum AccessoryRarity {
         return 'Divino';
       case AccessoryRarity.transcendent:
         return 'Transcendente';
+      case AccessoryRarity.primordial:
+        return 'Primordial';
+      case AccessoryRarity.cosmic:
+        return 'Cósmico';
+      case AccessoryRarity.infinite:
+        return 'Infinito';
     }
   }
 
@@ -89,6 +104,12 @@ enum AccessoryRarity {
         return 0.007;
       case AccessoryRarity.transcendent:
         return 0.003;
+      case AccessoryRarity.primordial:
+        return 0.001;
+      case AccessoryRarity.cosmic:
+        return 0.0005;
+      case AccessoryRarity.infinite:
+        return 0.0001;
     }
   }
 
@@ -110,6 +131,12 @@ enum AccessoryRarity {
         return 3.0;
       case AccessoryRarity.transcendent:
         return 4.0;
+      case AccessoryRarity.primordial:
+        return 8.0;
+      case AccessoryRarity.cosmic:
+        return 12.0;
+      case AccessoryRarity.infinite:
+        return 20.0;
     }
   }
 
@@ -130,6 +157,12 @@ enum AccessoryRarity {
       case AccessoryRarity.divine:
         return AccessoryShape.hexagon;
       case AccessoryRarity.transcendent:
+        return AccessoryShape.octagon;
+      case AccessoryRarity.primordial:
+        return AccessoryShape.hexagon;
+      case AccessoryRarity.cosmic:
+        return AccessoryShape.octagon;
+      case AccessoryRarity.infinite:
         return AccessoryShape.octagon;
     }
   }
@@ -388,5 +421,89 @@ const List<CakeAccessory> allAccessories = [
     description: 'Cupcake mágico que traz infinita energia',
     visualEffect: VisualEffect.lightning,
     specialAbility: SpecialAbility.autoClicker,
+  ),
+  // Novos acessórios primordiais
+  CakeAccessory(
+    id: 'void_essence',
+    name: 'Essência do Vazio',
+    emoji: '🌑',
+    rarity: AccessoryRarity.primordial,
+    description: 'A essência primordial do vazio cósmico',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'ancient_rune',
+    name: 'Runa Ancestral',
+    emoji: '🔮',
+    rarity: AccessoryRarity.primordial,
+    description: 'Runa gravada pelos primeiros seres do fubá',
+    visualEffect: VisualEffect.pulse,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  CakeAccessory(
+    id: 'primordial_flame',
+    name: 'Leite Primordial',
+    emoji: '🥛',
+    rarity: AccessoryRarity.primordial,
+    description: 'A primeira leitada',
+    visualEffect: VisualEffect.flames,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  // Novos acessórios cósmicos
+  CakeAccessory(
+    id: 'nebula_core',
+    name: 'Núcleo de Nebulosa',
+    emoji: '🌌',
+    rarity: AccessoryRarity.cosmic,
+    description: 'O coração de uma nebulosa em formação',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  CakeAccessory(
+    id: 'stellar_remnant',
+    name: 'Remanescente Estelar',
+    emoji: '⭐',
+    rarity: AccessoryRarity.cosmic,
+    description: 'Os restos de uma estrela que explodiu',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'black_hole_fragment',
+    name: 'Fragmento de Vazio absoluto',
+    emoji: '⚫',
+    rarity: AccessoryRarity.cosmic,
+    description: 'Um pedaço do nada espacial',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  // Novos acessórios infinitos
+  CakeAccessory(
+    id: 'infinity_matri6x',
+    name: 'Matriz Infinita',
+    emoji: '♾️',
+    rarity: AccessoryRarity.infinite,
+    description: 'A estrutura fundamental da realidade',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  CakeAccessory(
+    id: 'eternal_paradox',
+    name: 'Paradoxo Eterno',
+    emoji: '🌀',
+    rarity: AccessoryRarity.infinite,
+    description: 'Um paradoxo que transcende o tempo e espaço',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  CakeAccessory(
+    id: 'omniversal_key',
+    name: 'Chave Omniversal',
+    emoji: '🗝️',
+    rarity: AccessoryRarity.infinite,
+    description: 'A chave que abre todas as dimensões',
+    visualEffect: VisualEffect.lightning,
+    specialAbility: SpecialAbility.criticalClick,
   ),
 ];

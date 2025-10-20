@@ -100,6 +100,15 @@ class DifficultyBarrierManager {
       unlockMessage: 'Caixas transcendentais desbloqueadas!',
       emoji: '🌟',
     ),
+    DifficultyBarrier(
+      name: 'Caixas Primordiais',
+      description: 'Desbloqueie caixas de qualidade primordial',
+      requiredFuba: BigDecimal.parse('0'),
+      requiredGeneratorTier: 25,
+      requiredGeneratorCount: 100,
+      unlockMessage: 'Caixas primordiais desbloqueadas!',
+      emoji: '🌌',
+    ),
   ];
 
   static final List<DifficultyBarrier> rebirthBarriers = [

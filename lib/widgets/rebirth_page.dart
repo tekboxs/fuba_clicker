@@ -302,7 +302,13 @@ class RebirthPage extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    _buildMultipleOperationsButtons(context, ref, tier, fuba, rebirthData),
+                    _buildMultipleOperationsButtons(
+                      context,
+                      ref,
+                      tier,
+                      fuba,
+                      rebirthData,
+                    ),
                   ],
                 ),
             ],
@@ -444,9 +450,9 @@ class RebirthPage extends ConsumerWidget {
     RebirthData rebirthData,
   ) {
     final maxOperations = calculateMaxOperations(tier, fuba, rebirthData);
-    
+
     if (maxOperations <= 1) return const SizedBox.shrink();
-    
+
     return Row(
       children: [
         Expanded(
@@ -463,7 +469,8 @@ class RebirthPage extends ConsumerWidget {
         const SizedBox(width: 8),
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: () => _showRebirthConfirmation(context, ref, tier, maxOperations),
+            onPressed: () =>
+                _showRebirthConfirmation(context, ref, tier, maxOperations),
             icon: const Icon(Icons.all_inclusive, size: 16),
             label: Text('${maxOperations}x'),
             style: ElevatedButton.styleFrom(
@@ -487,14 +494,14 @@ class RebirthPage extends ConsumerWidget {
       RebirthTier.ascension => rebirthData.ascensionCount,
       RebirthTier.transcendence => rebirthData.transcendenceCount,
     };
-    
+
     int totalTokenReward = 0;
     double totalMultiplierGain = 0;
     for (int i = 0; i < count; i++) {
-      totalTokenReward += tier.getTokenReward(currentCount + i);
+      totalTokenReward += tier.getTokenReward(currentCount + i).toInt();
       totalMultiplierGain += tier.getMultiplierGain(currentCount + i);
     }
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -532,7 +539,9 @@ class RebirthPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text('• x${totalMultiplierGain.toStringAsFixed(1)} multiplicador permanente'),
+            Text(
+              '• x${totalMultiplierGain.toStringAsFixed(1)} multiplicador permanente',
+            ),
             if (totalTokenReward > 0)
               Text('• $totalTokenReward tokens celestiais'),
           ],
@@ -547,7 +556,9 @@ class RebirthPage extends ConsumerWidget {
               if (count == 1) {
                 ref.read(rebirthNotifierProvider).performRebirth(tier);
               } else {
-                ref.read(rebirthNotifierProvider).performMultipleRebirth(tier, count);
+                ref
+                    .read(rebirthNotifierProvider)
+                    .performMultipleRebirth(tier, count);
               }
               Navigator.pop(context);
               Navigator.pop(context);

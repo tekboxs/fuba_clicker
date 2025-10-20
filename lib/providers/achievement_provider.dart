@@ -24,6 +24,9 @@ final achievementStatsProvider = StateProvider<Map<String, double>>((ref) {
     'lootboxes_opened': 0,
     'legendary_count': 0,
     'mythical_count': 0,
+    'primordial_count': 0,
+    'cosmic_count': 0,
+    'infinite_count': 0,
     'equipped_count': 0,
     'clicks_per_second': 0,
     'max_clicks_per_second': 0,
@@ -60,7 +63,11 @@ class AchievementNotifier {
 
       switch (achievement.category) {
         case AchievementCategory.clicks:
-          if (achievement.id.startsWith('click_') && achievement.id != 'click_speed_' && achievement.id != 'click_streak_' && achievement.id != 'fuba_per_click_') {
+          if (achievement.id.startsWith('click_') && 
+              !achievement.id.startsWith('click_speed_') && 
+              !achievement.id.startsWith('click_streak_') && 
+              !achievement.id.startsWith('fuba_per_click_') &&
+              !achievement.id.endsWith('_daily')) {
             shouldUnlock = (stats['total_clicks'] ?? 0) >= achievement.targetValue;
           } else if (achievement.id.startsWith('click_speed_')) {
             shouldUnlock = (stats['max_clicks_per_second'] ?? 0) >= achievement.targetValue;
@@ -68,6 +75,8 @@ class AchievementNotifier {
             shouldUnlock = (stats['max_click_streak'] ?? 0) >= achievement.targetValue;
           } else if (achievement.id.startsWith('fuba_per_click_')) {
             shouldUnlock = (stats['max_fuba_per_click'] ?? 0) >= achievement.targetValue;
+          } else if (achievement.id.endsWith('_daily')) {
+            shouldUnlock = (stats['total_clicks'] ?? 0) >= achievement.targetValue;
           }
           break;
         case AchievementCategory.production:
@@ -81,12 +90,19 @@ class AchievementNotifier {
         case AchievementCategory.accessories:
           if (achievement.id == 'first_accessory') {
             shouldUnlock =
-                (stats['legendary_count'] ?? 0) + (stats['mythical_count'] ?? 0) >
-                    0;
+                (stats['legendary_count'] ?? 0) + (stats['mythical_count'] ?? 0) +
+                (stats['primordial_count'] ?? 0) + (stats['cosmic_count'] ?? 0) +
+                (stats['infinite_count'] ?? 0) > 0;
           } else if (achievement.id == 'accessory_legendary') {
             shouldUnlock = (stats['legendary_count'] ?? 0) >= 1;
           } else if (achievement.id == 'accessory_mythical') {
             shouldUnlock = (stats['mythical_count'] ?? 0) >= 1;
+          } else if (achievement.id == 'accessory_primordial') {
+            shouldUnlock = (stats['primordial_count'] ?? 0) >= 1;
+          } else if (achievement.id == 'accessory_cosmic') {
+            shouldUnlock = (stats['cosmic_count'] ?? 0) >= 1;
+          } else if (achievement.id == 'accessory_infinite') {
+            shouldUnlock = (stats['infinite_count'] ?? 0) >= 1;
           } else if (achievement.id == 'equip_8') {
             shouldUnlock = (stats['equipped_count'] ?? 0) >= 8;
           }
@@ -149,6 +165,8 @@ class AchievementNotifier {
             shouldUnlock = (stats['max_time_without_clicking'] ?? 0) >= achievement.targetValue;
           } else if (achievement.id == 'secret_rebirth_master') {
             shouldUnlock = rebirthData.rebirthCount >= achievement.targetValue;
+          } else if (achievement.id.startsWith('secret_meditation_')) {
+            shouldUnlock = (stats['max_time_without_clicking'] ?? 0) >= achievement.targetValue;
           }
           break;
       }
@@ -174,7 +192,7 @@ class AchievementNotifier {
     if (achievement.reward.type == AchievementRewardType.tokens) {
       final rebirthData = ref.read(rebirthDataProvider);
       ref.read(rebirthDataProvider.notifier).state = rebirthData.copyWith(
-        celestialTokens: rebirthData.celestialTokens + achievement.reward.value.toInt(),
+        celestialTokens: rebirthData.celestialTokens + achievement.reward.value,
       );
     } else if (achievement.reward.type == AchievementRewardType.unlockSecret) {
       if (achievement.reward.secretId != null) {
