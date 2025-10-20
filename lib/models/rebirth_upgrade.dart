@@ -182,7 +182,7 @@ const List<RebirthUpgrade> allUpgrades = [
     type: UpgradeType.accessoryCapacity,
     baseTokenCost: 8,
     maxLevel: 12,
-    ascensionRequirement: 2,
+    ascensionRequirement: 0,
   ),
 ];
 

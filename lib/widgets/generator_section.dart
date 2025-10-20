@@ -11,13 +11,21 @@ import '../utils/constants.dart';
 import 'particle_system.dart';
 
 /// Widget da seção de geradores de fubá
-class GeneratorSection extends ConsumerWidget {
+class GeneratorSection extends ConsumerStatefulWidget {
   const GeneratorSection({super.key});
 
+  @override
+  ConsumerState<GeneratorSection> createState() => _GeneratorSectionState();
+}
+
+class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
   static final Map<int, Timer?> _autoBuyTimers = {};
+  
+  // Estado dos toggles de compra múltipla
+  int _activeMultiBuyQuantity = 0; // 0 = desativado, 10, 100, 1000, -1 = MAX
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final generators = ref.watch(generatorsProvider);
     final fuba = ref.watch(fubaProvider);
     final unlockedSecrets = ref.watch(unlockedSecretsProvider);
@@ -34,16 +42,19 @@ class GeneratorSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              'FUGERADORES',
-              style: TextStyle(
-                fontSize: GameConstants.getTitleFontSize(context),
-                fontWeight: FontWeight.bold,
-                color: Colors.orange,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'FUGERADORES',
+                style: TextStyle(
+                  fontSize: GameConstants.getTitleFontSize(context),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
               ),
-            ),
+              _buildGlobalMultiBuyButtons(ref, context),
+            ],
           ),
           SizedBox(height: GameConstants.isMobile(context) ? 8 : 12),
           Expanded(
@@ -88,22 +99,87 @@ class GeneratorSection extends ConsumerWidget {
 
   /// Compra um gerador
   void _buyGenerator(WidgetRef ref, int index, BigDecimal cost, BuildContext context) {
+    if (_activeMultiBuyQuantity > 0) {
+      _buyMultipleGenerators(ref, index, _activeMultiBuyQuantity, context);
+    } else if (_activeMultiBuyQuantity == -1) {
+      _buyMaxGenerators(ref, index, context);
+    } else {
+      _buyMultipleGenerators(ref, index, 1, context);
+    }
+  }
+
+  /// Compra múltiplos geradores
+  void _buyMultipleGenerators(WidgetRef ref, int index, int quantity, BuildContext context) {
     final currentFuba = ref.read(fubaProvider);
-    if (currentFuba.compareTo(cost) < 0) return;
-    
-    ref.read(fubaProvider.notifier).state = currentFuba - cost;
     final generators = List<int>.from(ref.read(generatorsProvider));
-    generators[index]++;
-    ref.read(generatorsProvider.notifier).state = generators;
+    final generator = availableGenerators[index];
     
-    final differentGenerators = generators.where((count) => count > 0).length;
-    ref.read(achievementNotifierProvider).updateStat(
-      'different_generators',
-      differentGenerators.toDouble(),
-      context,
-    );
+    BigDecimal totalCost = BigDecimal.zero;
+    int actualQuantity = 0;
     
-    ref.read(saveNotifierProvider.notifier).saveImmediate();
+    for (int i = 0; i < quantity; i++) {
+      final currentOwned = generators[index] + actualQuantity;
+      final currentCost = generator.getCost(currentOwned);
+      
+      if (currentFuba.compareTo(totalCost + currentCost) >= 0) {
+        totalCost += currentCost;
+        actualQuantity++;
+      } else {
+        break;
+      }
+    }
+    
+    if (actualQuantity > 0) {
+      ref.read(fubaProvider.notifier).state = currentFuba - totalCost;
+      generators[index] += actualQuantity;
+      ref.read(generatorsProvider.notifier).state = generators;
+      
+      final differentGenerators = generators.where((count) => count > 0).length;
+      ref.read(achievementNotifierProvider).updateStat(
+        'different_generators',
+        differentGenerators.toDouble(),
+        context,
+      );
+      
+      ref.read(saveNotifierProvider.notifier).saveImmediate();
+    }
+  }
+
+  /// Compra o máximo possível de um gerador
+  void _buyMaxGenerators(WidgetRef ref, int index, BuildContext context) {
+    final currentFuba = ref.read(fubaProvider);
+    final generators = List<int>.from(ref.read(generatorsProvider));
+    final generator = availableGenerators[index];
+    
+    BigDecimal totalCost = BigDecimal.zero;
+    int actualQuantity = 0;
+    
+    while (true) {
+      final currentOwned = generators[index] + actualQuantity;
+      final currentCost = generator.getCost(currentOwned);
+      
+      if (currentFuba.compareTo(totalCost + currentCost) >= 0) {
+        totalCost += currentCost;
+        actualQuantity++;
+      } else {
+        break;
+      }
+    }
+    
+    if (actualQuantity > 0) {
+      ref.read(fubaProvider.notifier).state = currentFuba - totalCost;
+      generators[index] += actualQuantity;
+      ref.read(generatorsProvider.notifier).state = generators;
+      
+      final differentGenerators = generators.where((count) => count > 0).length;
+      ref.read(achievementNotifierProvider).updateStat(
+        'different_generators',
+        differentGenerators.toDouble(),
+        context,
+      );
+      
+      ref.read(saveNotifierProvider.notifier).saveImmediate();
+    }
   }
 
   /// Inicia a compra automática de um gerador
@@ -130,6 +206,61 @@ class GeneratorSection extends ConsumerWidget {
     _autoBuyTimers[index]?.cancel();
     _autoBuyTimers[index] = null;
   }
+
+  /// Constrói os botões de compra múltipla globais
+  Widget _buildGlobalMultiBuyButtons(WidgetRef ref, BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildToggleButton('x1', 1, Colors.green),
+        const SizedBox(width: 4),
+        _buildToggleButton('x10', 10, Colors.blue),
+        const SizedBox(width: 4),
+        _buildToggleButton('x100', 100, Colors.purple),
+        const SizedBox(width: 4),
+        _buildToggleButton('x1000', 1000, Colors.orange),
+        const SizedBox(width: 4),
+        _buildToggleButton('xMAX', -1, Colors.red),
+      ],
+    );
+  }
+
+  /// Constrói um botão toggle
+  Widget _buildToggleButton(String label, int quantity, Color color) {
+    final isActive = _activeMultiBuyQuantity == quantity;
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (_activeMultiBuyQuantity == quantity) {
+            _activeMultiBuyQuantity = 0; // Desativa se já estiver ativo
+          } else {
+            _activeMultiBuyQuantity = quantity; // Ativa este toggle
+          }
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isActive ? color : color.withAlpha(100),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive ? color : color.withAlpha(150),
+            width: isActive ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? Colors.white : color,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
 }
 
 /// Widget do card individual de um gerador
@@ -533,4 +664,5 @@ class _GeneratorCardState extends State<_GeneratorCard>
       },
     );
   }
+
 }

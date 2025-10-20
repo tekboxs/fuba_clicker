@@ -54,11 +54,11 @@ extension RebirthTierExtension on RebirthTier {
   double getMultiplierGain(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return 0.2;
+        return 1.0;
       case RebirthTier.ascension:
-        return 2.0;
+        return 3.0;
       case RebirthTier.transcendence:
-        return 4.5;
+        return 6.5;
     }
   }
 
