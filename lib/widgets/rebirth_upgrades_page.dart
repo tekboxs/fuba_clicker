@@ -19,7 +19,7 @@ class RebirthUpgradesPage extends ConsumerWidget {
   ) {
     final barriers = DifficultyBarrierManager.getBarriersForCategory('upgrade');
 
-    if (kDebugMode) return false;
+    // if (kDebugMode) return false;
 
     switch (upgrade.id) {
       case 'auto_clicker':

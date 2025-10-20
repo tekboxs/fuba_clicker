@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 final audioPlayerProvider = Provider<AudioPlayer>((ref) {
   final player = AudioPlayer();
@@ -33,11 +34,32 @@ class AudioStateNotifier extends StateNotifier<bool> {
     _initializeAudio();
   }
 
+  Future<bool> _requestAudioPermission() async {
+    if (kIsWeb) return true;
+    
+    final status = await Permission.audio.status;
+    if (status.isGranted) return true;
+    
+    if (status.isDenied) {
+      final result = await Permission.audio.request();
+      return result.isGranted;
+    }
+    
+    return false;
+  }
+
   Future<void> _initializeAudio() async {
     if (kDebugMode) return;
     if (_isInitialized) return;
 
     try {
+      final hasPermission = await _requestAudioPermission();
+      if (!hasPermission) {
+        debugPrint('Permissão de áudio negada');
+        state = false;
+        return;
+      }
+
       await _player.setReleaseMode(ReleaseMode.loop);
       await _player.setVolume(0.1);
       await _player.play(AssetSource('song/tek-tema.mp3'));
@@ -51,6 +73,12 @@ class AudioStateNotifier extends StateNotifier<bool> {
 
   Future<void> toggleAudio() async {
     if (!_isInitialized) {
+      final hasPermission = await _requestAudioPermission();
+      if (!hasPermission) {
+        debugPrint('Permissão de áudio necessária para reproduzir música');
+        state = false;
+        return;
+      }
       await _initializeAudio();
       return;
     }
@@ -82,8 +110,28 @@ class ClickSoundNotifier {
 
   ClickSoundNotifier(this._clickPlayer);
 
+  Future<bool> _requestAudioPermission() async {
+    if (kIsWeb) return true;
+    
+    final status = await Permission.audio.status;
+    if (status.isGranted) return true;
+    
+    if (status.isDenied) {
+      final result = await Permission.audio.request();
+      return result.isGranted;
+    }
+    
+    return false;
+  }
+
   Future<void> playClickSound() async {
     try {
+      final hasPermission = await _requestAudioPermission();
+      if (!hasPermission) {
+        debugPrint('Permissão de áudio necessária para tocar som');
+        return;
+      }
+
       await _clickPlayer.stop();
       await _clickPlayer.setVolume(0.3);
       await _clickPlayer.play(AssetSource('song/click.mp3'));

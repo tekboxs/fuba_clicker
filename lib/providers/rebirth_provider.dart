@@ -97,9 +97,86 @@ class RebirthNotifier {
       );
     }
   }
+
+  void performMultipleRebirth(RebirthTier tier, int count) {
+    if (count <= 0) return;
+    
+    final currentData = ref.read(rebirthDataProvider);
+    final fuba = ref.read(fubaProvider);
+    
+    int actualCount = 0;
+    BigDecimal remainingFuba = fuba;
+    
+    final currentTierCount = switch (tier) {
+      RebirthTier.rebirth => currentData.rebirthCount,
+      RebirthTier.ascension => currentData.ascensionCount,
+      RebirthTier.transcendence => currentData.transcendenceCount,
+    };
+    
+    for (int i = 0; i < count; i++) {
+      final requirement = tier.getRequirement(currentTierCount + i);
+      final requirementBigDecimal = BigDecimal.parse(requirement.toString());
+      
+      if (remainingFuba.compareTo(requirementBigDecimal) >= 0) {
+        remainingFuba = remainingFuba - requirementBigDecimal;
+        actualCount++;
+      } else {
+        break;
+      }
+    }
+    
+    if (actualCount == 0) return;
+    
+    int totalTokenReward = 0;
+    for (int i = 0; i < actualCount; i++) {
+      totalTokenReward += tier.getTokenReward(currentTierCount + i);
+    }
+    
+    _resetProgress(tier);
+    
+    ref.read(rebirthDataProvider.notifier).state = switch (tier) {
+      RebirthTier.rebirth => currentData.copyWith(
+          rebirthCount: currentData.rebirthCount + actualCount,
+          celestialTokens: currentData.celestialTokens + totalTokenReward,
+        ),
+      RebirthTier.ascension => currentData.copyWith(
+          ascensionCount: currentData.ascensionCount + actualCount,
+          celestialTokens: currentData.celestialTokens + totalTokenReward,
+        ),
+      RebirthTier.transcendence => currentData.copyWith(
+          transcendenceCount: currentData.transcendenceCount + actualCount,
+          celestialTokens: currentData.celestialTokens + totalTokenReward,
+        ),
+    };
+  }
 }
 
 final rebirthNotifierProvider = Provider<RebirthNotifier>((ref) {
   return RebirthNotifier(ref);
 });
+
+int calculateMaxOperations(RebirthTier tier, BigDecimal fuba, RebirthData rebirthData) {
+  int count = 0;
+  BigDecimal remainingFuba = fuba;
+  
+  final currentCount = switch (tier) {
+    RebirthTier.rebirth => rebirthData.rebirthCount,
+    RebirthTier.ascension => rebirthData.ascensionCount,
+    RebirthTier.transcendence => rebirthData.transcendenceCount,
+  };
+  
+  while (true) {
+    final requirement = tier.getRequirement(currentCount + count);
+    final requirementBigDecimal = BigDecimal.parse(requirement.toString());
+    
+    if (remainingFuba.compareTo(requirementBigDecimal) >= 0) {
+      remainingFuba = remainingFuba - requirementBigDecimal;
+      count++;
+    } else {
+      break;
+    }
+  }
+  
+  return count;
+}
 

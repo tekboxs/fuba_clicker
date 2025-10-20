@@ -193,7 +193,7 @@ class RebirthPage extends ConsumerWidget {
         onTap: isLocked
             ? null
             : (canRebirth
-                  ? () => _showRebirthConfirmation(context, ref, tier)
+                  ? () => _showRebirthConfirmation(context, ref, tier, 1)
                   : null),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -283,20 +283,26 @@ class RebirthPage extends ConsumerWidget {
                   ),
                 )
               else
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Column(
                   children: [
-                    _buildRewardChip(
-                      'x${multiplierGain.toStringAsFixed(1)} Multiplicador',
-                      Icons.trending_up,
-                      Colors.orange,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildRewardChip(
+                          'x${multiplierGain.toStringAsFixed(1)} Multiplicador',
+                          Icons.trending_up,
+                          Colors.orange,
+                        ),
+                        if (tokenReward > 0)
+                          _buildRewardChip(
+                            '+$tokenReward 💎',
+                            Icons.star,
+                            Colors.cyan,
+                          ),
+                      ],
                     ),
-                    if (tokenReward > 0)
-                      _buildRewardChip(
-                        '+$tokenReward 💎',
-                        Icons.star,
-                        Colors.cyan,
-                      ),
+                    const SizedBox(height: 8),
+                    _buildMultipleOperationsButtons(context, ref, tier, fuba, rebirthData),
                   ],
                 ),
             ],
@@ -430,11 +436,65 @@ class RebirthPage extends ConsumerWidget {
     }
   }
 
+  Widget _buildMultipleOperationsButtons(
+    BuildContext context,
+    WidgetRef ref,
+    RebirthTier tier,
+    BigDecimal fuba,
+    RebirthData rebirthData,
+  ) {
+    final maxOperations = calculateMaxOperations(tier, fuba, rebirthData);
+    
+    if (maxOperations <= 1) return const SizedBox.shrink();
+    
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _showRebirthConfirmation(context, ref, tier, 1),
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const Text('1x'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _getTierColor(tier),
+              side: BorderSide(color: _getTierColor(tier)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () => _showRebirthConfirmation(context, ref, tier, maxOperations),
+            icon: const Icon(Icons.all_inclusive, size: 16),
+            label: Text('${maxOperations}x'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _getTierColor(tier),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _showRebirthConfirmation(
     BuildContext context,
     WidgetRef ref,
     RebirthTier tier,
+    int count,
   ) {
+    final rebirthData = ref.read(rebirthDataProvider);
+    final currentCount = switch (tier) {
+      RebirthTier.rebirth => rebirthData.rebirthCount,
+      RebirthTier.ascension => rebirthData.ascensionCount,
+      RebirthTier.transcendence => rebirthData.transcendenceCount,
+    };
+    
+    int totalTokenReward = 0;
+    double totalMultiplierGain = 0;
+    for (int i = 0; i < count; i++) {
+      totalTokenReward += tier.getTokenReward(currentCount + i);
+      totalMultiplierGain += tier.getMultiplierGain(currentCount + i);
+    }
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -443,7 +503,7 @@ class RebirthPage extends ConsumerWidget {
           children: [
             Text(tier.emoji),
             const SizedBox(width: 8),
-            Text(tier.displayName),
+            Text('${tier.displayName} x$count'),
           ],
         ),
         content: Column(
@@ -472,9 +532,9 @@ class RebirthPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text('• x${tier.getMultiplierGain(0)} multiplicador permanente'),
-            if (tier.getTokenReward(0) > 0)
-              Text('• ${tier.getTokenReward(0)} tokens celestiais'),
+            Text('• x${totalMultiplierGain.toStringAsFixed(1)} multiplicador permanente'),
+            if (totalTokenReward > 0)
+              Text('• $totalTokenReward tokens celestiais'),
           ],
         ),
         actions: [
@@ -484,12 +544,16 @@ class RebirthPage extends ConsumerWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              ref.read(rebirthNotifierProvider).performRebirth(tier);
+              if (count == 1) {
+                ref.read(rebirthNotifierProvider).performRebirth(tier);
+              } else {
+                ref.read(rebirthNotifierProvider).performMultipleRebirth(tier, count);
+              }
               Navigator.pop(context);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${tier.displayName} realizado!'),
+                  content: Text('${tier.displayName} x$count realizado!'),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -497,7 +561,7 @@ class RebirthPage extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: _getTierColor(tier),
             ),
-            child: const Text('Confirmar'),
+            child: Text('Confirmar x$count'),
           ),
         ],
       ),

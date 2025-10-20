@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'providers/achievement_provider.dart';
 import 'providers/save_provider.dart';
 import 'widgets/home_page.dart';
@@ -28,12 +30,23 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   Future<void> _loadGameData() async {
     await Future.delayed(const Duration(milliseconds: 100));
 
+    await _requestAudioPermission();
+
     final saveNotifier = ref.read(saveNotifierProvider.notifier);
     await saveNotifier.loadGame();
 
     setState(() {
       _isLoading = false;
     });
+  }
+
+  Future<void> _requestAudioPermission() async {
+    if (kIsWeb) return;
+    
+    final status = await Permission.audio.status;
+    if (status.isDenied) {
+      await Permission.audio.request();
+    }
   }
 
   @override
