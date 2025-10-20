@@ -506,4 +506,5 @@ const List<CakeAccessory> allAccessories = [
     visualEffect: VisualEffect.lightning,
     specialAbility: SpecialAbility.criticalClick,
   ),
+  //
 ];
