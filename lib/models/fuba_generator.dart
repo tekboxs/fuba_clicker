@@ -238,7 +238,7 @@ final availableGenerators = [
     tier: GeneratorTier.godly,
   ),
   FubaGenerator(
-    name: 'Robô Fubá 3000',
+    name: 'Fubátron 3000',
     emoji: '🤖',
     baseCost: BigDecimal.parse('18000000000'),
     baseProduction: BigDecimal.parse('65000000'),

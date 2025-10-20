@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:big_decimal/big_decimal.dart';
+import 'package:fuba_clicker/providers/save_provider.dart';
 import '../providers/game_providers.dart';
 import '../providers/audio_provider.dart';
 import '../providers/accessory_provider.dart';
@@ -45,7 +46,7 @@ class _HomePageState extends ConsumerState<HomePage>
   DateTime _lastClickTime = DateTime.now();
   int _currentStreak = 0;
   DateTime _lastStreakTime = DateTime.now();
-  
+
   // Variáveis para conquistas secretas
   final List<DateTime> _clickTimes = [];
   Timer? _patienceTimer;
@@ -118,12 +119,14 @@ class _HomePageState extends ConsumerState<HomePage>
             );
             final accessoryMultiplier = ref.read(accessoryMultiplierProvider);
             final rebirthMultiplier = ref.read(rebirthMultiplierProvider);
+            final oneTimeMultiplier = ref.read(oneTimeMultiplierProvider);
 
             final totalClickMultiplier =
                 clickMultiplier *
                 achievementMultiplier *
                 accessoryMultiplier *
-                rebirthMultiplier;
+                rebirthMultiplier *
+                oneTimeMultiplier;
 
             final autoClickValue = autoClickerRate * totalClickMultiplier;
             totalProduction += BigDecimal.parse(autoClickValue.toString());
@@ -177,6 +180,8 @@ class _HomePageState extends ConsumerState<HomePage>
       floatingActionButton: _buildSupporterButton(),
     );
   }
+
+  final TextEditingController _codeController = TextEditingController();
 
   /// Constrói o conteúdo principal da tela
   Widget _buildMainContent() {
@@ -338,12 +343,14 @@ class _HomePageState extends ConsumerState<HomePage>
     final achievementMultiplier = ref.watch(achievementMultiplierProvider);
     final accessoryMultiplier = ref.read(accessoryMultiplierProvider);
     final rebirthMultiplier = ref.read(rebirthMultiplierProvider);
+    final oneTimeMultiplier = ref.read(oneTimeMultiplierProvider);
 
     final totalClickMultiplier =
         clickMultiplier *
         achievementMultiplier *
         accessoryMultiplier *
-        rebirthMultiplier;
+        rebirthMultiplier *
+        oneTimeMultiplier;
 
     final clickValue = 1 * totalClickMultiplier;
 
@@ -400,35 +407,32 @@ class _HomePageState extends ConsumerState<HomePage>
   /// Atualiza o rastreamento para conquistas secretas
   void _updateSecretAchievementTracking(double clickValue) {
     final now = DateTime.now();
-    
+
     // Atualizar lista de cliques para verificar cliques em 10 segundos
     _clickTimes.add(now);
     _clickTimes.removeWhere((time) => now.difference(time).inSeconds > 10);
-    
+
     // Atualizar estatística de cliques em 10 segundos
-    ref.read(achievementNotifierProvider).updateClicksIn10Seconds(
-      _clickTimes.length.toDouble(),
-      context,
-    );
-    
+    ref
+        .read(achievementNotifierProvider)
+        .updateClicksIn10Seconds(_clickTimes.length.toDouble(), context);
+
     // Atualizar fubá total obtido por cliques
     _totalClickFuba += clickValue;
-    ref.read(achievementNotifierProvider).updateTotalClickFuba(
-      _totalClickFuba,
-      context,
-    );
-    
+    ref
+        .read(achievementNotifierProvider)
+        .updateTotalClickFuba(_totalClickFuba, context);
+
     // Atualizar tempo do último clique para conquista zen
     _lastClickTimeForZen = now;
-    
+
     // Reiniciar timer de paciência
     _patienceTimer?.cancel();
     _patienceTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final timeSinceClick = now.difference(_lastClickTime).inSeconds;
-      ref.read(achievementNotifierProvider).updateTimeSinceLastClick(
-        timeSinceClick.toDouble(),
-        context,
-      );
+      ref
+          .read(achievementNotifierProvider)
+          .updateTimeSinceLastClick(timeSinceClick.toDouble(), context);
     });
   }
 
@@ -437,18 +441,16 @@ class _HomePageState extends ConsumerState<HomePage>
     _playTimeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final now = DateTime.now();
       final playTime = now.difference(_appStartTime).inSeconds;
-      
-      ref.read(achievementNotifierProvider).updateConsecutivePlayTime(
-        playTime.toDouble(),
-        context,
-      );
-      
+
+      ref
+          .read(achievementNotifierProvider)
+          .updateConsecutivePlayTime(playTime.toDouble(), context);
+
       // Verificar tempo sem clicar para conquista zen
       final timeSinceLastClick = now.difference(_lastClickTimeForZen).inSeconds;
-      ref.read(achievementNotifierProvider).updateTimeWithoutClicking(
-        timeSinceLastClick.toDouble(),
-        context,
-      );
+      ref
+          .read(achievementNotifierProvider)
+          .updateTimeWithoutClicking(timeSinceLastClick.toDouble(), context);
     });
   }
 
@@ -487,13 +489,15 @@ class _HomePageState extends ConsumerState<HomePage>
     final rebirthMultiplier = ref.watch(rebirthMultiplierProvider);
     final upgradeMultiplier = ref.watch(upgradeProductionMultiplierProvider);
     final accessoryMultiplier = ref.watch(accessoryMultiplierProvider);
+    final oneTimeMultiplier = ref.watch(oneTimeMultiplierProvider);
     final equippedIds = ref.watch(equippedAccessoriesProvider);
 
     final manualTotal =
         accessoryMultiplier *
         rebirthMultiplier *
         upgradeMultiplier *
-        achievementMultiplier;
+        achievementMultiplier *
+        oneTimeMultiplier;
 
     return Column(
       children: [
@@ -611,7 +615,7 @@ class _HomePageState extends ConsumerState<HomePage>
             ),
           ),
           Text(
-            'Acessórios: x${accessoryMultiplier.toStringAsFixed(2)} | Rebirth: x${rebirthMultiplier.toStringAsFixed(2)} | Upgrade: x${upgradeMultiplier.toStringAsFixed(2)} | Conquistas: x${achievementMultiplier.toStringAsFixed(2)}',
+            'Acessórios: x${accessoryMultiplier.toStringAsFixed(2)} | Rebirth: x${rebirthMultiplier.toStringAsFixed(2)} | Upgrade: x${upgradeMultiplier.toStringAsFixed(2)} | Conquistas: x${achievementMultiplier.toStringAsFixed(2)} | Único: x${oneTimeMultiplier.toStringAsFixed(2)}',
             style: const TextStyle(fontSize: 8, color: Colors.grey),
           ),
           Text(
@@ -653,6 +657,15 @@ class _HomePageState extends ConsumerState<HomePage>
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              if (oneTimeMultiplier > 1)
+                Text(
+                  '💎 x${oneTimeMultiplier.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.purple,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -901,6 +914,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 duration: 5.seconds,
                 color: Colors.white.withAlpha(100),
               ),
+          const SizedBox(height: 10),
           Text(
             'Fubádor',
             style: TextStyle(
@@ -1028,6 +1042,71 @@ class _HomePageState extends ConsumerState<HomePage>
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _codeController,
+                    decoration: InputDecoration(
+                      hintText: 'Código',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.qr_code),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 30),
+                Consumer(
+                  builder: (context, ref, child) {
+                    return IconButton(
+                      onPressed: () {
+                        final code = _codeController.text;
+                        if (code == 'ivi100') {
+                          final rebirthData = ref.read(rebirthDataProvider);
+                          
+                          if (rebirthData.hasUsedOneTimeMultiplier) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('❌ Este multiplicador já foi usado!'),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                            return;
+                          }
+                          
+                          ref.read(rebirthDataProvider.notifier).state = 
+                              rebirthData.copyWith(hasUsedOneTimeMultiplier: true);
+                          
+                          ref
+                              .read(saveNotifierProvider.notifier)
+                              .saveImmediate();
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('✅ Multiplicador x100 ativado!'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+
+                          Navigator.of(context).pop();
+                        }
+                        // if (code.isNotEmpty) {
+                        //   final saveData = SaveService.restoreFromBackupCode(
+                        //     code,
+                        //   );
+                        //   if (saveData != null) {
+                        //     ref.read(saveProvider.notifier).state = saveData;
+                        //   }
+                        // }
+                      },
+                      icon: Icon(Icons.confirmation_num),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),

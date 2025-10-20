@@ -79,12 +79,14 @@ class RebirthData {
   final int ascensionCount;
   final int transcendenceCount;
   final int celestialTokens;
+  final bool hasUsedOneTimeMultiplier;
 
   const RebirthData({
     this.rebirthCount = 0,
     this.ascensionCount = 0,
     this.transcendenceCount = 0,
     this.celestialTokens = 0,
+    this.hasUsedOneTimeMultiplier = false,
   });
 
   RebirthData copyWith({
@@ -92,22 +94,21 @@ class RebirthData {
     int? ascensionCount,
     int? transcendenceCount,
     int? celestialTokens,
+    bool? hasUsedOneTimeMultiplier,
   }) {
     return RebirthData(
       rebirthCount: rebirthCount ?? this.rebirthCount,
       ascensionCount: ascensionCount ?? this.ascensionCount,
       transcendenceCount: transcendenceCount ?? this.transcendenceCount,
       celestialTokens: celestialTokens ?? this.celestialTokens,
+      hasUsedOneTimeMultiplier: hasUsedOneTimeMultiplier ?? this.hasUsedOneTimeMultiplier,
     );
   }
 
   double getTotalMultiplier() {
     double multiplier = 1.0;
 
-    multiplier *= pow(
-      RebirthTier.rebirth.getMultiplierGain(0),
-      rebirthCount,
-    ).toDouble();
+    multiplier *= 1.0 + (RebirthTier.rebirth.getMultiplierGain(0) * rebirthCount);
 
     multiplier *= pow(
       RebirthTier.ascension.getMultiplierGain(0),
@@ -128,6 +129,7 @@ class RebirthData {
       'ascension_count': ascensionCount,
       'transcendence_count': transcendenceCount,
       'celestial_tokens': celestialTokens,
+      'has_used_one_time_multiplier': hasUsedOneTimeMultiplier,
     };
   }
 
@@ -137,6 +139,7 @@ class RebirthData {
       ascensionCount: json['ascension_count'] ?? 0,
       transcendenceCount: json['transcendence_count'] ?? 0,
       celestialTokens: json['celestial_tokens'] ?? 0,
+      hasUsedOneTimeMultiplier: json['has_used_one_time_multiplier'] ?? false,
     );
   }
 }

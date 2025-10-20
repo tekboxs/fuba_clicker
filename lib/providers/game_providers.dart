@@ -43,6 +43,9 @@ final autoProductionProvider = Provider<BigDecimal>((ref) {
   final achievementMultiplier = ref.watch(achievementMultiplierProvider);
   totalProduction *= BigDecimal.parse(achievementMultiplier.toString());
 
+  final oneTimeMultiplier = ref.watch(oneTimeMultiplierProvider);
+  totalProduction *= BigDecimal.parse(oneTimeMultiplier.toString());
+
   return totalProduction;
 });
 
@@ -52,5 +55,6 @@ final totalMultiplierProvider = Provider<double>((ref) {
   total *= ref.watch(rebirthMultiplierProvider);
   total *= ref.watch(upgradeProductionMultiplierProvider);
   total *= ref.watch(achievementMultiplierProvider);
+  total *= ref.watch(oneTimeMultiplierProvider);
   return total;
 });

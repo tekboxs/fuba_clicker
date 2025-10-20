@@ -14,6 +14,11 @@ final rebirthMultiplierProvider = Provider<double>((ref) {
   return ref.watch(rebirthDataProvider).getTotalMultiplier();
 });
 
+final oneTimeMultiplierProvider = Provider<double>((ref) {
+  final rebirthData = ref.watch(rebirthDataProvider);
+  return rebirthData.hasUsedOneTimeMultiplier ? 100.0 : 1.0;
+});
+
 final canRebirthProvider = Provider.family<bool, RebirthTier>((ref, tier) {
   final fuba = ref.watch(fubaProvider);
   final rebirthData = ref.watch(rebirthDataProvider);

@@ -29,14 +29,26 @@ class SaveService {
     required Set<String> secrets,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     await prefs.setString(_fubaKey, _compress(fuba.toString()));
     await prefs.setString(_generatorsKey, _compress(jsonEncode(generators)));
     await prefs.setString(_inventoryKey, _compress(jsonEncode(inventory)));
     await prefs.setString(_equippedKey, _compress(jsonEncode(equipped)));
-    await prefs.setString(_rebirthDataKey, _compress(jsonEncode(rebirthData.toJson())));
-    await prefs.setString(_achievementsKey, _compress(jsonEncode(achievements.toList())));
-    await prefs.setString(_achievementStatsKey, _compress(jsonEncode(achievementStats)));
+    await prefs.setString(
+      _rebirthDataKey,
+      _compress(jsonEncode(rebirthData.toJson())),
+    );
+    
+    await prefs.setString(
+      _achievementsKey,
+      _compress(jsonEncode(achievements.toList())),
+    );
+
+    await prefs.setString(
+      _achievementStatsKey,
+      _compress(jsonEncode(achievementStats)),
+    );
+
     await prefs.setString(_upgradesKey, _compress(jsonEncode(upgrades)));
     await prefs.setString(_secretsKey, _compress(jsonEncode(secrets.toList())));
   }
@@ -45,7 +57,7 @@ class SaveService {
     final prefs = await SharedPreferences.getInstance();
 
     double fuba = 0.0;
-    
+
     final fubaString = prefs.getString(_fubaKey);
     if (fubaString != null) {
       fuba = double.tryParse(_decompress(fubaString)) ?? 0.0;
@@ -57,7 +69,7 @@ class SaveService {
         await prefs.setString(_fubaKey, _compress(fuba.toString()));
       }
     }
-    
+
     final generatorsJson = prefs.getString(_generatorsKey);
     final generators = generatorsJson != null
         ? List<int>.from(jsonDecode(_decompress(generatorsJson)))
@@ -85,7 +97,9 @@ class SaveService {
 
     final achievementStatsJson = prefs.getString(_achievementStatsKey);
     final achievementStats = achievementStatsJson != null
-        ? Map<String, double>.from(jsonDecode(_decompress(achievementStatsJson)))
+        ? Map<String, double>.from(
+            jsonDecode(_decompress(achievementStatsJson)),
+          )
         : <String, double>{};
 
     final upgradesJson = prefs.getString(_upgradesKey);
@@ -111,12 +125,12 @@ class SaveService {
     );
 
     // Validar consistência dos dados
-    final validation = SaveValidationService.validateSaveData(saveData);
-    if (!validation.isValid) {
-      // Se dados são críticos inválidos, limpar save
-      await clearSave();
-      return _getDefaultSaveData();
-    }
+    // final validation = SaveValidationService.validateSaveData(saveData);
+    // if (!validation.isValid) {
+    //   // Se dados são críticos inválidos, limpar save
+    //   await clearSave();
+    //   return _getDefaultSaveData();
+    // }
 
     return saveData;
   }
@@ -161,7 +175,7 @@ class SaveService {
       upgrades: upgrades,
       secrets: secrets,
     );
-    
+
     return SaveValidationService.generateBackupCode(saveData);
   }
 
@@ -187,26 +201,26 @@ class SaveService {
     try {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final timestampBytes = utf8.encode(timestamp.toString().padLeft(8, '0'));
-      
+
       final checksum = _generateChecksum(data);
       final checksumBytes = utf8.encode(checksum);
-      
+
       final random = Random();
       final salt = List.generate(16, (_) => random.nextInt(256));
-      
+
       final payload = [
         ...timestampBytes,
         ...utf8.encode(data),
         ...checksumBytes,
         ...salt,
       ];
-      
+
       final compressed = gzip.encode(payload);
       final encoded1 = base64Encode(compressed);
       final obfuscated = _obfuscate(encoded1);
       final encoded2 = base64Encode(utf8.encode(obfuscated));
       final shuffled = _shuffleBytes(utf8.encode(encoded2));
-      
+
       return base64Encode(shuffled);
     } catch (e) {
       return data;
@@ -222,31 +236,38 @@ class SaveService {
       final encoded1 = _deobfuscate(obfuscated);
       final bytes = base64Decode(encoded1);
       final decompressed = gzip.decode(bytes);
-      
+
       final decompressedString = utf8.decode(decompressed);
       final timestampLength = 8;
       final checksumLength = 64;
       final saltLength = 16;
-      
-      if (decompressedString.length < timestampLength + checksumLength + saltLength) {
+
+      if (decompressedString.length <
+          timestampLength + checksumLength + saltLength) {
         return _decompressLegacy(compressedData);
       }
-      
+
       decompressedString.substring(0, timestampLength);
-      final data = decompressedString.substring(timestampLength, decompressedString.length - checksumLength - saltLength);
-      final checksum = decompressedString.substring(decompressedString.length - checksumLength - saltLength, decompressedString.length - saltLength);
-      
+      final data = decompressedString.substring(
+        timestampLength,
+        decompressedString.length - checksumLength - saltLength,
+      );
+      final checksum = decompressedString.substring(
+        decompressedString.length - checksumLength - saltLength,
+        decompressedString.length - saltLength,
+      );
+
       final expectedChecksum = _generateChecksum(data);
       if (checksum != expectedChecksum) {
         return _decompressLegacy(compressedData);
       }
-      
+
       return data;
     } catch (e) {
       return _decompressLegacy(compressedData);
     }
   }
-  
+
   String _decompressLegacy(String compressedData) {
     try {
       final deobfuscated = _deobfuscate(compressedData);
@@ -263,11 +284,11 @@ class SaveService {
     final keyBytes = utf8.encode(key);
     final dataBytes = utf8.encode(data);
     final result = <int>[];
-    
+
     for (int i = 0; i < dataBytes.length; i++) {
       result.add(dataBytes[i] ^ keyBytes[i % keyBytes.length]);
     }
-    
+
     return base64Encode(result);
   }
 
@@ -276,11 +297,11 @@ class SaveService {
     final keyBytes = utf8.encode(key);
     final dataBytes = base64Decode(obfuscatedData);
     final result = <int>[];
-    
+
     for (int i = 0; i < dataBytes.length; i++) {
       result.add(dataBytes[i] ^ keyBytes[i % keyBytes.length]);
     }
-    
+
     return utf8.decode(result);
   }
 
@@ -314,5 +335,3 @@ class SaveService {
     return result;
   }
 }
-
-

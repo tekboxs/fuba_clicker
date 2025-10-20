@@ -22,7 +22,7 @@ class SaveNotifier extends StateNotifier<bool> {
 
   void _startPeriodicSave() {
     _periodicTimer = Timer.periodic(
-      const Duration(seconds: 15),
+      const Duration(seconds: 5),
       (_) => saveGame(),
     );
   }
