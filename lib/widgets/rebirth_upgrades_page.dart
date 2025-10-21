@@ -61,6 +61,8 @@ class RebirthUpgradesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rebirthData = ref.watch(rebirthDataProvider);
+    final fuba = ref.watch(fubaProvider);
+    final generatorsOwned = ref.watch(generatorsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -84,15 +86,10 @@ class RebirthUpgradesPage extends ConsumerWidget {
                 gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 400,
                   mainAxisExtent: 350,
-                  // childAspectRatio: 0.85,
-                  // mainAxisSpacing: 20,
-                  // crossAxisSpacing: 20,
                 ),
                 itemCount: allUpgrades.length,
                 itemBuilder: (context, index) {
                   final upgrade = allUpgrades[index];
-                  final fuba = ref.watch(fubaProvider);
-                  final generatorsOwned = ref.watch(generatorsProvider);
                   final isBarrierLocked = _isUpgradeBarrierLocked(
                     upgrade,
                     fuba,

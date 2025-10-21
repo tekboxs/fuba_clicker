@@ -25,70 +25,75 @@ class HexagonalUpgradeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final upgradeNotifier = ref.watch(upgradeNotifierProvider);
-    final currentLevel = upgradeNotifier.getUpgradeLevel(upgrade.id);
-    final canPurchase = upgradeNotifier.canPurchase(upgrade);
-    final isMaxed = currentLevel >= upgrade.maxLevel;
-    final isLocked = rebirthData.ascensionCount < upgrade.ascensionRequirement;
+    return Consumer(
+      builder: (context, ref, child) {
+        final upgradeData = ref.watch(upgradeCardDataProvider(upgrade.id));
+        final currentLevel = upgradeData['currentLevel'] as int;
+        final isMaxed = upgradeData['isMaxed'] as bool;
+        final isLocked = upgradeData['isLocked'] as bool;
+        
+        final upgradeNotifier = ref.read(upgradeNotifierProvider);
+        final canPurchase = upgradeNotifier.canPurchase(upgrade);
 
-    final cardColors = _getCardColors(
-      upgrade,
-      isMaxed,
-      isLocked,
-      isBarrierLocked,
-      canPurchase,
-    );
+        final cardColors = _getCardColors(
+          upgrade,
+          isMaxed,
+          isLocked,
+          isBarrierLocked,
+          canPurchase,
+        );
 
-    return GestureDetector(
-      onTap: canPurchase && !isMaxed && !isLocked && !isBarrierLocked
-          ? () {
-              final upgradeNotifier = ref.read(upgradeNotifierProvider);
-              upgradeNotifier.purchaseUpgrade(upgrade);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${upgrade.name} melhorado!'),
-                  backgroundColor: Colors.green,
+        return GestureDetector(
+          onTap: canPurchase && !isMaxed && !isLocked && !isBarrierLocked
+              ? () {
+                  upgradeNotifier.purchaseUpgrade(upgrade);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${upgrade.name} melhorado!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              : null,
+          child: SizedBox(
+            width: 180,
+            height: 220,
+            child: CustomPaint(
+              painter: HexagonalPainter(
+                gradient: cardColors.gradient,
+                borderColor: cardColors.borderColor,
+                isLocked: isLocked || isBarrierLocked,
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 90),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildIcon(upgrade, isLocked, isBarrierLocked),
+                    _buildContent(
+                      upgrade,
+                      currentLevel,
+                      isMaxed,
+                      isLocked,
+                      isBarrierLocked,
+                      canPurchase,
+                      cardColors,
+                    ),
+                    Spacer(),
+                    _buildBanner(
+                      upgrade,
+                      isMaxed,
+                      isLocked,
+                      isBarrierLocked,
+                      cardColors,
+                    ),
+                  ],
                 ),
-              );
-            }
-          : null,
-      child: SizedBox(
-        width: 180,
-        height: 220,
-        child: CustomPaint(
-          painter: HexagonalPainter(
-            gradient: cardColors.gradient,
-            borderColor: cardColors.borderColor,
-            isLocked: isLocked || isBarrierLocked,
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 90),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildIcon(upgrade, isLocked, isBarrierLocked),
-                _buildContent(
-                  upgrade,
-                  currentLevel,
-                  isMaxed,
-                  isLocked,
-                  isBarrierLocked,
-                  canPurchase,
-                  cardColors,
-                ),
-                Spacer(),
-                _buildBanner(
-                  upgrade,
-                  isMaxed,
-                  isLocked,
-                  isBarrierLocked,
-                  cardColors,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

@@ -6,6 +6,10 @@ final upgradesLevelProvider = StateProvider<Map<String, int>>((ref) {
   return {};
 });
 
+final upgradeLevelsProvider = Provider<Map<String, int>>((ref) {
+  return ref.watch(upgradesLevelProvider);
+});
+
 class UpgradeNotifier {
   UpgradeNotifier(this.ref);
   final Ref ref;
@@ -38,7 +42,7 @@ class UpgradeNotifier {
   }
 
   int getUpgradeLevel(String upgradeId) {
-    return ref.read(upgradesLevelProvider)[upgradeId] ?? 0;
+    return ref.read(upgradeLevelsProvider)[upgradeId] ?? 0;
   }
 
   double getUpgradeEffect(UpgradeType type) {
@@ -81,5 +85,21 @@ final upgradeNotifierProvider = Provider<UpgradeNotifier>((ref) {
 
 final upgradeProductionMultiplierProvider = Provider<double>((ref) {
   return ref.watch(upgradeNotifierProvider).getTotalProductionMultiplier();
+});
+
+final upgradeCardDataProvider = Provider.family<Map<String, dynamic>, String>((ref, upgradeId) {
+  final upgradeLevels = ref.watch(upgradeLevelsProvider);
+  final rebirthData = ref.watch(rebirthDataProvider);
+  final upgrade = allUpgrades.firstWhere((u) => u.id == upgradeId);
+  
+  final currentLevel = upgradeLevels[upgradeId] ?? 0;
+  final isMaxed = currentLevel >= upgrade.maxLevel;
+  final isLocked = rebirthData.ascensionCount < upgrade.ascensionRequirement;
+  
+  return {
+    'currentLevel': currentLevel,
+    'isMaxed': isMaxed,
+    'isLocked': isLocked,
+  };
 });
 
