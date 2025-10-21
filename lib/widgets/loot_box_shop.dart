@@ -36,6 +36,34 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     super.dispose();
   }
 
+  double _getMainAxisExtent(double screenHeight, bool isMobile) {
+    if (screenHeight < 500) {
+      return isMobile ? 280 : 320;
+    } else if (screenHeight < 600) {
+      return isMobile ? 320 : 360;
+    } else if (screenHeight < 700) {
+      return isMobile ? 360 : 400;
+    } else if (screenHeight < 800) {
+      return isMobile ? 400 : 450;
+    } else {
+      return isMobile ? 420 : 480;
+    }
+  }
+
+  double _getInventoryAspectRatio(double screenHeight, bool isMobile) {
+    if (screenHeight < 500) {
+      return isMobile ? 3.5 : 4.0;
+    } else if (screenHeight < 600) {
+      return isMobile ? 3.0 : 3.5;
+    } else if (screenHeight < 700) {
+      return isMobile ? 2.8 : 3.2;
+    } else if (screenHeight < 800) {
+      return isMobile ? 2.6 : 3.0;
+    } else {
+      return isMobile ? 2.4 : 2.8;
+    }
+  }
+
   bool _isLootBoxTierUnlocked(
     LootBoxTier tier,
     BigDecimal fuba,
@@ -58,6 +86,18 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
         return barriers[5].isUnlocked(fuba, generatorsOwned);
       case LootBoxTier.primordial:
         return barriers[6].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.cosmic:
+        return barriers[7].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.infinite:
+        return barriers[8].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.reality:
+        return barriers[9].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.omniversal:
+        return barriers[10].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.tek:
+        return barriers[11].isUnlocked(fuba, generatorsOwned);
+      case LootBoxTier.absolute:
+        return barriers[12].isUnlocked(fuba, generatorsOwned);
     }
   }
 
@@ -79,6 +119,18 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
         return barriers[5];
       case LootBoxTier.primordial:
         return barriers[6];
+      case LootBoxTier.cosmic:
+        return barriers[7];
+      case LootBoxTier.infinite:
+        return barriers[8];
+      case LootBoxTier.reality:
+        return barriers[9];
+      case LootBoxTier.omniversal:
+        return barriers[10];
+      case LootBoxTier.tek:
+        return barriers[11];
+      case LootBoxTier.absolute:
+        return barriers[12];
     }
   }
 
@@ -107,6 +159,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   Widget _buildShopTab() {
     final fuba = ref.watch(fubaProvider);
     final isMobile = GameConstants.isMobile(context);
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Padding(
       padding: EdgeInsets.all(GameConstants.getDefaultPadding(context)),
@@ -140,7 +193,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 400,
-                mainAxisExtent: 450,
+                mainAxisExtent: _getMainAxisExtent(screenHeight, isMobile),
                 crossAxisSpacing: isMobile ? 16 : 20,
                 mainAxisSpacing: isMobile ? 16 : 20,
               ),
@@ -307,15 +360,33 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
         Row(
           children: [
             Expanded(
-              child: _buildBulkPurchaseButton(tier, 5, tierCost, canAfford5, isMobile),
+              child: _buildBulkPurchaseButton(
+                tier,
+                5,
+                tierCost,
+                canAfford5,
+                isMobile,
+              ),
             ),
             SizedBox(width: isMobile ? 8 : 12),
             Expanded(
-              child: _buildBulkPurchaseButton(tier, 10, tierCost, canAfford10, isMobile),
+              child: _buildBulkPurchaseButton(
+                tier,
+                10,
+                tierCost,
+                canAfford10,
+                isMobile,
+              ),
             ),
             SizedBox(width: isMobile ? 8 : 12),
             Expanded(
-              child: _buildBulkPurchaseButton(tier, 30, tierCost, canAfford30, isMobile),
+              child: _buildBulkPurchaseButton(
+                tier,
+                30,
+                tierCost,
+                canAfford30,
+                isMobile,
+              ),
             ),
           ],
         ),
@@ -445,8 +516,8 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     List<int> generatorsOwned,
     bool isMobile,
   ) {
-    final progress = barrier.getProgress(fuba, generatorsOwned);
-
+    double progress = barrier.getProgress(BigDecimal.zero, generatorsOwned);
+    progress -= 0.5;
     return Column(
       children: [
         Container(
@@ -466,14 +537,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 4),
-              Text(
-                '🌽 ${GameConstants.formatNumber(barrier.requiredFuba)} fubá',
-                style: TextStyle(
-                  fontSize: isMobile ? 9 : 11,
-                  color: Colors.white70,
-                ),
-              ),
+
               if (barrier.requiredGeneratorTier < generatorsOwned.length)
                 Text(
                   '${availableGenerators[barrier.requiredGeneratorTier].emoji} ${barrier.requiredGeneratorCount}x ${availableGenerators[barrier.requiredGeneratorTier].name}',
@@ -489,7 +553,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: LinearProgressIndicator(
-            value: progress,
+            value: progress * 2,
             minHeight: 12,
             backgroundColor: Colors.grey.shade800,
             valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
@@ -497,7 +561,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
         ),
         SizedBox(height: 4),
         Text(
-          '${(progress * 100).toStringAsFixed(1)}%',
+          '${((progress * 2) * 100).toStringAsFixed(1)}%',
           style: TextStyle(
             fontSize: isMobile ? 10 : 12,
             color: Colors.grey.shade400,
@@ -798,11 +862,14 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     List<MapEntry<String, int>> inventoryItems,
     List<String> equipped,
   ) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = GameConstants.isMobile(context);
+    
     return GridView.builder(
       padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 2.5,
+        childAspectRatio: _getInventoryAspectRatio(screenHeight, isMobile),
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),

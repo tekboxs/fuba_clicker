@@ -209,7 +209,82 @@ class GameConstants {
       'Cg', 'Ucg', 'Dcg', 'Tcg', 'Qacg', 'Qicg', 'Sxcg', 'Spcg', 'Occg', 'Nocg',
       // Additional suffixes for 10^363 to 10^399 (magnitudes 121 to 133)
       'Cag', 'Ucag', 'Dcag', 'Tcag', 'Qacag', 'Qicag', 'Sxcag', 'Spcag', 'Occag', 'Nocag',
-      'Cig', 'Ucig', 'Dcig' // Up to 133 suffixes (10^399)
+      'Cig', 'Ucig', 'Dcig', 'Tcig', 'Qacig', 'Qicig', 'Sxcig', 'Spcig', 'Occig', 'Nocig',
+      // 10^393 to 10^420 (magnitudes 131 to 140)
+      'Sxig', 'Usxig', 'Dsxig', 'Tsxig', 'Qasxig', 'Qisxig', 'Sxsxig', 'Spsxig', 'Ocsxig', 'Nosxig',
+      // 10^423 to 10^450 (magnitudes 141 to 150)
+      'Spig', 'Uspig', 'Dspig', 'Tspig', 'Qaspig', 'Qispig', 'Sxspig', 'Spspig', 'Ocspig', 'Nospig',
+      // 10^453 to 10^480 (magnitudes 151 to 160)
+      'Ocig', 'Uocig', 'Docig', 'Tocig', 'Qaocig', 'Qiocig', 'Sxocig', 'Spocig', 'Ococig', 'Noocig',
+      // 10^483 to 10^510 (magnitudes 161 to 170)
+      'Noig', 'Unoig', 'Dnoig', 'Tnoig', 'Qanoig', 'Qinoig', 'Sxnoig', 'Spnoig', 'Ocnoig', 'Nonoig',
+      // 10^513 to 10^540 (magnitudes 171 to 180)
+      'Ung', 'Uung', 'Dung', 'Tung', 'Qaung', 'Qiung', 'Sxung', 'Spung', 'Ocung', 'Nounig',
+      // 10^543 to 10^570 (magnitudes 181 to 190)
+      'Dng', 'Udng', 'Ddng', 'Tdng', 'Qadng', 'Qidng', 'Sxdng', 'Spdng', 'Ocdng', 'Nodng',
+      // 10^573 to 10^600 (magnitudes 191 to 200)
+      'Tng', 'Utng', 'Dtng', 'Ttng', 'Qatng', 'Qitng', 'Sxtng', 'Sptng', 'Octng', 'Notng',
+      // 10^603 to 10^630 (magnitudes 201 to 210)
+      'Qang', 'Uqang', 'Dqang', 'Tqang', 'Qaqang', 'Qiqang', 'Sxqang', 'Spqang', 'Ocqang', 'Noqang',
+      // 10^633 to 10^660 (magnitudes 211 to 220)
+      'Qing', 'Uqing', 'Dqing', 'Tqing', 'Qaqing', 'Qiqing', 'Sxqing', 'Spqing', 'Ocqing', 'Noqing',
+      // 10^663 to 10^690 (magnitudes 221 to 230)
+      'Sxng', 'Usxng', 'Dsxng', 'Tsxng', 'Qasxng', 'Qisxng', 'Sxsxng', 'Spsxng', 'Ocsxng', 'Nosxng',
+      // 10^693 to 10^720 (magnitudes 231 to 240)
+      'Spng', 'Uspng', 'Dspng', 'Tspng', 'Qaspng', 'Qispng', 'Sxspng', 'Spspng', 'Ocspng', 'Nospng',
+      // 10^723 to 10^750 (magnitudes 241 to 250)
+      'Ocng', 'Uocng', 'Docng', 'Tocng', 'Qaocng', 'Qiocng', 'Sxocng', 'Spocng', 'Ococng', 'Noocng',
+      // 10^753 to 10^780 (magnitudes 251 to 260)
+      'Nong', 'Unong', 'Dnong', 'Tnong', 'Qanong', 'Qinong', 'Sxnong', 'Spnong', 'Ocnong', 'Nonong',
+      // 10^783 to 10^810 (magnitudes 261 to 270)
+      'Uctg', 'Uuctg', 'Ductg', 'Tuctg', 'Qauctg', 'Qiuctg', 'Sxuctg', 'Spuctg', 'Ocuctg', 'Nouctg',
+      // 10^813 to 10^840 (magnitudes 271 to 280)
+      'Dctg', 'Udctg', 'Ddctg', 'Tdctg', 'Qadctg', 'Qidctg', 'Sxdctg', 'Spdctg', 'Ocdctg', 'Nodctg',
+      // 10^843 to 10^870 (magnitudes 281 to 290)
+      'Tctg', 'Utctg', 'Dtctg', 'Ttctg', 'Qatctg', 'Qitctg', 'Sxtctg', 'Sptctg', 'Octctg', 'Notctg',
+      // 10^873 to 10^900 (magnitudes 291 to 300)
+      'Qactg', 'Uqactg', 'Dqactg', 'Tqactg', 'Qaqactg', 'Qiqactg', 'Sxqactg', 'Spqactg', 'Ocqactg', 'Noqactg',
+      // 10^903 to 10^930 (magnitudes 301 to 310)
+      'Qictg', 'Uqictg', 'Dqictg', 'Tqictg', 'Qaqictg', 'Qiqictg', 'Sxqictg', 'Spqictg', 'Ocqictg', 'Noqictg',
+      // 10^933 to 10^960 (magnitudes 311 to 320)
+      'Sxctg', 'Usxctg', 'Dsxctg', 'Tsxctg', 'Qasxctg', 'Qisxctg', 'Sxsxctg', 'Spsxctg', 'Ocsxctg', 'Nosxctg',
+      // 10^963 to 10^990 (magnitudes 321 to 330)
+      'Spctg', 'Uspctg', 'Dspctg', 'Tspctg', 'Qaspctg', 'Qispctg', 'Sxspctg', 'Spspctg', 'Ocspctg', 'Nospctg',
+      // 10^993 to 10^1020 (magnitudes 331 to 340)
+      'Occtg', 'Uocctg', 'Docctg', 'Tocctg', 'Qaocctg', 'Qiocctg', 'Sxocctg', 'Spocctg', 'Ococctg', 'Noocctg',
+      // 10^1023 to 10^1050 (magnitudes 341 to 350)
+      'Noctg', 'Unoctg', 'Dnoctg', 'Tnoctg', 'Qanoctg', 'Qinoctg', 'Sxnoctg', 'Spnoctg', 'Ocnoctg', 'Nonoctg',
+      // 10^1053 to 10^1080 (magnitudes 351 to 360)
+      'Ucag', 'Uucag', 'Ducag', 'Tucag', 'Qaucag', 'Qiucag', 'Sxucag', 'Spucag', 'Ocucag', 'Noucag',
+      // 10^1083 to 10^1110 (magnitudes 361 to 370)
+      'Dcag', 'Udcag', 'Ddcag', 'Tdcag', 'Qadcag', 'Qidcag', 'Sxdcag', 'Spdcag', 'Ocdcag', 'Nodcag',
+      // 10^1113 to 10^1140 (magnitudes 371 to 380)
+      'Tcag', 'Utcag', 'Dtcag', 'Ttcag', 'Qatcag', 'Qitcag', 'Sxtcag', 'Sptcag', 'Octcag', 'Notcag',
+      // 10^1143 to 10^1170 (magnitudes 381 to 390)
+      'Qacag', 'Uqacag', 'Dqacag', 'Tqacag', 'Qaqacag', 'Qiqacag', 'Sxqacag', 'Spqacag', 'Ocqacag', 'Noqacag',
+      // 10^1173 to 10^1200 (magnitudes 391 to 400)
+      'Qicag', 'Uqicag', 'Dqicag', 'Tqicag', 'Qaqicag', 'Qiqicag', 'Sxqicag', 'Spqicag', 'Ocqicag', 'Noqicag',
+      // 10^1203 to 10^1230 (magnitudes 401 to 410)
+      'Sxcag', 'Usxcag', 'Dsxcag', 'Tsxcag', 'Qasxcag', 'Qisxcag', 'Sxsxcag', 'Spsxcag', 'Ocsxcag', 'Nosxcag',
+      // 10^1233 to 10^1260 (magnitudes 411 to 420)
+      'Spcag', 'Uspcag', 'Dspcag', 'Tspcag', 'Qaspcag', 'Qispcag', 'Sxspcag', 'Spspcag', 'Ocspcag', 'Nospcag',
+      // 10^1263 to 10^1290 (magnitudes 421 to 430)
+      'Occag', 'Uoccag', 'Doccag', 'Toccag', 'Qaoccag', 'Qioccag', 'Sxoccag', 'Spoccag', 'Ococcag', 'Nooccag',
+      // 10^1293 to 10^1320 (magnitudes 431 to 440)
+      'Nocag', 'Unocag', 'Dnocag', 'Tnocag', 'Qanocag', 'Qinocag', 'Sxnocag', 'Spnocag', 'Ocnocag', 'Nonocag',
+      // 10^1323 to 10^1350 (magnitudes 441 to 450)
+      'Ucig', 'Uucig', 'Ducig', 'Tucig', 'Qaucig', 'Qiucig', 'Sxucig', 'Spucig', 'Ocucig', 'Noucig',
+      // 10^1353 to 10^1380 (magnitudes 451 to 460)
+      'Dcig', 'Udcig', 'Ddcig', 'Tdcig', 'Qadcig', 'Qidcig', 'Sxdcig', 'Spdcig', 'Ocdcig', 'Nodcig',
+      // 10^1383 to 10^1410 (magnitudes 461 to 470)
+      'Tcig', 'Utcig', 'Dtcig', 'Ttcig', 'Qatcig', 'Qitcig', 'Sxtcig', 'Sptcig', 'Octcig', 'Notcig',
+      // 10^1413 to 10^1440 (magnitudes 471 to 480)
+      'Qacig', 'Uqacig', 'Dqacig', 'Tqacig', 'Qaqacig', 'Qiqacig', 'Sxqacig', 'Spqacig', 'Ocqacig', 'Noqacig',
+      // 10^1443 to 10^1470 (magnitudes 481 to 490)
+      'Qicig', 'Uqicig', 'Dqicig', 'Tqicig', 'Qaqicig', 'Qiqicig', 'Sxqicig', 'Spqicig', 'Ocqicig', 'Noqicig',
+      // 10^1473 to 10^1500 (magnitudes 491 to 500)
+      'Sxcig', 'Usxcig', 'Dsxcig', 'Tsxcig', 'Qasxcig', 'Qisxcig', 'Sxsxcig', 'Spsxcig', 'Ocsxcig', 'Nosxcig',
+      'Spcig', 'Uspcig', 'Dspcig', 'Tspcig', 'Qaspcig', 'Qispcig', 'Sxspcig', 'Spspcig', 'Ocspcig', 'Nospcig'
     ];
 
     String numberString = absNumber.toPlainString();
@@ -287,11 +362,49 @@ class SuffixNumber {
       'Ct', 'Uct', 'Dct', 'Tct', 'Qact', 'Qict', 'Sxct', 'Spct', 'Occt', 'Noct',
       'Cg', 'Ucg', 'Dcg', 'Tcg', 'Qacg', 'Qicg', 'Sxcg', 'Spcg', 'Occg', 'Nocg',
       'Cag', 'Ucag', 'Dcag', 'Tcag', 'Qacag', 'Qicag', 'Sxcag', 'Spcag', 'Occag', 'Nocag',
-      'Cig', 'Ucig', 'Dcig'
+      'Cig', 'Ucig', 'Dcig', 'Tcig', 'Qacig', 'Qicig', 'Sxcig', 'Spcig', 'Occig', 'Nocig',
+      'Sxig', 'Usxig', 'Dsxig', 'Tsxig', 'Qasxig', 'Qisxig', 'Sxsxig', 'Spsxig', 'Ocsxig', 'Nosxig',
+      'Spig', 'Uspig', 'Dspig', 'Tspig', 'Qaspig', 'Qispig', 'Sxspig', 'Spspig', 'Ocspig', 'Nospig',
+      'Ocig', 'Uocig', 'Docig', 'Tocig', 'Qaocig', 'Qiocig', 'Sxocig', 'Spocig', 'Ococig', 'Noocig',
+      'Noig', 'Unoig', 'Dnoig', 'Tnoig', 'Qanoig', 'Qinoig', 'Sxnoig', 'Spnoig', 'Ocnoig', 'Nonoig',
+      'Ung', 'Uung', 'Dung', 'Tung', 'Qaung', 'Qiung', 'Sxung', 'Spung', 'Ocung', 'Nounig',
+      'Dng', 'Udng', 'Ddng', 'Tdng', 'Qadng', 'Qidng', 'Sxdng', 'Spdng', 'Ocdng', 'Nodng',
+      'Tng', 'Utng', 'Dtng', 'Ttng', 'Qatng', 'Qitng', 'Sxtng', 'Sptng', 'Octng', 'Notng',
+      'Qang', 'Uqang', 'Dqang', 'Tqang', 'Qaqang', 'Qiqang', 'Sxqang', 'Spqang', 'Ocqang', 'Noqang',
+      'Qing', 'Uqing', 'Dqing', 'Tqing', 'Qaqing', 'Qiqing', 'Sxqing', 'Spqing', 'Ocqing', 'Noqing',
+      'Sxng', 'Usxng', 'Dsxng', 'Tsxng', 'Qasxng', 'Qisxng', 'Sxsxng', 'Spsxng', 'Ocsxng', 'Nosxng',
+      'Spng', 'Uspng', 'Dspng', 'Tspng', 'Qaspng', 'Qispng', 'Sxspng', 'Spspng', 'Ocspng', 'Nospng',
+      'Ocng', 'Uocng', 'Docng', 'Tocng', 'Qaocng', 'Qiocng', 'Sxocng', 'Spocng', 'Ococng', 'Noocng',
+      'Nong', 'Unong', 'Dnong', 'Tnong', 'Qanong', 'Qinong', 'Sxnong', 'Spnong', 'Ocnong', 'Nonong',
+      'Uctg', 'Uuctg', 'Ductg', 'Tuctg', 'Qauctg', 'Qiuctg', 'Sxuctg', 'Spuctg', 'Ocuctg', 'Nouctg',
+      'Dctg', 'Udctg', 'Ddctg', 'Tdctg', 'Qadctg', 'Qidctg', 'Sxdctg', 'Spdctg', 'Ocdctg', 'Nodctg',
+      'Tctg', 'Utctg', 'Dtctg', 'Ttctg', 'Qatctg', 'Qitctg', 'Sxtctg', 'Sptctg', 'Octctg', 'Notctg',
+      'Qactg', 'Uqactg', 'Dqactg', 'Tqactg', 'Qaqactg', 'Qiqactg', 'Sxqactg', 'Spqactg', 'Ocqactg', 'Noqactg',
+      'Qictg', 'Uqictg', 'Dqictg', 'Tqictg', 'Qaqictg', 'Qiqictg', 'Sxqictg', 'Spqictg', 'Ocqictg', 'Noqictg',
+      'Sxctg', 'Usxctg', 'Dsxctg', 'Tsxctg', 'Qasxctg', 'Qisxctg', 'Sxsxctg', 'Spsxctg', 'Ocsxctg', 'Nosxctg',
+      'Spctg', 'Uspctg', 'Dspctg', 'Tspctg', 'Qaspctg', 'Qispctg', 'Sxspctg', 'Spspctg', 'Ocspctg', 'Nospctg',
+      'Occtg', 'Uocctg', 'Docctg', 'Tocctg', 'Qaocctg', 'Qiocctg', 'Sxocctg', 'Spocctg', 'Ococctg', 'Noocctg',
+      'Noctg', 'Unoctg', 'Dnoctg', 'Tnoctg', 'Qanoctg', 'Qinoctg', 'Sxnoctg', 'Spnoctg', 'Ocnoctg', 'Nonoctg',
+      'Ucag', 'Uucag', 'Ducag', 'Tucag', 'Qaucag', 'Qiucag', 'Sxucag', 'Spucag', 'Ocucag', 'Noucag',
+      'Dcag', 'Udcag', 'Ddcag', 'Tdcag', 'Qadcag', 'Qidcag', 'Sxdcag', 'Spdcag', 'Ocdcag', 'Nodcag',
+      'Tcag', 'Utcag', 'Dtcag', 'Ttcag', 'Qatcag', 'Qitcag', 'Sxtcag', 'Sptcag', 'Octcag', 'Notcag',
+      'Qacag', 'Uqacag', 'Dqacag', 'Tqacag', 'Qaqacag', 'Qiqacag', 'Sxqacag', 'Spqacag', 'Ocqacag', 'Noqacag',
+      'Qicag', 'Uqicag', 'Dqicag', 'Tqicag', 'Qaqicag', 'Qiqicag', 'Sxqicag', 'Spqicag', 'Ocqicag', 'Noqicag',
+      'Sxcag', 'Usxcag', 'Dsxcag', 'Tsxcag', 'Qasxcag', 'Qisxcag', 'Sxsxcag', 'Spsxcag', 'Ocsxcag', 'Nosxcag',
+      'Spcag', 'Uspcag', 'Dspcag', 'Tspcag', 'Qaspcag', 'Qispcag', 'Sxspcag', 'Spspcag', 'Ocspcag', 'Nospcag',
+      'Occag', 'Uoccag', 'Doccag', 'Toccag', 'Qaoccag', 'Qioccag', 'Sxoccag', 'Spoccag', 'Ococcag', 'Nooccag',
+      'Nocag', 'Unocag', 'Dnocag', 'Tnocag', 'Qanocag', 'Qinocag', 'Sxnocag', 'Spnocag', 'Ocnocag', 'Nonocag',
+      'Ucig', 'Uucig', 'Ducig', 'Tucig', 'Qaucig', 'Qiucig', 'Sxucig', 'Spucig', 'Ocucig', 'Noucig',
+      'Dcig', 'Udcig', 'Ddcig', 'Tdcig', 'Qadcig', 'Qidcig', 'Sxdcig', 'Spdcig', 'Ocdcig', 'Nodcig',
+      'Tcig', 'Utcig', 'Dtcig', 'Ttcig', 'Qatcig', 'Qitcig', 'Sxtcig', 'Sptcig', 'Octcig', 'Notcig',
+      'Qacig', 'Uqacig', 'Dqacig', 'Tqacig', 'Qaqacig', 'Qiqacig', 'Sxqacig', 'Spqacig', 'Ocqacig', 'Noqacig',
+      'Qicig', 'Uqicig', 'Dqicig', 'Tqicig', 'Qaqicig', 'Qiqicig', 'Sxqicig', 'Spqicig', 'Ocqicig', 'Noqicig',
+      'Sxcig', 'Usxcig', 'Dsxcig', 'Tsxcig', 'Qasxcig', 'Qisxcig', 'Sxsxcig', 'Spsxcig', 'Ocsxcig', 'Nosxcig',
+      'Spcig', 'Uspcig', 'Dspcig', 'Tspcig', 'Qaspcig', 'Qispcig', 'Sxspcig', 'Spspcig', 'Ocspcig', 'Nospcig'
     ];
     
     if (magnitude >= baseSuffixes.length) {
-      return SuffixNumber(1.0, 999, 'Fubinity');
+      return SuffixNumber(1.0, 500, 'Fubinity');
     }
     
     BigDecimal divisor = BigDecimal.parse('1${'0' * (magnitude * 3)}');

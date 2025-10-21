@@ -16,6 +16,10 @@ final rebirthMultiplierProvider = Provider<double>((ref) {
   return ref.watch(rebirthDataProvider).getTotalMultiplier();
 });
 
+final diamondsProvider = Provider<int>((ref) {
+  return ref.watch(rebirthDataProvider).diamonds;
+});
+
 final oneTimeMultiplierProvider = Provider<double>((ref) {
   final rebirthData = ref.watch(rebirthDataProvider);
   return rebirthData.hasUsedOneTimeMultiplier ? 100.0 : 1.0;
@@ -111,6 +115,22 @@ class RebirthNotifier {
     }
   }
 
+  void addDiamonds(int amount) {
+    final currentData = ref.read(rebirthDataProvider);
+    ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+      diamonds: currentData.diamonds + amount,
+    );
+  }
+
+  void spendDiamonds(int amount) {
+    final currentData = ref.read(rebirthDataProvider);
+    if (currentData.diamonds >= amount) {
+      ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+        diamonds: currentData.diamonds - amount,
+      );
+    }
+  }
+
   void performMultipleRebirth(RebirthTier tier, int count) {
     if (count <= 0) return;
     
@@ -118,7 +138,6 @@ class RebirthNotifier {
     final fuba = ref.read(fubaProvider);
     
     int actualCount = 0;
-    BigDecimal remainingFuba = fuba;
     
     final currentTierCount = switch (tier) {
       RebirthTier.rebirth => currentData.rebirthCount,
@@ -127,9 +146,9 @@ class RebirthNotifier {
     };
     
     // Limites máximos seguros para evitar travamentos
-    const maxRebirths = 200;
-    const maxAscensions = 100;
-    const maxTranscendences = 80;
+    const maxRebirths = 50;
+    const maxAscensions = 10;
+    const maxTranscendences = 5;
     
     // Determina limite baseado no tier
     int maxAllowed;
@@ -155,13 +174,14 @@ class RebirthNotifier {
     if (fubaSuffix.magnitude > 20) { // Para números muito grandes (acima de 10^60)
       // Para números extremos, permite mais rebirths baseado na magnitude
       final adjustedMaxIterations = switch (tier) {
-        RebirthTier.rebirth => fubaSuffix.magnitude > 30 ? 200 : 100,
-        RebirthTier.ascension => fubaSuffix.magnitude > 35 ? 100 : 50,
-        RebirthTier.transcendence => fubaSuffix.magnitude > 40 ? 80 : 40,
+        RebirthTier.rebirth => fubaSuffix.magnitude > 30 ? 50 : 25,
+        RebirthTier.ascension => fubaSuffix.magnitude > 35 ? 10 : 5,
+        RebirthTier.transcendence => fubaSuffix.magnitude > 40 ? 5 : 3,
       };
       
       if (adjustedMaxIterations > maxIterations) {
-        // Usa o limite maior para números extremos
+        // Usa o limite maior para números extremos com custo progressivo
+        BigDecimal totalCost = BigDecimal.zero;
         for (int i = 0; i < adjustedMaxIterations; i++) {
           final requirement = tier.getRequirement(currentTierCount + i);
           
@@ -180,10 +200,15 @@ class RebirthNotifier {
           
           try {
             final requirementBigDecimal = BigDecimal.parse(requirement.toString());
-            final requirementSuffix = SuffixNumber.fromBigDecimal(requirementBigDecimal);
+            
+            // Aplica multiplicador progressivo para compras múltiplas
+            final progressiveMultiplier = _calculateProgressiveMultiplier(i + 1, tier);
+            final adjustedCost = requirementBigDecimal * BigDecimal.parse(progressiveMultiplier.toString());
+            
+            final requirementSuffix = SuffixNumber.fromBigDecimal(adjustedCost);
             
             if (fubaSuffix.isGreaterOrEqual(requirementSuffix)) {
-              remainingFuba = remainingFuba - requirementBigDecimal;
+              totalCost = totalCost + adjustedCost;
               actualCount++;
             } else {
               break;
@@ -191,6 +216,11 @@ class RebirthNotifier {
           } catch (e) {
             break;
           }
+        }
+        
+        // Aplica o custo total
+        if (actualCount > 0) {
+          ref.read(fubaProvider.notifier).state = fuba - totalCost;
         }
         
         if (actualCount > 0) {
@@ -231,32 +261,14 @@ class RebirthNotifier {
       }
     }
     
+    // Calcula custo total com progressão para compras múltiplas
+    BigDecimal totalCost = BigDecimal.zero;
     for (int i = 0; i < maxIterations; i++) {
       final requirement = tier.getRequirement(currentTierCount + i);
       
       // Verifica se o requisito é válido antes de converter
       if (requirement.isInfinite || requirement.isNaN || requirement <= 0) {
         break;
-      }
-      
-      // Para números muito grandes, usa comparação de SuffixNumber
-      if (requirement > 1e50) {
-        // Converte requirement para SuffixNumber e compara
-        try {
-          final requirementBigDecimal = BigDecimal.parse(requirement.toString());
-          final requirementSuffix = SuffixNumber.fromBigDecimal(requirementBigDecimal);
-          
-          if (fubaSuffix.isGreaterOrEqual(requirementSuffix)) {
-            remainingFuba = remainingFuba - requirementBigDecimal;
-            actualCount++;
-          } else {
-            break;
-          }
-        } catch (e) {
-          // Se houver erro na conversão, para o loop
-          break;
-        }
-        continue;
       }
       
       final requirementString = requirement.toString();
@@ -266,14 +278,30 @@ class RebirthNotifier {
       
       try {
         final requirementBigDecimal = BigDecimal.parse(requirementString);
-        final requirementSuffix = SuffixNumber.fromBigDecimal(requirementBigDecimal);
         
-        // Usa comparação de SuffixNumber para números muito grandes
-        if (fubaSuffix.isGreaterOrEqual(requirementSuffix)) {
-          remainingFuba = remainingFuba - requirementBigDecimal;
-          actualCount++;
+        // Aplica multiplicador progressivo para compras múltiplas
+        final progressiveMultiplier = _calculateProgressiveMultiplier(i + 1, tier);
+        final adjustedCost = requirementBigDecimal * BigDecimal.parse(progressiveMultiplier.toString());
+        
+        totalCost = totalCost + adjustedCost;
+        
+        // Para números muito grandes, usa comparação de SuffixNumber
+        if (requirement > 1e50) {
+          final requirementSuffix = SuffixNumber.fromBigDecimal(adjustedCost);
+          
+          if (fubaSuffix.isGreaterOrEqual(requirementSuffix)) {
+            actualCount++;
+          } else {
+            break;
+          }
         } else {
-          break;
+          final requirementSuffix = SuffixNumber.fromBigDecimal(adjustedCost);
+          
+          if (fubaSuffix.isGreaterOrEqual(requirementSuffix)) {
+            actualCount++;
+          } else {
+            break;
+          }
         }
       } catch (e) {
         // Se houver erro na conversão, para o loop
@@ -284,6 +312,22 @@ class RebirthNotifier {
       if (actualCount >= maxAllowed) {
         break;
       }
+    }
+    
+    // Aplica o custo total se conseguiu fazer algum rebirth
+    if (actualCount > 0) {
+      // Calcula o custo real baseado nos rebirths que conseguiu fazer
+      BigDecimal realCost = BigDecimal.zero;
+      for (int i = 0; i < actualCount; i++) {
+        final requirement = tier.getRequirement(currentTierCount + i);
+        final requirementBigDecimal = BigDecimal.parse(requirement.toString());
+        final progressiveMultiplier = _calculateProgressiveMultiplier(i + 1, tier);
+        final adjustedCost = requirementBigDecimal * BigDecimal.parse(progressiveMultiplier.toString());
+        realCost = realCost + adjustedCost;
+      }
+      
+      // Subtrai o custo real do fuba
+      ref.read(fubaProvider.notifier).state = fuba - realCost;
     }
     
     if (actualCount == 0) return;
@@ -349,9 +393,9 @@ int calculateMaxOperations(RebirthTier tier, BigDecimal fuba, RebirthData rebirt
   };
   
   // Limites máximos seguros para evitar travamentos
-  const maxRebirths = 200;
-  const maxAscensions = 100;
-  const maxTranscendences = 80;
+  const maxRebirths = 50;
+  const maxAscensions = 10;
+  const maxTranscendences = 5;
   
   // Determina limite baseado no tier
   int maxAllowed;
@@ -424,6 +468,22 @@ int calculateMaxOperations(RebirthTier tier, BigDecimal fuba, RebirthData rebirt
   }
   
   return count;
+}
+
+/// Calcula multiplicador progressivo para compras múltiplas
+double _calculateProgressiveMultiplier(int count, RebirthTier tier) {
+  // Multiplicador baseado no tier e quantidade
+  switch (tier) {
+    case RebirthTier.rebirth:
+      // Rebirth: multiplicador mais suave (1.0, 1.1, 1.2, 1.3, ...)
+      return 1.0 + (count - 1) * 0.1;
+    case RebirthTier.ascension:
+      // Ascensão: multiplicador moderado (1.0, 1.2, 1.4, 1.6, ...)
+      return 1.0 + (count - 1) * 0.2;
+    case RebirthTier.transcendence:
+      // Transcendência: multiplicador mais agressivo (1.0, 1.5, 2.0, 2.5, ...)
+      return 1.0 + (count - 1) * 0.5;
+  }
 }
 
 

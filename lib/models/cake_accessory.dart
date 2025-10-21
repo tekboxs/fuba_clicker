@@ -27,7 +27,11 @@ enum AccessoryRarity {
   transcendent(8),
   primordial(9),
   cosmic(10),
-  infinite(11);
+  infinite(11),
+  omniversal(12),
+  reality(13),
+  tek(14),
+  absolute(15);
 
   final int value;
   const AccessoryRarity(this.value);
@@ -56,6 +60,14 @@ enum AccessoryRarity {
         return Colors.indigo;
       case AccessoryRarity.infinite:
         return Colors.amber;
+      case AccessoryRarity.omniversal:
+        return Colors.teal;
+      case AccessoryRarity.reality:
+        return Colors.pink;
+      case AccessoryRarity.tek:
+        return Colors.lime;
+      case AccessoryRarity.absolute:
+        return Colors.red;
     }
   }
 
@@ -83,6 +95,14 @@ enum AccessoryRarity {
         return 'Cósmico';
       case AccessoryRarity.infinite:
         return 'Infinito';
+      case AccessoryRarity.omniversal:
+        return 'Omniversal';
+      case AccessoryRarity.reality:
+        return 'Realidade';
+      case AccessoryRarity.tek:
+        return 'Tek';
+      case AccessoryRarity.absolute:
+        return 'Absoluto';
     }
   }
 
@@ -110,6 +130,14 @@ enum AccessoryRarity {
         return 0.0005;
       case AccessoryRarity.infinite:
         return 0.0001;
+      case AccessoryRarity.omniversal:
+        return 0.00005;
+      case AccessoryRarity.reality:
+        return 0.00001;
+      case AccessoryRarity.tek:
+        return 0.000005;
+      case AccessoryRarity.absolute:
+        return 0.000001;
     }
   }
 
@@ -137,6 +165,14 @@ enum AccessoryRarity {
         return 12.0;
       case AccessoryRarity.infinite:
         return 20.0;
+      case AccessoryRarity.omniversal:
+        return 50.0;
+      case AccessoryRarity.reality:
+        return 100.0;
+      case AccessoryRarity.tek:
+        return 250.0;
+      case AccessoryRarity.absolute:
+        return 500.0;
     }
   }
 
@@ -163,6 +199,14 @@ enum AccessoryRarity {
       case AccessoryRarity.cosmic:
         return AccessoryShape.octagon;
       case AccessoryRarity.infinite:
+        return AccessoryShape.octagon;
+      case AccessoryRarity.omniversal:
+        return AccessoryShape.octagon;
+      case AccessoryRarity.reality:
+        return AccessoryShape.octagon;
+      case AccessoryRarity.tek:
+        return AccessoryShape.octagon;
+      case AccessoryRarity.absolute:
         return AccessoryShape.octagon;
     }
   }
@@ -259,8 +303,8 @@ const List<CakeAccessory> allAccessories = [
     id: 'avocado',
     name: 'Abacate',
     emoji: '🥑',
-    rarity: AccessoryRarity.rare,
-    description: 'Um abacate cremoso',
+    rarity: AccessoryRarity.divine,
+    description: 'Abacate pay <3',
   ),
   CakeAccessory(
     id: 'mango',
@@ -289,7 +333,7 @@ const List<CakeAccessory> allAccessories = [
     id: 'fire',
     name: 'Fogo',
     emoji: '🔥',
-    rarity: AccessoryRarity.epic,
+    rarity: AccessoryRarity.legendary,
     description: 'Chamas ardentes',
     visualEffect: VisualEffect.flames,
     specialAbility: SpecialAbility.criticalClick,
@@ -298,7 +342,7 @@ const List<CakeAccessory> allAccessories = [
     id: 'lightning',
     name: 'Raio',
     emoji: '⚡',
-    rarity: AccessoryRarity.epic,
+    rarity: AccessoryRarity.legendary,
     description: 'Energia elétrica',
     visualEffect: VisualEffect.lightning,
     specialAbility: SpecialAbility.timeWarp,
@@ -360,7 +404,7 @@ const List<CakeAccessory> allAccessories = [
   CakeAccessory(
     id: 'phoenix',
     name: 'Fênix',
-    emoji: '🔥',
+    emoji: '🦅',
     rarity: AccessoryRarity.mythical,
     description: 'A ave lendária que renasce das cinzas',
     visualEffect: VisualEffect.flames,
@@ -388,7 +432,7 @@ const List<CakeAccessory> allAccessories = [
   CakeAccessory(
     id: 'divine_crown',
     name: 'Coroa Divina',
-    emoji: '👑',
+    emoji: '👸',
     rarity: AccessoryRarity.divine,
     description: 'A coroa dos deuses do fubá',
     visualEffect: VisualEffect.rainbow,
@@ -435,7 +479,7 @@ const List<CakeAccessory> allAccessories = [
   CakeAccessory(
     id: 'ancient_rune',
     name: 'Runa Ancestral',
-    emoji: '🔮',
+    emoji: '🔯',
     rarity: AccessoryRarity.primordial,
     description: 'Runa gravada pelos primeiros seres do fubá',
     visualEffect: VisualEffect.pulse,
@@ -454,7 +498,7 @@ const List<CakeAccessory> allAccessories = [
   CakeAccessory(
     id: 'nebula_core',
     name: 'Núcleo de Nebulosa',
-    emoji: '🌌',
+    emoji: '🌫️',
     rarity: AccessoryRarity.cosmic,
     description: 'O coração de uma nebulosa em formação',
     visualEffect: VisualEffect.cosmic,
@@ -463,7 +507,7 @@ const List<CakeAccessory> allAccessories = [
   CakeAccessory(
     id: 'stellar_remnant',
     name: 'Remanescente Estelar',
-    emoji: '⭐',
+    emoji: '💫',
     rarity: AccessoryRarity.cosmic,
     description: 'Os restos de uma estrela que explodiu',
     visualEffect: VisualEffect.sparkle,
@@ -482,7 +526,7 @@ const List<CakeAccessory> allAccessories = [
   CakeAccessory(
     id: 'infinity_matri6x',
     name: 'Matriz Infinita',
-    emoji: '♾️',
+    emoji: '🔢',
     rarity: AccessoryRarity.infinite,
     description: 'A estrutura fundamental da realidade',
     visualEffect: VisualEffect.rainbow,
@@ -491,7 +535,7 @@ const List<CakeAccessory> allAccessories = [
   CakeAccessory(
     id: 'eternal_paradox',
     name: 'Paradoxo Eterno',
-    emoji: '🌀',
+    emoji: '🔄',
     rarity: AccessoryRarity.infinite,
     description: 'Um paradoxo que transcende o tempo e espaço',
     visualEffect: VisualEffect.orbit,
@@ -504,6 +548,317 @@ const List<CakeAccessory> allAccessories = [
     rarity: AccessoryRarity.infinite,
     description: 'A chave que abre todas as dimensões',
     visualEffect: VisualEffect.lightning,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  // Novos acessórios para acompanhar o novo limite
+  CakeAccessory(
+    id: 'quantum_butterfly',
+    name: 'Flutter Quântico',
+    emoji: '🦋',
+    rarity: AccessoryRarity.cosmic,
+    description: 'Flutter é a melhor linguagem de programação',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  CakeAccessory(
+    id: 'neutron_star_core',
+    name: 'Núcleo de Estrela de Nêutrons',
+    emoji: '💫',
+    rarity: AccessoryRarity.cosmic,
+    description: 'O coração de uma estrela super densa',
+    visualEffect: VisualEffect.pulse,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'dark_matter_crystal',
+    name: 'Cristal de Matéria Escura',
+    emoji: '💠',
+    rarity: AccessoryRarity.primordial,
+    description: 'Cristal formado pela matéria invisível do universo',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  CakeAccessory(
+    id: 'time_crystal',
+    name: 'Cristal Temporal',
+    emoji: '⏰',
+    rarity: AccessoryRarity.primordial,
+    description: 'Cristal que manipula o fluxo temporal',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  CakeAccessory(
+    id: 'singularity_fragment',
+    name: 'Fragmento de Singularidade',
+    emoji: '🕳️',
+    rarity: AccessoryRarity.primordial,
+    description: 'Pedaço de uma singularidade espacial',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  CakeAccessory(
+    id: 'multiverse_essence',
+    name: 'Essência Multiversal',
+    emoji: '🌐',
+    rarity: AccessoryRarity.transcendent,
+    description: 'A essência que conecta todos os universos',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'dimensional_anchor',
+    name: 'Âncora Dimensional',
+    emoji: '⚓',
+    rarity: AccessoryRarity.transcendent,
+    description: 'Âncora que estabiliza dimensões',
+    visualEffect: VisualEffect.pulse,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  CakeAccessory(
+    id: 'reality_fabric',
+    name: 'Tecido da Realidade',
+    emoji: '🧵',
+    rarity: AccessoryRarity.transcendent,
+    description: 'O próprio tecido que compõe a realidade',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  CakeAccessory(
+    id: 'consciousness_core',
+    name: 'Núcleo de Consciência',
+    emoji: '🧠',
+    rarity: AccessoryRarity.divine,
+    description: 'O núcleo da consciência universal',
+    visualEffect: VisualEffect.glow,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  CakeAccessory(
+    id: 'eternity_gem',
+    name: 'Gema da Eternidade',
+    emoji: '💍',
+    rarity: AccessoryRarity.divine,
+    description: 'Gema que contém a eternidade',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'void_whisper',
+    name: 'Sussurro do Vazio',
+    emoji: '👻',
+    rarity: AccessoryRarity.divine,
+    description: 'O sussurro do vazio primordial',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  CakeAccessory(
+    id: 'cosmic_web',
+    name: 'Teia Cósmica',
+    emoji: '🕸️',
+    rarity: AccessoryRarity.mythical,
+    description: 'A teia que conecta todas as galáxias',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  CakeAccessory(
+    id: 'stellar_nursery',
+    name: 'Berçário Estelar',
+    emoji: '🌠',
+    rarity: AccessoryRarity.mythical,
+    description: 'Onde as estrelas nascem',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'gravity_well',
+    name: 'Poço Gravitacional',
+    emoji: '🌊',
+    rarity: AccessoryRarity.mythical,
+    description: 'Um poço de gravidade extrema',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  CakeAccessory(
+    id: 'plasma_orb',
+    name: 'Orbe de Plasma',
+    emoji: '🔴',
+    rarity: AccessoryRarity.epic,
+    description: 'Orbe de plasma superaquecido',
+    visualEffect: VisualEffect.glow,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  CakeAccessory(
+    id: 'magnetic_field',
+    name: 'Campo Magnético',
+    emoji: '🧲',
+    rarity: AccessoryRarity.epic,
+    description: 'Campo magnético intenso',
+    visualEffect: VisualEffect.pulse,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  CakeAccessory(
+    id: 'solar_wind',
+    name: 'Vento Solar',
+    emoji: '💨',
+    rarity: AccessoryRarity.rare,
+    description: 'Partículas energéticas do sol',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'aurora_borealis',
+    name: 'Aurora Boreal',
+    emoji: '🌅',
+    rarity: AccessoryRarity.rare,
+    description: 'Luzes dançantes do norte',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.none,
+  ),
+  CakeAccessory(
+    id: 'meteor_shower',
+    name: 'Chuva de Meteoros',
+    emoji: '☄️',
+    rarity: AccessoryRarity.uncommon,
+    description: 'Chuva de meteoros brilhantes',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.none,
+  ),
+  CakeAccessory(
+    id: 'comet_tail',
+    name: 'Cauda de Cometa',
+    emoji: '☄️',
+    rarity: AccessoryRarity.uncommon,
+    description: 'A cauda brilhante de um cometa',
+    visualEffect: VisualEffect.glow,
+    specialAbility: SpecialAbility.none,
+  ),
+  CakeAccessory(
+    id: 'moon_rock',
+    name: 'Rocha Lunar',
+    emoji: '🪨',
+    rarity: AccessoryRarity.common,
+    description: 'Rocha trazida da lua',
+    visualEffect: VisualEffect.none,
+    specialAbility: SpecialAbility.none,
+  ),
+  CakeAccessory(
+    id: 'space_dust',
+    name: 'Poeira Espacial',
+    emoji: '✨',
+    rarity: AccessoryRarity.common,
+    description: 'Poeira das estrelas distantes',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.none,
+  ),
+  // Novos acessórios Omniversais
+  CakeAccessory(
+    id: 'multiverse_core',
+    name: 'Núcleo Multiversal',
+    emoji: '🌐',
+    rarity: AccessoryRarity.omniversal,
+    description: 'O coração de todos os universos',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'dimensional_weaver',
+    name: 'Tecelão Dimensional',
+    emoji: '🕷️',
+    rarity: AccessoryRarity.omniversal,
+    description: 'Tecelão que cria novas dimensões',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  CakeAccessory(
+    id: 'quantum_entangler',
+    name: 'Emaranhador Quântico',
+    emoji: '🔗',
+    rarity: AccessoryRarity.omniversal,
+    description: 'Conecta partículas através do espaço-tempo',
+    visualEffect: VisualEffect.pulse,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  // Novos acessórios de Realidade
+  CakeAccessory(
+    id: 'reality_anchor',
+    name: 'Âncora da Realidade',
+    emoji: '⚓',
+    rarity: AccessoryRarity.reality,
+    description: 'Estabiliza a própria realidade',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'existence_crystal',
+    name: 'Cristal da Existência',
+    emoji: '💎',
+    rarity: AccessoryRarity.reality,
+    description: 'Cristal que define o que existe',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  CakeAccessory(
+    id: 'truth_fragment',
+    name: 'Fragmento da Verdade',
+    emoji: '🔍',
+    rarity: AccessoryRarity.reality,
+    description: 'Um pedaço da verdade absoluta',
+    visualEffect: VisualEffect.glow,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  // Novos acessórios Tek
+  CakeAccessory(
+    id: 'tek_processor',
+    name: 'Processador Tek',
+    emoji: '💻',
+    rarity: AccessoryRarity.tek,
+    description: 'Processador de tecnologia avançada',
+    visualEffect: VisualEffect.lightning,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  CakeAccessory(
+    id: 'quantum_computer',
+    name: 'Computador Quântico',
+    emoji: '🖥️',
+    rarity: AccessoryRarity.tek,
+    description: 'Computador que processa infinitas possibilidades',
+    visualEffect: VisualEffect.pulse,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'neural_interface',
+    name: 'Interface Neural',
+    emoji: '🧠',
+    rarity: AccessoryRarity.tek,
+    description: 'Interface que conecta mente e máquina',
+    visualEffect: VisualEffect.glow,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  // Novos acessórios Absolutos
+  CakeAccessory(
+    id: 'absolute_zero',
+    name: 'Zero Absoluto',
+    emoji: '❄️',
+    rarity: AccessoryRarity.absolute,
+    description: 'A temperatura mais baixa possível',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
+  CakeAccessory(
+    id: 'infinity_engine',
+    name: 'Motor do Infinito',
+    emoji: '⚙️',
+    rarity: AccessoryRarity.absolute,
+    description: 'Motor que gera energia infinita',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  CakeAccessory(
+    id: 'god_mode',
+    name: 'Modo Deus',
+    emoji: '👑',
+    rarity: AccessoryRarity.absolute,
+    description: 'Acesso total ao poder divino',
+    visualEffect: VisualEffect.flames,
     specialAbility: SpecialAbility.criticalClick,
   ),
   //

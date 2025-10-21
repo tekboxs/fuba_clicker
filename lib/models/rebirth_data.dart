@@ -81,11 +81,11 @@ extension RebirthTierExtension on RebirthTier {
   double getMultiplierGain(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return 1.0;
+        return 2.0; // 2x por rebirth
       case RebirthTier.ascension:
-        return 3.0;
+        return 10.0; // 10x por ascensão
       case RebirthTier.transcendence:
-        return 6.5;
+        return 100.0; // 100x por transcendência
     }
   }
 
@@ -108,6 +108,7 @@ class RebirthData {
   final double celestialTokens;
   final bool hasUsedOneTimeMultiplier;
   final Set<String> usedCoupons;
+  final int diamonds;
 
   const RebirthData({
     this.rebirthCount = 0,
@@ -116,6 +117,7 @@ class RebirthData {
     this.celestialTokens = 0.0,
     this.hasUsedOneTimeMultiplier = false,
     this.usedCoupons = const {},
+    this.diamonds = 0,
   });
 
   RebirthData copyWith({
@@ -125,6 +127,7 @@ class RebirthData {
     double? celestialTokens,
     bool? hasUsedOneTimeMultiplier,
     Set<String>? usedCoupons,
+    int? diamonds,
   }) {
     return RebirthData(
       rebirthCount: rebirthCount ?? this.rebirthCount,
@@ -133,6 +136,7 @@ class RebirthData {
       celestialTokens: celestialTokens ?? this.celestialTokens,
       hasUsedOneTimeMultiplier: hasUsedOneTimeMultiplier ?? this.hasUsedOneTimeMultiplier,
       usedCoupons: usedCoupons ?? this.usedCoupons,
+      diamonds: diamonds ?? this.diamonds,
     );
   }
 
@@ -186,6 +190,7 @@ class RebirthData {
       'celestial_tokens': celestialTokens,
       'has_used_one_time_multiplier': hasUsedOneTimeMultiplier,
       'used_coupons': usedCoupons.toList(),
+      'diamonds': diamonds,
     };
   }
 
@@ -197,6 +202,7 @@ class RebirthData {
       celestialTokens: (json['celestial_tokens'] ?? 0).toDouble(),
       hasUsedOneTimeMultiplier: json['has_used_one_time_multiplier'] ?? false,
       usedCoupons: Set<String>.from(json['used_coupons'] ?? []),
+      diamonds: json['diamonds'] ?? 0,
     );
   }
 }

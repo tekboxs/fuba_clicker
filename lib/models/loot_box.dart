@@ -10,7 +10,13 @@ enum LootBoxTier {
   ultimate(4),
   divine(5),
   transcendent(6),
-  primordial(7);
+  primordial(7),
+  cosmic(8),
+  infinite(9),
+  reality(10),
+  omniversal(11),
+  tek(12),
+  absolute(13);
 
   final int value;
   const LootBoxTier(this.value);
@@ -31,6 +37,18 @@ enum LootBoxTier {
         return 'Caixa Transcendente';
       case LootBoxTier.primordial:
         return 'Caixa Primordial';
+      case LootBoxTier.cosmic:
+        return 'Caixa Cósmica';
+      case LootBoxTier.infinite:
+        return 'Caixa Infinita';
+      case LootBoxTier.reality:
+        return 'Caixa da Realidade';
+      case LootBoxTier.omniversal:
+        return 'Caixa Omniversal';
+      case LootBoxTier.tek:
+        return 'Caixas de Tek';
+      case LootBoxTier.absolute:
+        return 'Caixa Absoluta';
     }
   }
 
@@ -50,6 +68,18 @@ enum LootBoxTier {
         return '🌟';
       case LootBoxTier.primordial:
         return '🌌';
+      case LootBoxTier.cosmic:
+        return '🌠';
+      case LootBoxTier.infinite:
+        return '♾️';
+      case LootBoxTier.reality:
+        return '🔮';
+      case LootBoxTier.omniversal:
+        return '🌐';
+      case LootBoxTier.tek:
+        return '💻';
+      case LootBoxTier.absolute:
+        return '👑';
     }
   }
 
@@ -69,6 +99,18 @@ enum LootBoxTier {
         return Colors.white;
       case LootBoxTier.primordial:
         return Colors.deepPurple;
+      case LootBoxTier.cosmic:
+        return Colors.indigo;
+      case LootBoxTier.infinite:
+        return Colors.amber;
+      case LootBoxTier.reality:
+        return Colors.pink;
+      case LootBoxTier.omniversal:
+        return Colors.teal;
+      case LootBoxTier.tek:
+        return Colors.lime;
+      case LootBoxTier.absolute:
+        return Colors.red;
     }
   }
 
@@ -88,13 +130,67 @@ enum LootBoxTier {
         return BigDecimal.parse('50000000000');
       case LootBoxTier.primordial:
         if (currentFuba != null) {
-          final baseCost = BigDecimal.parse('1e80'); // Custo base do Nexus Primordial
+          final baseCost = BigDecimal.parse('1e80');
           if (currentFuba.compareTo(baseCost) > 0) {
             return currentFuba.divide(BigDecimal.parse('30'), scale: 0, roundingMode: RoundingMode.DOWN);
           }
           return baseCost;
         }
         return BigDecimal.parse('1e80');
+      case LootBoxTier.cosmic:
+        if (currentFuba != null) {
+          final baseCost = BigDecimal.parse('1e120');
+          if (currentFuba.compareTo(baseCost) > 0) {
+            return currentFuba.divide(BigDecimal.parse('50'), scale: 0, roundingMode: RoundingMode.DOWN);
+          }
+          return baseCost;
+        }
+        return BigDecimal.parse('1e120');
+      case LootBoxTier.infinite:
+        if (currentFuba != null) {
+          final baseCost = BigDecimal.parse('1e200');
+          if (currentFuba.compareTo(baseCost) > 0) {
+            return currentFuba.divide(BigDecimal.parse('100'), scale: 0, roundingMode: RoundingMode.DOWN);
+          }
+          return baseCost;
+        }
+        return BigDecimal.parse('1e200');
+      case LootBoxTier.reality:
+        if (currentFuba != null) {
+          final baseCost = BigDecimal.parse('1e300');
+          if (currentFuba.compareTo(baseCost) > 0) {
+            return currentFuba.divide(BigDecimal.parse('200'), scale: 0, roundingMode: RoundingMode.DOWN);
+          }
+          return baseCost;
+        }
+        return BigDecimal.parse('1e300');
+      case LootBoxTier.omniversal:
+        if (currentFuba != null) {
+          final baseCost = BigDecimal.parse('1e400');
+          if (currentFuba.compareTo(baseCost) > 0) {
+            return currentFuba.divide(BigDecimal.parse('500'), scale: 0, roundingMode: RoundingMode.DOWN);
+          }
+          return baseCost;
+        }
+        return BigDecimal.parse('1e400');
+      case LootBoxTier.tek:
+        if (currentFuba != null) {
+          final baseCost = BigDecimal.parse('1e500');
+          if (currentFuba.compareTo(baseCost) > 0) {
+            return currentFuba.divide(BigDecimal.parse('1000'), scale: 0, roundingMode: RoundingMode.DOWN);
+          }
+          return baseCost;
+        }
+        return BigDecimal.parse('1e500');
+      case LootBoxTier.absolute:
+        if (currentFuba != null) {
+          final baseCost = BigDecimal.parse('1e600');
+          if (currentFuba.compareTo(baseCost) > 0) {
+            return currentFuba.divide(BigDecimal.parse('2000'), scale: 0, roundingMode: RoundingMode.DOWN);
+          }
+          return baseCost;
+        }
+        return BigDecimal.parse('1e600');
     }
   }
 
@@ -114,6 +210,18 @@ enum LootBoxTier {
         return 'Itens de todas as raridades';
       case LootBoxTier.primordial:
         return 'Acessórios ultra-raros primordiais, cósmicos e infinitos';
+      case LootBoxTier.cosmic:
+        return 'Tesouros cósmicos e primordiais';
+      case LootBoxTier.infinite:
+        return 'Relíquias infinitas e cósmicas';
+      case LootBoxTier.reality:
+        return 'Fragmentos da própria realidade';
+      case LootBoxTier.omniversal:
+        return 'Tesouros de todos os universos';
+      case LootBoxTier.tek:
+        return 'Tecnologia avançada e artefatos';
+      case LootBoxTier.absolute:
+        return 'Poder absoluto e definitivo';
     }
   }
 
@@ -132,6 +240,10 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.0,
           AccessoryRarity.cosmic: 0.0,
           AccessoryRarity.infinite: 0.0,
+          AccessoryRarity.omniversal: 0.0,
+          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.absolute: 0.0,
         };
       case LootBoxTier.advanced:
         return {
@@ -146,6 +258,10 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.0,
           AccessoryRarity.cosmic: 0.0,
           AccessoryRarity.infinite: 0.0,
+          AccessoryRarity.omniversal: 0.0,
+          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.absolute: 0.0,
         };
       case LootBoxTier.premium:
         return {
@@ -160,6 +276,10 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.0,
           AccessoryRarity.cosmic: 0.0,
           AccessoryRarity.infinite: 0.0,
+          AccessoryRarity.omniversal: 0.0,
+          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.absolute: 0.0,
         };
       case LootBoxTier.ultimate:
         return {
@@ -174,6 +294,10 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.0,
           AccessoryRarity.cosmic: 0.0,
           AccessoryRarity.infinite: 0.0,
+          AccessoryRarity.omniversal: 0.0,
+          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.absolute: 0.0,
         };
       case LootBoxTier.divine:
         return {
@@ -188,6 +312,10 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.0,
           AccessoryRarity.cosmic: 0.0,
           AccessoryRarity.infinite: 0.0,
+          AccessoryRarity.omniversal: 0.0,
+          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.absolute: 0.0,
         };
       case LootBoxTier.transcendent:
         return {
@@ -202,6 +330,10 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.0,
           AccessoryRarity.cosmic: 0.0,
           AccessoryRarity.infinite: 0.0,
+          AccessoryRarity.omniversal: 0.0,
+          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.absolute: 0.0,
         };
       case LootBoxTier.primordial:
         return {
@@ -216,6 +348,106 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.06,
           AccessoryRarity.cosmic: 0.03,
           AccessoryRarity.infinite: 0.001,
+        };
+      case LootBoxTier.cosmic:
+        return {
+          AccessoryRarity.common: 0.0,
+          AccessoryRarity.uncommon: 0.0,
+          AccessoryRarity.rare: 0.0,
+          AccessoryRarity.epic: 0.0,
+          AccessoryRarity.legendary: 0.0,
+          AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.20,
+          AccessoryRarity.transcendent: 0.30,
+          AccessoryRarity.primordial: 0.25,
+          AccessoryRarity.cosmic: 0.20,
+          AccessoryRarity.infinite: 0.05,
+        };
+      case LootBoxTier.infinite:
+        return {
+          AccessoryRarity.common: 0.0,
+          AccessoryRarity.uncommon: 0.0,
+          AccessoryRarity.rare: 0.0,
+          AccessoryRarity.epic: 0.0,
+          AccessoryRarity.legendary: 0.0,
+          AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.10,
+          AccessoryRarity.transcendent: 0.20,
+          AccessoryRarity.primordial: 0.30,
+          AccessoryRarity.cosmic: 0.25,
+          AccessoryRarity.infinite: 0.15,
+        };
+      case LootBoxTier.reality:
+        return {
+          AccessoryRarity.common: 0.0,
+          AccessoryRarity.uncommon: 0.0,
+          AccessoryRarity.rare: 0.0,
+          AccessoryRarity.epic: 0.0,
+          AccessoryRarity.legendary: 0.0,
+          AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.05,
+          AccessoryRarity.transcendent: 0.15,
+          AccessoryRarity.primordial: 0.25,
+          AccessoryRarity.cosmic: 0.30,
+          AccessoryRarity.infinite: 0.25,
+          AccessoryRarity.omniversal: 0.0,
+          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.absolute: 0.0,
+        };
+      case LootBoxTier.omniversal:
+        return {
+          AccessoryRarity.common: 0.0,
+          AccessoryRarity.uncommon: 0.0,
+          AccessoryRarity.rare: 0.0,
+          AccessoryRarity.epic: 0.0,
+          AccessoryRarity.legendary: 0.0,
+          AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.0,
+          AccessoryRarity.transcendent: 0.10,
+          AccessoryRarity.primordial: 0.20,
+          AccessoryRarity.cosmic: 0.25,
+          AccessoryRarity.infinite: 0.30,
+          AccessoryRarity.omniversal: 0.15,
+          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.absolute: 0.0,
+        };
+      case LootBoxTier.tek:
+        return {
+          AccessoryRarity.common: 0.0,
+          AccessoryRarity.uncommon: 0.0,
+          AccessoryRarity.rare: 0.0,
+          AccessoryRarity.epic: 0.0,
+          AccessoryRarity.legendary: 0.0,
+          AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.0,
+          AccessoryRarity.transcendent: 0.05,
+          AccessoryRarity.primordial: 0.15,
+          AccessoryRarity.cosmic: 0.20,
+          AccessoryRarity.infinite: 0.25,
+          AccessoryRarity.omniversal: 0.20,
+          AccessoryRarity.reality: 0.15,
+          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.absolute: 0.0,
+        };
+      case LootBoxTier.absolute:
+        return {
+          AccessoryRarity.common: 0.0,
+          AccessoryRarity.uncommon: 0.0,
+          AccessoryRarity.rare: 0.0,
+          AccessoryRarity.epic: 0.0,
+          AccessoryRarity.legendary: 0.0,
+          AccessoryRarity.mythical: 0.0,
+          AccessoryRarity.divine: 0.0,
+          AccessoryRarity.transcendent: 0.0,
+          AccessoryRarity.primordial: 0.10,
+          AccessoryRarity.cosmic: 0.15,
+          AccessoryRarity.infinite: 0.20,
+          AccessoryRarity.omniversal: 0.25,
+          AccessoryRarity.reality: 0.20,
+          AccessoryRarity.tek: 0.10,
+          AccessoryRarity.absolute: 0.0,
         };
     }
   }

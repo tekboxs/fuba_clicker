@@ -1137,6 +1137,39 @@ class _HomePageState extends ConsumerState<HomePage>
                           );
 
                           Navigator.of(context).pop();
+                        } else if (code == 'oliveiralindo') {
+                          final rebirthData = ref.read(rebirthDataProvider);
+                          
+                          if (rebirthData.usedCoupons.contains('oliveiralindo')) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('❌ Este cupom já foi usado!'),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                            return;
+                          }
+                          
+                          ref.read(rebirthDataProvider.notifier).state = 
+                              rebirthData.copyWith(
+                                diamonds: rebirthData.diamonds + 69,
+                                usedCoupons: {...rebirthData.usedCoupons, 'oliveiralindo'},
+                              );
+                          
+                          ref
+                              .read(saveNotifierProvider.notifier)
+                              .saveImmediate();
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('✅ 69 Diamantes adicionados! 💎'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+
+                          Navigator.of(context).pop();
                         }
                         // if (code.isNotEmpty) {
                         //   final saveData = SaveService.restoreFromBackupCode(

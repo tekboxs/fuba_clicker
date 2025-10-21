@@ -66,9 +66,6 @@ class UpgradeNotifier {
     
     // Limpa o cache após uma compra
     _clearCache();
-    
-    // Limpa cache de barriers também
-    ref.read(barrierProgressCacheProvider.notifier).state = {};
   }
 
   int getUpgradeLevel(String upgradeId) {
@@ -154,21 +151,9 @@ final allUpgradesDataProvider = Provider<Map<String, Map<String, dynamic>>>((ref
   return upgradesData;
 });
 
-// Provider otimizado para barriers com cache
-final barrierProgressCacheProvider = StateProvider<Map<String, double>>((ref) => {});
-
 final barrierProgressProvider = Provider.family<double, String>((ref, upgradeId) {
   final fuba = ref.watch(fubaProvider);
   final generatorsOwned = ref.watch(generatorsProvider);
-  final cache = ref.watch(barrierProgressCacheProvider);
-  
-  // Chave de cache baseada em fuba e geradores
-  final cacheKey = '${upgradeId}_${fuba.toString()}_${generatorsOwned.join(',')}';
-  
-  // Verifica se já está em cache
-  if (cache.containsKey(cacheKey)) {
-    return cache[cacheKey]!;
-  }
   
   // Cache simples para evitar recálculos
   final upgrade = allUpgrades.firstWhere((u) => u.id == upgradeId);
@@ -198,22 +183,10 @@ final barrierProgressProvider = Provider.family<double, String>((ref, upgradeId)
   
   // Otimização: se já está desbloqueado, retorna 1.0 sem cálculos custosos
   if (barrier.isUnlocked(fuba, generatorsOwned)) {
-    final result = 1.0;
-    ref.read(barrierProgressCacheProvider.notifier).state = {
-      ...cache,
-      cacheKey: result,
-    };
-    return result;
+    return 1.0;
   }
   
   final result = barrier.getProgress(fuba, generatorsOwned);
-  
-  // Armazena no cache
-  ref.read(barrierProgressCacheProvider.notifier).state = {
-    ...cache,
-    cacheKey: result,
-  };
-  
   return result;
 });
 

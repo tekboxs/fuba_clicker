@@ -208,60 +208,124 @@ class AchievementNotifier {
   }
 
   void incrementStat(String statKey, [double amount = 1, BuildContext? context]) {
-    final stats = ref.read(achievementStatsProvider);
-    final newStats = Map<String, double>.from(stats);
-    newStats[statKey] = (newStats[statKey] ?? 0) + amount;
-    ref.read(achievementStatsProvider.notifier).state = newStats;
-    checkAchievements(context);
+    try {
+      final stats = ref.read(achievementStatsProvider);
+      final newStats = Map<String, double>.from(stats);
+      final currentValue = newStats[statKey] ?? 0;
+      
+      // Evita overflow para valores muito grandes
+      if (currentValue > 1e100) {
+        return;
+      }
+      
+      newStats[statKey] = currentValue + amount;
+      ref.read(achievementStatsProvider.notifier).state = newStats;
+      checkAchievements(context);
+    } catch (e) {
+      // Se houver erro, não atualiza o estado para evitar crash
+      print('Erro ao incrementar stat $statKey: $e');
+    }
   }
 
   void updateStat(String statKey, double value, [BuildContext? context]) {
-    final stats = ref.read(achievementStatsProvider);
-    final newStats = Map<String, double>.from(stats);
-    newStats[statKey] = value;
-    ref.read(achievementStatsProvider.notifier).state = newStats;
-    checkAchievements(context);
+    try {
+      final stats = ref.read(achievementStatsProvider);
+      final newStats = Map<String, double>.from(stats);
+      
+      // Evita overflow para valores muito grandes
+      if (value > 1e100) {
+        newStats[statKey] = 1e100;
+      } else {
+        newStats[statKey] = value;
+      }
+      
+      ref.read(achievementStatsProvider.notifier).state = newStats;
+      checkAchievements(context);
+    } catch (e) {
+      // Se houver erro, não atualiza o estado para evitar crash
+      print('Erro ao atualizar stat $statKey: $e');
+    }
   }
 
   void updateClickSpeed(double clicksPerSecond, [BuildContext? context]) {
-    final stats = ref.read(achievementStatsProvider);
-    final newStats = Map<String, double>.from(stats);
-    newStats['clicks_per_second'] = clicksPerSecond;
-    if (clicksPerSecond > (newStats['max_clicks_per_second'] ?? 0)) {
-      newStats['max_clicks_per_second'] = clicksPerSecond;
+    try {
+      final stats = ref.read(achievementStatsProvider);
+      final newStats = Map<String, double>.from(stats);
+      
+      // Evita overflow para valores muito grandes
+      if (clicksPerSecond > 1e100) {
+        newStats['clicks_per_second'] = 1e100;
+        newStats['max_clicks_per_second'] = 1e100;
+      } else {
+        newStats['clicks_per_second'] = clicksPerSecond;
+        if (clicksPerSecond > (newStats['max_clicks_per_second'] ?? 0)) {
+          newStats['max_clicks_per_second'] = clicksPerSecond;
+        }
+      }
+      
+      ref.read(achievementStatsProvider.notifier).state = newStats;
+      checkAchievements(context);
+    } catch (e) {
+      print('Erro ao atualizar click speed: $e');
     }
-    ref.read(achievementStatsProvider.notifier).state = newStats;
-    checkAchievements(context);
   }
 
   void updateClickStreak(double streak, [BuildContext? context]) {
-    final stats = ref.read(achievementStatsProvider);
-    final newStats = Map<String, double>.from(stats);
-    newStats['click_streak'] = streak;
-    if (streak > (newStats['max_click_streak'] ?? 0)) {
-      newStats['max_click_streak'] = streak;
+    try {
+      final stats = ref.read(achievementStatsProvider);
+      final newStats = Map<String, double>.from(stats);
+      
+      // Evita overflow para valores muito grandes
+      if (streak > 1e100) {
+        newStats['click_streak'] = 1e100;
+        newStats['max_click_streak'] = 1e100;
+      } else {
+        newStats['click_streak'] = streak;
+        if (streak > (newStats['max_click_streak'] ?? 0)) {
+          newStats['max_click_streak'] = streak;
+        }
+      }
+      
+      ref.read(achievementStatsProvider.notifier).state = newStats;
+      checkAchievements(context);
+    } catch (e) {
+      print('Erro ao atualizar click streak: $e');
     }
-    ref.read(achievementStatsProvider.notifier).state = newStats;
-    checkAchievements(context);
   }
 
   void updateFubaPerClick(double fubaPerClick, [BuildContext? context]) {
-    final stats = ref.read(achievementStatsProvider);
-    final newStats = Map<String, double>.from(stats);
-    newStats['fuba_per_click'] = fubaPerClick;
-    if (fubaPerClick > (newStats['max_fuba_per_click'] ?? 0)) {
-      newStats['max_fuba_per_click'] = fubaPerClick;
+    try {
+      final stats = ref.read(achievementStatsProvider);
+      final newStats = Map<String, double>.from(stats);
+      
+      // Evita overflow para valores muito grandes
+      if (fubaPerClick > 1e100) {
+        newStats['fuba_per_click'] = 1e100;
+        newStats['max_fuba_per_click'] = 1e100;
+      } else {
+        newStats['fuba_per_click'] = fubaPerClick;
+        if (fubaPerClick > (newStats['max_fuba_per_click'] ?? 0)) {
+          newStats['max_fuba_per_click'] = fubaPerClick;
+        }
+      }
+      
+      ref.read(achievementStatsProvider.notifier).state = newStats;
+      checkAchievements(context);
+    } catch (e) {
+      print('Erro ao atualizar fuba per click: $e');
     }
-    ref.read(achievementStatsProvider.notifier).state = newStats;
-    checkAchievements(context);
   }
 
   void updateClicksIn10Seconds(double clicks, [BuildContext? context]) {
-    final stats = ref.read(achievementStatsProvider);
-    final newStats = Map<String, double>.from(stats);
-    newStats['clicks_in_10_seconds'] = clicks;
-    ref.read(achievementStatsProvider.notifier).state = newStats;
-    checkAchievements(context);
+    try {
+      final stats = ref.read(achievementStatsProvider);
+      final newStats = Map<String, double>.from(stats);
+      newStats['clicks_in_10_seconds'] = clicks > 1e100 ? 1e100 : clicks;
+      ref.read(achievementStatsProvider.notifier).state = newStats;
+      checkAchievements(context);
+    } catch (e) {
+      print('Erro ao atualizar clicks em 10 segundos: $e');
+    }
   }
 
   void updateTimeSinceLastClick(double seconds, [BuildContext? context]) {
