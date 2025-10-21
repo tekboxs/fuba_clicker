@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../models/rebirth_upgrade.dart';
 import 'rebirth_provider.dart';
 import 'game_providers.dart';
@@ -78,15 +79,15 @@ class UpgradeNotifier {
     return upgrade.getEffectValue(level);
   }
 
-  double getTotalProductionMultiplier() {
-    double multiplier = 1.0;
-    multiplier *= getUpgradeEffect(UpgradeType.idleBoost);
-    multiplier *= getUpgradeEffect(UpgradeType.productionMultiplier);
+  BigDecimal getTotalProductionMultiplier() {
+    BigDecimal multiplier = BigDecimal.one;
+    multiplier *= BigDecimal.parse(getUpgradeEffect(UpgradeType.idleBoost).toString());
+    multiplier *= BigDecimal.parse(getUpgradeEffect(UpgradeType.productionMultiplier).toString());
     return multiplier;
   }
 
-  double getClickMultiplier() {
-    return getUpgradeEffect(UpgradeType.clickPower);
+  BigDecimal getClickMultiplier() {
+    return BigDecimal.parse(getUpgradeEffect(UpgradeType.clickPower).toString());
   }
 
   double getAutoClickerRate() {
@@ -110,7 +111,7 @@ final upgradeNotifierProvider = Provider<UpgradeNotifier>((ref) {
   return UpgradeNotifier(ref);
 });
 
-final upgradeProductionMultiplierProvider = Provider<double>((ref) {
+final upgradeProductionMultiplierProvider = Provider<BigDecimal>((ref) {
   return ref.watch(upgradeNotifierProvider).getTotalProductionMultiplier();
 });
 

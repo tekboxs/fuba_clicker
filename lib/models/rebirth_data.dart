@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:big_decimal/big_decimal.dart';
 
 enum RebirthTier {
   rebirth,
@@ -140,43 +141,28 @@ class RebirthData {
     );
   }
 
-  double getTotalMultiplier() {
-    double multiplier = 1.0;
+  BigDecimal getTotalMultiplier() {
+    BigDecimal multiplier = BigDecimal.one;
 
-    // Otimização: evita cálculos custosos para números muito grandes
+    // Rebirth multiplier
     if (rebirthCount > 0) {
-      multiplier *= 1.0 + (RebirthTier.rebirth.getMultiplierGain(0) * rebirthCount);
+      final rebirthGain = BigDecimal.parse(RebirthTier.rebirth.getMultiplierGain(0).toString());
+      final rebirthMultiplier = BigDecimal.one + (rebirthGain * BigDecimal.parse(rebirthCount.toString()));
+      multiplier *= rebirthMultiplier;
     }
 
+    // Ascension multiplier
     if (ascensionCount > 0) {
-      // Para muitas ascensões, usa aproximação logarítmica
-      if (ascensionCount > 50) {
-        final logMultiplier = ascensionCount * log(RebirthTier.ascension.getMultiplierGain(0));
-        multiplier *= exp(logMultiplier);
-      } else {
-        multiplier *= pow(
-          RebirthTier.ascension.getMultiplierGain(0),
-          ascensionCount,
-        ).toDouble();
-      }
+      final ascensionGain = BigDecimal.parse(RebirthTier.ascension.getMultiplierGain(0).toString());
+      final ascensionMultiplier = ascensionGain.pow(ascensionCount);
+      multiplier *= ascensionMultiplier;
     }
 
+    // Transcendence multiplier
     if (transcendenceCount > 0) {
-      // Para muitas transcendências, usa aproximação logarítmica
-      if (transcendenceCount > 30) {
-        final logMultiplier = transcendenceCount * log(RebirthTier.transcendence.getMultiplierGain(0));
-        multiplier *= exp(logMultiplier);
-      } else {
-        multiplier *= pow(
-          RebirthTier.transcendence.getMultiplierGain(0),
-          transcendenceCount,
-        ).toDouble();
-      }
-    }
-
-    // Verifica se o resultado é finito
-    if (multiplier.isInfinite || multiplier.isNaN) {
-      return 1e50; // Valor máximo seguro
+      final transcendenceGain = BigDecimal.parse(RebirthTier.transcendence.getMultiplierGain(0).toString());
+      final transcendenceMultiplier = transcendenceGain.pow(transcendenceCount);
+      multiplier *= transcendenceMultiplier;
     }
 
     return multiplier;

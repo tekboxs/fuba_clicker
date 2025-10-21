@@ -12,7 +12,7 @@ final rebirthDataProvider = StateProvider<RebirthData>((ref) {
   return const RebirthData();
 });
 
-final rebirthMultiplierProvider = Provider<double>((ref) {
+final rebirthMultiplierProvider = Provider<BigDecimal>((ref) {
   return ref.watch(rebirthDataProvider).getTotalMultiplier();
 });
 
@@ -20,9 +20,9 @@ final diamondsProvider = Provider<int>((ref) {
   return ref.watch(rebirthDataProvider).diamonds;
 });
 
-final oneTimeMultiplierProvider = Provider<double>((ref) {
+final oneTimeMultiplierProvider = Provider<BigDecimal>((ref) {
   final rebirthData = ref.watch(rebirthDataProvider);
-  return rebirthData.hasUsedOneTimeMultiplier ? 100.0 : 1.0;
+  return rebirthData.hasUsedOneTimeMultiplier ? BigDecimal.parse('100') : BigDecimal.one;
 });
 
 final canRebirthProvider = Provider.family<bool, RebirthTier>((ref, tier) {

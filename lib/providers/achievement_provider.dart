@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../models/achievement.dart';
 import '../widgets/achievement_popup.dart';
 import 'rebirth_provider.dart';
@@ -390,15 +391,15 @@ class AchievementNotifier {
     checkAchievements(context);
   }
 
-  double getTotalMultiplierFromAchievements() {
+  BigDecimal getTotalMultiplierFromAchievements() {
     final unlocked = ref.read(unlockedAchievementsProvider);
-    double multiplier = 1.0;
+    BigDecimal multiplier = BigDecimal.one;
 
     for (final achievementId in unlocked) {
       final achievement =
           allAchievements.firstWhere((a) => a.id == achievementId);
       if (achievement.reward.type == AchievementRewardType.multiplier) {
-        multiplier *= achievement.reward.value;
+        multiplier *= BigDecimal.parse(achievement.reward.value.toString());
       }
     }
 
@@ -410,15 +411,15 @@ final achievementNotifierProvider = Provider<AchievementNotifier>((ref) {
   return AchievementNotifier(ref);
 });
 
-final achievementMultiplierProvider = Provider<double>((ref) {
+final achievementMultiplierProvider = Provider<BigDecimal>((ref) {
   final unlocked = ref.watch(unlockedAchievementsProvider);
-  double multiplier = 1.0;
+  BigDecimal multiplier = BigDecimal.one;
 
   for (final achievementId in unlocked) {
     final achievement =
         allAchievements.firstWhere((a) => a.id == achievementId);
     if (achievement.reward.type == AchievementRewardType.multiplier) {
-      multiplier *= achievement.reward.value;
+      multiplier *= BigDecimal.parse(achievement.reward.value.toString());
     }
   }
 

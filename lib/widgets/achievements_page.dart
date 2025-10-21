@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../models/achievement.dart';
 import '../providers/achievement_provider.dart';
 import '../utils/constants.dart';
@@ -66,7 +67,7 @@ class AchievementsPage extends ConsumerWidget {
     return 2;
   }
 
-  Widget _buildHeader(int unlockedCount, double multiplier) {
+  Widget _buildHeader(int unlockedCount, BigDecimal multiplier) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -98,7 +99,7 @@ class AchievementsPage extends ConsumerWidget {
           Column(
             children: [
               Text(
-                'x${multiplier.toStringAsFixed(2)}',
+                'x${GameConstants.formatNumber(multiplier)}',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

@@ -9,12 +9,6 @@ import '../utils/constants.dart';
 import '../utils/difficulty_barriers.dart';
 import '../models/fuba_generator.dart';
 
-BigDecimal _safeParseMultiplier(double value) {
-  if (value.isInfinite || value.isNaN) {
-    return BigDecimal.parse('1e50');
-  }
-  return BigDecimal.parse(value.toString());
-}
 
 class RebirthPage extends ConsumerWidget {
   const RebirthPage({super.key});
@@ -100,7 +94,7 @@ class RebirthPage extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'x${GameConstants.formatNumber(_safeParseMultiplier(multiplier))}',
+              'x${GameConstants.formatNumber(multiplier)}',
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -184,13 +178,13 @@ class RebirthPage extends ConsumerWidget {
     if (requirement > 1e50) {
       // Para requisitos astronômicos, usa comparação de SuffixNumber
       final fubaSuffix = SuffixNumber.fromBigDecimal(fuba);
-      final requirementSuffix = SuffixNumber.fromBigDecimal(_safeParseMultiplier(requirement));
+      final requirementSuffix = SuffixNumber.fromBigDecimal(BigDecimal.parse(requirement.toString()));
       progress = fubaSuffix.isGreaterOrEqual(requirementSuffix) ? 1.0 : 0.0;
     } else {
       try {
         progress = (fuba
                 .divide(
-                  _safeParseMultiplier(requirement),
+                  BigDecimal.parse(requirement.toString()),
                   scale: 6, // Reduzido de 10 para 6 para melhor performance
                   roundingMode: RoundingMode.HALF_UP,
                 )
@@ -199,7 +193,7 @@ class RebirthPage extends ConsumerWidget {
       } catch (e) {
         // Se houver erro na divisão, usa comparação de SuffixNumber
         final fubaSuffix = SuffixNumber.fromBigDecimal(fuba);
-        final requirementSuffix = SuffixNumber.fromBigDecimal(_safeParseMultiplier(requirement));
+        final requirementSuffix = SuffixNumber.fromBigDecimal(BigDecimal.parse(requirement.toString()));
         progress = fubaSuffix.isGreaterOrEqual(requirementSuffix) ? 1.0 : 0.0;
       }
     }
@@ -347,7 +341,7 @@ class RebirthPage extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Requisito: ${GameConstants.formatNumber(_safeParseMultiplier(requirement))} fubá',
+          'Requisito: ${GameConstants.formatNumber(BigDecimal.parse(requirement.toString()))} fubá',
           style: const TextStyle(fontSize: 14),
         ),
         const SizedBox(height: 4),

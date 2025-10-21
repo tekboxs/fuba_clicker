@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:big_decimal/big_decimal.dart';
 import '../models/cake_accessory.dart';
 import '../models/rebirth_upgrade.dart';
 import 'rebirth_upgrade_provider.dart';
@@ -91,14 +92,14 @@ class AccessoryNotifier {
         .length;
   }
 
-  double getTotalProductionMultiplier() {
+  BigDecimal getTotalProductionMultiplier() {
     final equipped = ref.read(equippedAccessoriesProvider);
-    if (equipped.isEmpty) return 1.0;
+    if (equipped.isEmpty) return BigDecimal.one;
 
-    double totalMultiplier = 1.0;
+    BigDecimal totalMultiplier = BigDecimal.one;
     for (final id in equipped) {
       final accessory = allAccessories.firstWhere((acc) => acc.id == id);
-      totalMultiplier *= accessory.productionMultiplier;
+      totalMultiplier *= BigDecimal.parse(accessory.productionMultiplier.toString());
     }
     return totalMultiplier;
   }
@@ -172,14 +173,14 @@ final accessoryNotifierProvider = Provider<AccessoryNotifier>((ref) {
   return AccessoryNotifier(ref);
 });
 
-final accessoryMultiplierProvider = Provider<double>((ref) {
+final accessoryMultiplierProvider = Provider<BigDecimal>((ref) {
   final equipped = ref.watch(equippedAccessoriesProvider);
-  if (equipped.isEmpty) return 1.0;
+  if (equipped.isEmpty) return BigDecimal.one;
 
-  double totalMultiplier = 1.0;
+  BigDecimal totalMultiplier = BigDecimal.one;
   for (final id in equipped) {
     final accessory = allAccessories.firstWhere((acc) => acc.id == id);
-    totalMultiplier *= accessory.productionMultiplier;
+    totalMultiplier *= BigDecimal.parse(accessory.productionMultiplier.toString());
   }
   return totalMultiplier;
 });

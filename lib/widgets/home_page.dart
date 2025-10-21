@@ -28,12 +28,6 @@ import 'achievements_page.dart';
 import 'rebirth_upgrades_page.dart';
 import 'achievement_popup.dart';
 
-BigDecimal _safeParseMultiplier(double value) {
-  if (value.isInfinite || value.isNaN) {
-    return BigDecimal.parse('1e50');
-  }
-  return BigDecimal.parse(value.toString());
-}
 
 /// Página principal do jogo
 class HomePage extends ConsumerStatefulWidget {
@@ -135,13 +129,11 @@ class _HomePageState extends ConsumerState<HomePage>
                 rebirthMultiplier *
                 oneTimeMultiplier;
 
-            final autoClickValue = autoClickerRate * totalClickMultiplier;
-            if (autoClickValue.isFinite) {
-              totalProduction += BigDecimal.parse(autoClickValue.toString());
-            }
+            final autoClickValue = BigDecimal.parse(autoClickerRate.toString()) * totalClickMultiplier;
+            totalProduction += autoClickValue;
 
             // Contar cliques automáticos para conquistas
-            _processAutoClicks(autoClickerRate, autoClickValue);
+            _processAutoClicks(autoClickerRate, autoClickValue.toDouble());
           }
 
           if (totalProduction.compareTo(BigDecimal.zero) > 0) {
@@ -361,11 +353,9 @@ class _HomePageState extends ConsumerState<HomePage>
         rebirthMultiplier *
         oneTimeMultiplier;
 
-    final clickValue = 1 * totalClickMultiplier;
+    final clickValue = totalClickMultiplier;
 
-    if (clickValue.isFinite) {
-      ref.read(fubaProvider.notifier).state += _safeParseMultiplier(clickValue);
-    }
+    ref.read(fubaProvider.notifier).state += clickValue;
 
     // Rastreamento de cliques para conquistas
     _updateClickTracking(clickValue);
@@ -376,11 +366,11 @@ class _HomePageState extends ConsumerState<HomePage>
         .incrementStat('total_clicks', 1, context);
     ref
         .read(achievementNotifierProvider)
-        .incrementStat('total_production', clickValue, context);
+        .incrementStat('total_production', clickValue.toDouble(), context);
   }
 
   /// Atualiza o rastreamento de cliques para conquistas
-  void _updateClickTracking(double clickValue) {
+  void _updateClickTracking(BigDecimal clickValue) {
     final now = DateTime.now();
 
     // Calcular velocidade de cliques (cliques por segundo)
@@ -408,13 +398,13 @@ class _HomePageState extends ConsumerState<HomePage>
     // Atualizar eficiência (fubá por clique)
     ref
         .read(achievementNotifierProvider)
-        .updateFubaPerClick(clickValue, context);
+        .updateFubaPerClick(clickValue.toDouble(), context);
 
     _lastClickTime = now;
   }
 
   /// Atualiza o rastreamento para conquistas secretas
-  void _updateSecretAchievementTracking(double clickValue) {
+  void _updateSecretAchievementTracking(BigDecimal clickValue) {
     final now = DateTime.now();
 
     // Atualizar lista de cliques para verificar cliques em 10 segundos
@@ -427,7 +417,7 @@ class _HomePageState extends ConsumerState<HomePage>
         .updateClicksIn10Seconds(_clickTimes.length.toDouble(), context);
 
     // Atualizar fubá total obtido por cliques
-    _totalClickFuba += clickValue;
+    _totalClickFuba += clickValue.toDouble();
     ref
         .read(achievementNotifierProvider)
         .updateTotalClickFuba(_totalClickFuba, context);
@@ -513,7 +503,7 @@ class _HomePageState extends ConsumerState<HomePage>
         const SizedBox(height: 5),
 
         Text(
-          'Multiplicador Total: x${GameConstants.formatNumber(_safeParseMultiplier(totalMultiplier))}',
+          'Multiplicador Total: x${GameConstants.formatNumber(totalMultiplier)}',
           style: const TextStyle(
             fontSize: 12,
             color: Colors.amber,
@@ -616,7 +606,7 @@ class _HomePageState extends ConsumerState<HomePage>
             child: const Text('mult'),
           ),
           Text(
-            'Debug Manual: x${manualTotal.toStringAsFixed(2)}',
+            'Debug Manual: x${manualTotal.toDouble().toStringAsFixed(2)}',
             style: const TextStyle(
               fontSize: 10,
               color: Colors.red,
@@ -624,7 +614,7 @@ class _HomePageState extends ConsumerState<HomePage>
             ),
           ),
           Text(
-            'Acessórios: x${accessoryMultiplier.toStringAsFixed(2)} | Rebirth: x${rebirthMultiplier.toStringAsFixed(2)} | Upgrade: x${upgradeMultiplier.toStringAsFixed(2)} | Conquistas: x${achievementMultiplier.toStringAsFixed(2)} | Único: x${oneTimeMultiplier.toStringAsFixed(2)}',
+            'Acessórios: x${accessoryMultiplier.toDouble().toStringAsFixed(2)} | Rebirth: x${rebirthMultiplier.toDouble().toStringAsFixed(2)} | Upgrade: x${upgradeMultiplier.toDouble().toStringAsFixed(2)} | Conquistas: x${achievementMultiplier.toDouble().toStringAsFixed(2)} | Único: x${oneTimeMultiplier.toDouble().toStringAsFixed(2)}',
             style: const TextStyle(fontSize: 8, color: Colors.grey),
           ),
           Text(
@@ -633,7 +623,7 @@ class _HomePageState extends ConsumerState<HomePage>
           ),
         ],
         const SizedBox(height: 5),
-        if (totalMultiplier > 1) ...[
+        if (totalMultiplier.compareTo(BigDecimal.one) > 0) ...[
           const SizedBox(height: 4),
           _buildEquippedAccessories(equippedIds),
           const SizedBox(height: 4),
@@ -642,36 +632,36 @@ class _HomePageState extends ConsumerState<HomePage>
             spacing: 8,
             runSpacing: 2,
             children: [
-              if (achievementMultiplier > 1)
+              if (achievementMultiplier.compareTo(BigDecimal.one) > 0)
                 Text(
-                  '🏆 x${achievementMultiplier.toStringAsFixed(2)}',
+                  '🏆 x${achievementMultiplier.toDouble().toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.orange,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              if (rebirthMultiplier > 1)
+              if (rebirthMultiplier.compareTo(BigDecimal.one) > 0)
                 Text(
-                  '🔄 x${GameConstants.formatNumber(BigDecimal.parse(rebirthMultiplier.toStringAsFixed(2)))}',
+                  '🔄 x${GameConstants.formatNumber(rebirthMultiplier)}',
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.blue,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              if (upgradeMultiplier > 1)
+              if (upgradeMultiplier.compareTo(BigDecimal.one) > 0)
                 Text(
-                  '⚡ x${upgradeMultiplier.toStringAsFixed(2)}',
+                  '⚡ x${upgradeMultiplier.toDouble().toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.green,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              if (oneTimeMultiplier > 1)
+              if (oneTimeMultiplier.compareTo(BigDecimal.one) > 0)
                 Text(
-                  '💎 x${oneTimeMultiplier.toStringAsFixed(2)}',
+                  '💎 x${oneTimeMultiplier.toDouble().toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.purple,

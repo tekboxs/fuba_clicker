@@ -469,7 +469,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 60,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 25),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'first_accessory',
@@ -709,7 +709,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.epic,
     targetValue: 10,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 25),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 12),
   ),
   Achievement(
     id: 'lootbox_divine_5',
@@ -719,7 +719,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.epic,
     targetValue: 5,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 30),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 12),
   ),
   Achievement(
     id: 'lootbox_transcendent_3',
@@ -729,7 +729,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 3,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 50),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_primordial_2',
@@ -739,7 +739,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 2,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 75),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_cosmic_1',
@@ -749,7 +749,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 1,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 100),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_infinite_1',
@@ -759,7 +759,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 1,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 150),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_reality_1',
@@ -769,7 +769,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 1,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 200),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_omniversal_1',
@@ -779,7 +779,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 1,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 250),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_tek_1',
@@ -789,7 +789,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 1,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 300),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_absolute_1',
@@ -799,7 +799,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 1,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 500),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_bulk_5',
@@ -839,7 +839,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 100,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 50),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_bulk_500',
@@ -849,7 +849,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 500,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 100),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_bulk_1000',
@@ -859,7 +859,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 1000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 200),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_legendary_10',
@@ -929,7 +929,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.epic,
     targetValue: 5,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 25),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 12),
   ),
   Achievement(
     id: 'lootbox_lucky_streak_10',
@@ -939,7 +939,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 10,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 50),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_lucky_streak_20',
@@ -949,7 +949,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 20,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 100),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_daily_200',
@@ -959,7 +959,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.epic,
     targetValue: 200,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 30),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 12),
   ),
   Achievement(
     id: 'lootbox_daily_500',
@@ -969,7 +969,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 500,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 60),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_daily_1000',
@@ -979,7 +979,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 1000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 120),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_weekly_1000',
@@ -989,7 +989,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.epic,
     targetValue: 1000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 50),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 12),
   ),
   Achievement(
     id: 'lootbox_weekly_5000',
@@ -999,7 +999,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 5000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 100),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_weekly_10000',
@@ -1009,7 +1009,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 10000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 200),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_monthly_10000',
@@ -1019,7 +1019,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.epic,
     targetValue: 10000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 100),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 12),
   ),
   Achievement(
     id: 'lootbox_monthly_50000',
@@ -1029,7 +1029,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 50000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 250),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'lootbox_monthly_100000',
@@ -1039,7 +1039,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 100000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 500),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'first_rebirth',

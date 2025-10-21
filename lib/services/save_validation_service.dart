@@ -208,7 +208,7 @@ class SaveValidationService {
     // Validar se fubá é consistente com geradores
     final totalProduction = _calculateTotalProduction(data.generators);
     final rebirthMultiplier = data.rebirthData.getTotalMultiplier();
-    final adjustedProduction = totalProduction * rebirthMultiplier;
+    final adjustedProduction = totalProduction * rebirthMultiplier.toDouble();
 
     if (adjustedProduction > 0 && data.fuba > adjustedProduction * 86400 * 30) {
       warnings.add('Fubá muito alto comparado à produção (possível edição)');
