@@ -288,8 +288,10 @@ class _GeneratorCardState extends State<_GeneratorCard>
     with TickerProviderStateMixin {
   late AnimationController _purchaseController;
   late AnimationController _glowController;
+  late AnimationController _milestoneController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
+  late Animation<double> _rotationAnimation;
   bool _showParticles = false;
   bool _showMilestone = false;
   int _lastOwned = 0;
@@ -309,12 +311,21 @@ class _GeneratorCardState extends State<_GeneratorCard>
       vsync: this,
     );
 
+    _milestoneController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _purchaseController, curve: Curves.bounceOut),
     );
 
     _glowAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+    );
+
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _milestoneController, curve: Curves.elasticOut),
     );
 
     if (widget.owned > 0) {
@@ -352,12 +363,11 @@ class _GeneratorCardState extends State<_GeneratorCard>
       setState(() {
         _showMilestone = true;
       });
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        if (mounted) {
-          setState(() {
-            _showMilestone = false;
-          });
-        }
+      _milestoneController.forward().then((_) {
+        _milestoneController.reverse();
+        setState(() {
+          _showMilestone = false;
+        });
       });
     }
   }
@@ -368,6 +378,7 @@ class _GeneratorCardState extends State<_GeneratorCard>
   void dispose() {
     _purchaseController.dispose();
     _glowController.dispose();
+    _milestoneController.dispose();
     super.dispose();
   }
 
@@ -398,7 +409,7 @@ class _GeneratorCardState extends State<_GeneratorCard>
 
     // double scale = 1.0 + (widget.owned * 0.01).clamp(0.0, 0.2);
     double scale = 1.0;
-    double glowIntensity = (widget.owned * 0.05).clamp(0.0, 0.8);
+    double glowIntensity = (widget.owned * 0.005).clamp(0.0, 0.8);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -552,44 +563,71 @@ class _GeneratorCardState extends State<_GeneratorCard>
             ),
 
           if (_showMilestone)
-            Positioned.fill(
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(200),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.yellow,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.yellow.withAlpha(100),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('🏆', style: TextStyle(fontSize: 24)),
-                      SizedBox(width: 4),
-                      Text(
-                        'MILESTONE!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.yellow,
+            AnimatedBuilder(
+              animation: _rotationAnimation,
+              builder: (context, child) {
+                return Positioned.fill(
+                  child: Center(
+                    child: Transform.scale(
+                      scale: _milestoneController.value,
+                      child: Transform.rotate(
+                        angle: _rotationAnimation.value * 0.5,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(200),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.yellow,
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.yellow.withAlpha(100),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Transform.rotate(
+                                angle: _rotationAnimation.value * 2,
+                                child: Text(
+                                  '🏆',
+                                  style: TextStyle(
+                                    fontSize: 24 * _milestoneController.value,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'MILESTONE!',
+                                style: TextStyle(
+                                  fontSize: 16 * _milestoneController.value,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.yellow,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Transform.rotate(
+                                angle: -_rotationAnimation.value * 2,
+                                child: Text(
+                                  '🏆',
+                                  style: TextStyle(
+                                    fontSize: 24 * _milestoneController.value,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      SizedBox(width: 4),
-                      Text('🏆', style: TextStyle(fontSize: 24)),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
         ],
       ),

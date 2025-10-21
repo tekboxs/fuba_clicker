@@ -124,12 +124,11 @@ class _ParticleSystemState extends State<ParticleSystem>
   }
 
   void _updateParticles() {
-    final deltaTime = _controller.value * 0.016;
     for (var particle in _particles) {
-      particle.x += particle.vx * deltaTime;
-      particle.y += particle.vy * deltaTime;
+      particle.x += particle.vx * _controller.value * 0.016;
+      particle.y += particle.vy * _controller.value * 0.016;
       particle.life -= 0.02;
-      particle.vy += 50 * deltaTime;
+      particle.vy += 50 * 0.016;
     }
     _particles.removeWhere((particle) => particle.life <= 0);
   }

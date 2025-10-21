@@ -78,13 +78,9 @@ class _HomePageState extends ConsumerState<HomePage>
       duration: GameConstants.cakeAnimationDuration,
     );
 
-    final parallaxDuration = GameConstants.isWeb 
-        ? const Duration(seconds: 200) 
-        : GameConstants.parallaxAnimationDuration;
-    
     _parallaxController = AnimationController(
       vsync: this,
-      duration: parallaxDuration,
+      duration: GameConstants.parallaxAnimationDuration,
     );
 
     _parallaxController.forward();
@@ -103,12 +99,8 @@ class _HomePageState extends ConsumerState<HomePage>
 
   /// Inicia a produção automática de fubá
   void _startAutoProduction() {
-    final interval = GameConstants.isWeb 
-        ? const Duration(milliseconds: 2000) 
-        : GameConstants.autoProductionInterval;
-    
     _autoProductionTimer = Timer.periodic(
-      interval,
+      GameConstants.autoProductionInterval,
       (timer) {
         if (mounted) {
           final autoProduction = ref.read(autoProductionProvider);
@@ -279,20 +271,14 @@ class _HomePageState extends ConsumerState<HomePage>
 
   /// Constrói o contador de fubá com animação
   Widget _buildCounter() {
-    final counterWidget = Text(
-      GameConstants.formatNumber(ref.watch(fubaProvider)),
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: GameConstants.getCounterFontSize(context),
-        fontWeight: FontWeight.bold,
-      ),
-    );
-    
-    if (GameConstants.isWeb) {
-      return counterWidget;
-    }
-    
-    return counterWidget
+    return Text(
+          GameConstants.formatNumber(ref.watch(fubaProvider)),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: GameConstants.getCounterFontSize(context),
+            fontWeight: FontWeight.bold,
+          ),
+        )
         .animate(
           autoPlay: true,
           onComplete: (controller) => controller.repeat(),
@@ -452,11 +438,7 @@ class _HomePageState extends ConsumerState<HomePage>
 
   /// Inicia o rastreamento de tempo de jogo consecutivo
   void _startPlayTimeTracking() {
-    final interval = GameConstants.isWeb 
-        ? const Duration(seconds: 5) 
-        : const Duration(seconds: 1);
-    
-    _playTimeTimer = Timer.periodic(interval, (timer) {
+    _playTimeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       final now = DateTime.now();
       final playTime = now.difference(_appStartTime).inSeconds;
 
@@ -899,43 +881,39 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   Widget _buildSupporterButton() {
-    final buttonWidget = Container(
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.purple, Colors.deepPurple, Colors.indigo],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withAlpha(100),
-            blurRadius: 15,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Icon(Icons.favorite, color: Colors.white, size: 28),
-    );
-    
     return InkWell(
       onTap: _showSupporterDialog,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GameConstants.isWeb 
-              ? buttonWidget
-              : buttonWidget
-                  .animate(
-                    autoPlay: true,
-                    onComplete: (controller) => controller.repeat(),
-                  )
-                  .shimmer(
-                    delay: 3.seconds,
-                    duration: 5.seconds,
-                    color: Colors.white.withAlpha(100),
+          Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.purple, Colors.deepPurple, Colors.indigo],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.purple.withAlpha(100),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Icon(Icons.favorite, color: Colors.white, size: 28),
+              )
+              .animate(
+                autoPlay: true,
+                onComplete: (controller) => controller.repeat(),
+              )
+              .shimmer(
+                delay: 3.seconds,
+                duration: 5.seconds,
+                color: Colors.white.withAlpha(100),
+              ),
           const SizedBox(height: 10),
           Text(
             'Fubádor',
