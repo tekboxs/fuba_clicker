@@ -40,7 +40,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Primeira Caixa',
       description: 'Desbloqueie a primeira caixa de acessórios',
-      requiredFuba: BigDecimal.parse('10000'),
+      requiredFuba: BigDecimal.zero,
       requiredGeneratorTier: 3,
       requiredGeneratorCount: 2,
       unlockMessage: 'Você desbloqueou a primeira caixa de acessórios!',
@@ -49,7 +49,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Raras',
       description: 'Desbloqueie caixas de qualidade rara',
-      requiredFuba: BigDecimal.parse('500000'),
+      requiredFuba: BigDecimal.zero,
       requiredGeneratorTier: 7,
       requiredGeneratorCount: 5,
       unlockMessage: 'Caixas raras desbloqueadas!',
@@ -58,7 +58,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Épicas',
       description: 'Desbloqueie caixas de qualidade épica',
-      requiredFuba: BigDecimal.parse('10000000'),
+      requiredFuba: BigDecimal.zero,
       requiredGeneratorTier: 12,
       requiredGeneratorCount: 8,
       unlockMessage: 'Caixas épicas desbloqueadas!',
@@ -67,7 +67,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Lendárias',
       description: 'Desbloqueie caixas de qualidade lendária',
-      requiredFuba: BigDecimal.parse('500000000'),
+      requiredFuba: BigDecimal.zero,
       requiredGeneratorTier: 18,
       requiredGeneratorCount: 12,
       unlockMessage: 'Caixas lendárias desbloqueadas!',
@@ -76,7 +76,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Míticas',
       description: 'Desbloqueie caixas de qualidade mítica',
-      requiredFuba: BigDecimal.parse('50000000000'),
+      requiredFuba: BigDecimal.zero,
       requiredGeneratorTier: 22,
       requiredGeneratorCount: 15,
       unlockMessage: 'Caixas míticas desbloqueadas!',
@@ -85,7 +85,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Divinas',
       description: 'Desbloqueie caixas de qualidade divina',
-      requiredFuba: BigDecimal.parse('5000000000000'),
+      requiredFuba: BigDecimal.zero,
       requiredGeneratorTier: 26,
       requiredGeneratorCount: 20,
       unlockMessage: 'Caixas divinas desbloqueadas!',
@@ -94,7 +94,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Transcendentes',
       description: 'Desbloqueie caixas de qualidade transcendente',
-      requiredFuba: BigDecimal.parse('500000000000000'),
+      requiredFuba: BigDecimal.zero,
       requiredGeneratorTier: 28,
       requiredGeneratorCount: 25,
       unlockMessage: 'Caixas transcendentais desbloqueadas!',
@@ -103,7 +103,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Primordiais',
       description: 'Desbloqueie caixas de qualidade primordial',
-      requiredFuba: BigDecimal.parse('0'),
+      requiredFuba: BigDecimal.zero,
       requiredGeneratorTier: 25,
       requiredGeneratorCount: 100,
       unlockMessage: 'Caixas primordiais desbloqueadas!',

@@ -21,10 +21,6 @@ class ParallaxBackground extends StatelessWidget {
     if (layerCount >= 2) layers.add(_buildContinuousLayer('🌾', 5.5, 50, 0.5));
     if (layerCount >= 3) layers.add(_buildContinuousLayer('🌽', 9.7, 70, 0.4));
     if (layerCount >= 4) layers.add(_buildContinuousLayer('🌽', 3.9, 90, 0.3));
-    if (layerCount >= 5) layers.add(_buildContinuousLayer('🌾', 1.2, 40, 0.2));
-    if (layerCount >= 6) layers.add(_buildContinuousLayer('🌽', 6.6, 60, 0.35));
-    if (layerCount >= 7) layers.add(_buildContinuousLayer('🌾', 4.0, 24, 0.15));
-    if (layerCount >= 8) layers.add(_buildContinuousLayer('🌽', 7.2, 28, 0.18));
     
     return Positioned.fill(
       child: Stack(children: layers),
@@ -46,7 +42,7 @@ class ParallaxBackground extends StatelessWidget {
           final screenHeight = MediaQuery.of(context).size.height;
 
           return Stack(
-            children: List.generate(10, (index) {
+            children: List.generate(5, (index) {
               final randomSeed = index * 12345 + speed.hashCode;
               final random = Random(randomSeed);
 
@@ -83,23 +79,21 @@ class ParallaxBackground extends StatelessWidget {
     );
   }
 
-  /// Calcula o offset de onda para movimento orgânico
+  /// Calcula o offset de onda para movimento orgânico (simplificado para web)
   WaveOffset _calculateWaveOffset(
     double animationValue,
     int index,
     double speed,
     double screenWidth,
   ) {
-    final time = animationValue * 2 * pi;
-    final waveFrequency = 0.5 + (index * 0.3);
-    final waveAmplitude = 40.0 + (index * 10);
-    final phaseOffset = index * pi / 3;
+    final time = animationValue * pi;
+    final waveFrequency = 0.3 + (index * 0.2);
+    final waveAmplitude = 20.0 + (index * 5);
+    final phaseOffset = index * pi / 4;
 
-    final horizontalWave =
-        sin(time * waveFrequency + phaseOffset) * waveAmplitude;
-    final verticalWave =
-        cos(time * waveFrequency * 0.7 + phaseOffset) * (waveAmplitude * 0.5);
-    final rotation = sin(time * waveFrequency * 1.2 + phaseOffset) * 0.3;
+    final horizontalWave = sin(time * waveFrequency + phaseOffset) * waveAmplitude;
+    final verticalWave = cos(time * waveFrequency + phaseOffset) * (waveAmplitude * 0.3);
+    final rotation = sin(time * waveFrequency + phaseOffset) * 0.1;
 
     return WaveOffset(
       horizontal: horizontalWave,

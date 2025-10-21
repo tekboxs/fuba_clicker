@@ -288,10 +288,8 @@ class _GeneratorCardState extends State<_GeneratorCard>
     with TickerProviderStateMixin {
   late AnimationController _purchaseController;
   late AnimationController _glowController;
-  late AnimationController _milestoneController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
-  late Animation<double> _rotationAnimation;
   bool _showParticles = false;
   bool _showMilestone = false;
   int _lastOwned = 0;
@@ -311,21 +309,12 @@ class _GeneratorCardState extends State<_GeneratorCard>
       vsync: this,
     );
 
-    _milestoneController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _purchaseController, curve: Curves.bounceOut),
     );
 
     _glowAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
-    );
-
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _milestoneController, curve: Curves.elasticOut),
     );
 
     if (widget.owned > 0) {
@@ -363,11 +352,12 @@ class _GeneratorCardState extends State<_GeneratorCard>
       setState(() {
         _showMilestone = true;
       });
-      _milestoneController.forward().then((_) {
-        _milestoneController.reverse();
-        setState(() {
-          _showMilestone = false;
-        });
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          setState(() {
+            _showMilestone = false;
+          });
+        }
       });
     }
   }
@@ -378,7 +368,6 @@ class _GeneratorCardState extends State<_GeneratorCard>
   void dispose() {
     _purchaseController.dispose();
     _glowController.dispose();
-    _milestoneController.dispose();
     super.dispose();
   }
 
@@ -409,7 +398,7 @@ class _GeneratorCardState extends State<_GeneratorCard>
 
     // double scale = 1.0 + (widget.owned * 0.01).clamp(0.0, 0.2);
     double scale = 1.0;
-    double glowIntensity = (widget.owned * 0.05).clamp(0.0, 1.0);
+    double glowIntensity = (widget.owned * 0.05).clamp(0.0, 0.8);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -449,11 +438,11 @@ class _GeneratorCardState extends State<_GeneratorCard>
                                       (255 * glowIntensity * 0.3).toInt(),
                                     ),
                               blurRadius: widget.generator.tier == GeneratorTier.absolute 
-                                  ? 15 
-                                  : 8 + (widget.owned * 0.5),
+                                  ? 15.0 
+                                  : (8 + (widget.owned * 0.5)).clamp(8.0, 25.0).toDouble(),
                               spreadRadius: widget.generator.tier == GeneratorTier.absolute 
-                                  ? 3 
-                                  : 2 + (widget.owned * 0.1),
+                                  ? 3.0 
+                                  : (2 + (widget.owned * 0.1)).clamp(2.0, 8.0).toDouble(),
                             ),
                           ]
                         : null,
@@ -563,71 +552,44 @@ class _GeneratorCardState extends State<_GeneratorCard>
             ),
 
           if (_showMilestone)
-            AnimatedBuilder(
-              animation: _rotationAnimation,
-              builder: (context, child) {
-                return Positioned.fill(
-                  child: Center(
-                    child: Transform.scale(
-                      scale: _milestoneController.value,
-                      child: Transform.rotate(
-                        angle: _rotationAnimation.value * 0.5,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withAlpha(200),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.yellow,
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.yellow.withAlpha(100),
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Transform.rotate(
-                                angle: _rotationAnimation.value * 2,
-                                child: Text(
-                                  '🏆',
-                                  style: TextStyle(
-                                    fontSize: 24 * _milestoneController.value,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'MILESTONE!',
-                                style: TextStyle(
-                                  fontSize: 16 * _milestoneController.value,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.yellow,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Transform.rotate(
-                                angle: -_rotationAnimation.value * 2,
-                                child: Text(
-                                  '🏆',
-                                  style: TextStyle(
-                                    fontSize: 24 * _milestoneController.value,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+            Positioned.fill(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha(200),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.yellow,
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.yellow.withAlpha(100),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('🏆', style: TextStyle(fontSize: 24)),
+                      SizedBox(width: 4),
+                      Text(
+                        'MILESTONE!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.yellow,
                         ),
                       ),
-                    ),
+                      SizedBox(width: 4),
+                      Text('🏆', style: TextStyle(fontSize: 24)),
+                    ],
                   ),
-                );
-              },
+                ),
+              ),
             ),
         ],
       ),
@@ -647,8 +609,8 @@ class _GeneratorCardState extends State<_GeneratorCard>
                       color: widget.generator.tierColor.withAlpha(
                         (100 * _glowAnimation.value).toInt(),
                       ),
-                      blurRadius: 10 + (widget.owned * 2),
-                      spreadRadius: 2 + (widget.owned * 0.5),
+                      blurRadius: (10 + (widget.owned * 2)).clamp(10.0, 50.0).toDouble(),
+                      spreadRadius: (2 + (widget.owned * 0.5)).clamp(2.0, 15.0).toDouble(),
                     ),
                   ],
                 )

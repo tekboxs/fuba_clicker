@@ -102,14 +102,14 @@ class GameConstants {
 
   /// Retorna o número de partículas baseado na plataforma e contexto
   static int getParticleCount(BuildContext? context) {
-    if (context != null && isMobileWeb(context)) return 4;
-    return isWeb ? 8 : 15;
+    if (context != null && isMobileWeb(context)) return 2;
+    return isWeb ? 4 : 8;
   }
 
   /// Retorna o número de camadas de paralaxe baseado na plataforma e contexto
   static int getParallaxLayerCount(BuildContext? context) {
-    if (context != null && isMobileWeb(context)) return 2;
-    return isWeb ? 4 : 8;
+    if (context != null && isMobileWeb(context)) return 1;
+    return isWeb ? 2 : 4;
   }
 
   /// Retorna o número de partículas baseado na plataforma (deprecated - use getParticleCount)

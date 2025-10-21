@@ -159,13 +159,14 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   Widget _buildLootBoxCard(LootBoxTier tier, BigDecimal fuba) {
     final generatorsOwned = ref.watch(generatorsProvider);
     final isUnlocked = _isLootBoxTierUnlocked(tier, fuba, generatorsOwned);
-    final canAfford = isUnlocked && fuba.compareTo(tier.cost) >= 0;
+    final tierCost = tier.getCost(fuba);
+    final canAfford = isUnlocked && fuba.compareTo(tierCost) >= 0;
     final canAfford5 =
-        isUnlocked && fuba.compareTo(tier.cost * BigDecimal.parse('5')) >= 0;
+        isUnlocked && fuba.compareTo(tierCost * BigDecimal.parse('5')) >= 0;
     final canAfford10 =
-        isUnlocked && fuba.compareTo(tier.cost * BigDecimal.parse('10')) >= 0;
+        isUnlocked && fuba.compareTo(tierCost * BigDecimal.parse('10')) >= 0;
     final canAfford30 =
-        isUnlocked && fuba.compareTo(tier.cost * BigDecimal.parse('30')) >= 0;
+        isUnlocked && fuba.compareTo(tierCost * BigDecimal.parse('30')) >= 0;
     final isMobile = GameConstants.isMobile(context);
 
     final barrier = _getBarrierForTier(tier);
@@ -276,6 +277,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
               _buildPurchaseButtons(
                 tier,
                 fuba,
+                tierCost,
                 canAfford,
                 canAfford5,
                 canAfford10,
@@ -291,6 +293,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   Widget _buildPurchaseButtons(
     LootBoxTier tier,
     BigDecimal fuba,
+    BigDecimal tierCost,
     bool canAfford,
     bool canAfford5,
     bool canAfford10,
@@ -299,20 +302,20 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   ) {
     return Column(
       children: [
-        _buildSinglePurchaseButton(tier, fuba, canAfford, isMobile),
+        _buildSinglePurchaseButton(tier, fuba, tierCost, canAfford, isMobile),
         SizedBox(height: isMobile ? 8 : 12),
         Row(
           children: [
             Expanded(
-              child: _buildBulkPurchaseButton(tier, 5, canAfford5, isMobile),
+              child: _buildBulkPurchaseButton(tier, 5, tierCost, canAfford5, isMobile),
             ),
             SizedBox(width: isMobile ? 8 : 12),
             Expanded(
-              child: _buildBulkPurchaseButton(tier, 10, canAfford10, isMobile),
+              child: _buildBulkPurchaseButton(tier, 10, tierCost, canAfford10, isMobile),
             ),
             SizedBox(width: isMobile ? 8 : 12),
             Expanded(
-              child: _buildBulkPurchaseButton(tier, 30, canAfford30, isMobile),
+              child: _buildBulkPurchaseButton(tier, 30, tierCost, canAfford30, isMobile),
             ),
           ],
         ),
@@ -323,6 +326,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   Widget _buildSinglePurchaseButton(
     LootBoxTier tier,
     BigDecimal fuba,
+    BigDecimal tierCost,
     bool canAfford,
     bool isMobile,
   ) {
@@ -353,7 +357,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
               Text('🌽', style: TextStyle(fontSize: isMobile ? 16 : 20)),
               SizedBox(width: isMobile ? 4 : 6),
               Text(
-                GameConstants.formatNumber(tier.cost),
+                GameConstants.formatNumber(tierCost),
                 style: TextStyle(
                   fontSize: isMobile ? 14 : 16,
                   fontWeight: FontWeight.bold,
@@ -370,10 +374,11 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   Widget _buildBulkPurchaseButton(
     LootBoxTier tier,
     int quantity,
+    BigDecimal tierCost,
     bool canAfford,
     bool isMobile,
   ) {
-    final totalCost = tier.cost * BigDecimal.parse(quantity.toString());
+    final totalCost = tierCost * BigDecimal.parse(quantity.toString());
     final discount = 0;
     final discountedCost =
         totalCost * BigDecimal.parse((1 - discount).toString());
@@ -504,9 +509,10 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   void _openLootBox(LootBoxTier tier) {
     final fuba = ref.read(fubaProvider);
-    if (fuba.compareTo(tier.cost) < 0) return;
+    final tierCost = tier.getCost(fuba);
+    if (fuba.compareTo(tierCost) < 0) return;
 
-    ref.read(fubaProvider.notifier).state -= tier.cost;
+    ref.read(fubaProvider.notifier).state -= tierCost;
 
     final lootBox = LootBox(tier: tier);
     final reward = lootBox.openBox();
@@ -556,9 +562,10 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   void _openMultipleLootBoxes(LootBoxTier tier, int quantity) {
     final fuba = ref.read(fubaProvider);
+    final tierCost = tier.getCost(fuba);
 
     final totalCost = BigDecimal.parse(
-      (tier.cost * BigDecimal.parse(quantity.toString())).toString(),
+      (tierCost * BigDecimal.parse(quantity.toString())).toString(),
     );
 
     if (fuba.compareTo(totalCost) < 0) return;

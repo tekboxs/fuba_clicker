@@ -72,7 +72,7 @@ enum LootBoxTier {
     }
   }
 
-  BigDecimal get cost {
+  BigDecimal getCost([BigDecimal? currentFuba]) {
     switch (this) {
       case LootBoxTier.basic:
         return BigDecimal.parse('1000');
@@ -87,7 +87,14 @@ enum LootBoxTier {
       case LootBoxTier.transcendent:
         return BigDecimal.parse('50000000000');
       case LootBoxTier.primordial:
-        return BigDecimal.parse('10000000000000000000000000000');
+        if (currentFuba != null) {
+          final baseCost = BigDecimal.parse('1e80'); // Custo base do Nexus Primordial
+          if (currentFuba.compareTo(baseCost) > 0) {
+            return currentFuba.divide(BigDecimal.parse('30'), scale: 0, roundingMode: RoundingMode.DOWN);
+          }
+          return baseCost;
+        }
+        return BigDecimal.parse('1e80');
     }
   }
 
