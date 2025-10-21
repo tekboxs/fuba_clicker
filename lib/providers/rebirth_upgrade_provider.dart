@@ -69,6 +69,10 @@ class UpgradeNotifier {
   int getAccessoryCapacity() {
     return getUpgradeEffect(UpgradeType.accessoryCapacity).toInt();
   }
+
+  bool shouldKeepItems() {
+    return getUpgradeEffect(UpgradeType.keepItems) >= 1.0;
+  }
 }
 
 final upgradeNotifierProvider = Provider<UpgradeNotifier>((ref) {

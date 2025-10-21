@@ -5,6 +5,7 @@ import '../models/fuba_generator.dart';
 import 'game_providers.dart';
 import 'accessory_provider.dart';
 import 'save_provider.dart';
+import 'rebirth_upgrade_provider.dart';
 
 final rebirthDataProvider = StateProvider<RebirthData>((ref) {
   return const RebirthData();
@@ -73,16 +74,23 @@ class RebirthNotifier {
     ref.read(generatorsProvider.notifier).state =
         List.filled(availableGenerators.length, 0);
 
+    final upgradeNotifier = ref.read(upgradeNotifierProvider);
+    final shouldKeepItems = upgradeNotifier.shouldKeepItems();
+
     switch (tier) {
       case RebirthTier.rebirth:
         break;
       case RebirthTier.ascension:
-        ref.read(inventoryProvider.notifier).state = {};
-        ref.read(equippedAccessoriesProvider.notifier).state = [];
+        if (!shouldKeepItems) {
+          ref.read(inventoryProvider.notifier).state = {};
+          ref.read(equippedAccessoriesProvider.notifier).state = [];
+        }
         break;
       case RebirthTier.transcendence:
-        ref.read(inventoryProvider.notifier).state = {};
-        ref.read(equippedAccessoriesProvider.notifier).state = [];
+        if (!shouldKeepItems) {
+          ref.read(inventoryProvider.notifier).state = {};
+          ref.read(equippedAccessoriesProvider.notifier).state = [];
+        }
         break;
     }
     

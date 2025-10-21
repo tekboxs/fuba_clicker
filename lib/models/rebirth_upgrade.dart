@@ -9,6 +9,7 @@ enum UpgradeType {
   productionMultiplier,
   animationSpeed,
   accessoryCapacity,
+  keepItems,
 }
 
 class RebirthUpgrade {
@@ -58,6 +59,8 @@ class RebirthUpgrade {
         return 1.0 - (level * 0.1);
       case UpgradeType.accessoryCapacity:
         return 3.0 + (level * 1.0);
+      case UpgradeType.keepItems:
+        return level >= 1 ? 1.0 : 0.0;
     }
   }
 
@@ -83,6 +86,8 @@ class RebirthUpgrade {
         return 'x${getEffectValue(level).toStringAsFixed(1)} velocidade animação';
       case UpgradeType.accessoryCapacity:
         return '${getEffectValue(level).toInt()} slots de acessórios';
+      case UpgradeType.keepItems:
+        return level >= 1 ? 'Mantém itens ao ascender' : 'Não mantém itens';
     }
   }
 }
@@ -170,7 +175,7 @@ const List<RebirthUpgrade> allUpgrades = [
     emoji: '⚡',
     description: 'Acelera animações de abertura de caixas',
     type: UpgradeType.animationSpeed,
-    baseTokenCost: 5,
+    baseTokenCost: 2,
     maxLevel: 10,
     ascensionRequirement: 1,
   ),
@@ -183,6 +188,16 @@ const List<RebirthUpgrade> allUpgrades = [
     baseTokenCost: 8,
     maxLevel: 12,
     ascensionRequirement: 0,
+  ),
+  RebirthUpgrade(
+    id: 'keep_items',
+    name: 'Inventário Eterno',
+    emoji: '🔒',
+    description: 'Mantém todos os acessórios ao ascender/transcender',
+    type: UpgradeType.keepItems,
+    baseTokenCost: 100,
+    maxLevel: 1,
+    ascensionRequirement: 10,
   ),
 ];
 
