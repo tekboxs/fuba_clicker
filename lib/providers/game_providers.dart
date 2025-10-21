@@ -6,6 +6,13 @@ import 'rebirth_provider.dart';
 import 'rebirth_upgrade_provider.dart';
 import 'achievement_provider.dart';
 
+BigDecimal _safeParseDouble(double value) {
+  if (value.isInfinite || value.isNaN) {
+    return BigDecimal.parse('1e100');
+  }
+  return BigDecimal.parse(value.toString());
+}
+
 final fubaProvider = StateProvider<BigDecimal>((ref) {
   return BigDecimal.zero;
 });
@@ -32,19 +39,19 @@ final autoProductionProvider = Provider<BigDecimal>((ref) {
   BigDecimal totalProduction = baseProduction;
 
   final accessoryMultiplier = ref.watch(accessoryMultiplierProvider);
-  totalProduction *= BigDecimal.parse(accessoryMultiplier.toString());
+  totalProduction *= _safeParseDouble(accessoryMultiplier);
 
   final rebirthMultiplier = ref.watch(rebirthMultiplierProvider);
-  totalProduction *= BigDecimal.parse(rebirthMultiplier.toString());
+  totalProduction *= _safeParseDouble(rebirthMultiplier);
 
   final upgradeMultiplier = ref.watch(upgradeProductionMultiplierProvider);
-  totalProduction *= BigDecimal.parse(upgradeMultiplier.toString());
+  totalProduction *= _safeParseDouble(upgradeMultiplier);
 
   final achievementMultiplier = ref.watch(achievementMultiplierProvider);
-  totalProduction *= BigDecimal.parse(achievementMultiplier.toString());
+  totalProduction *= _safeParseDouble(achievementMultiplier);
 
   final oneTimeMultiplier = ref.watch(oneTimeMultiplierProvider);
-  totalProduction *= BigDecimal.parse(oneTimeMultiplier.toString());
+  totalProduction *= _safeParseDouble(oneTimeMultiplier);
 
   return totalProduction;
 });

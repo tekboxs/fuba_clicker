@@ -22,12 +22,14 @@ class HexagonalUpgradeCard extends ConsumerWidget {
     required this.fuba,
     required this.generatorsOwned,
   });
+  
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Consumer(
       builder: (context, ref, child) {
-        final upgradeData = ref.watch(upgradeCardDataProvider(upgrade.id));
+        final allUpgradesData = ref.watch(allUpgradesDataProvider);
+        final upgradeData = allUpgradesData[upgrade.id]!;
         final currentLevel = upgradeData['currentLevel'] as int;
         final isMaxed = upgradeData['isMaxed'] as bool;
         final isLocked = upgradeData['isLocked'] as bool;
@@ -174,36 +176,40 @@ class HexagonalUpgradeCard extends ConsumerWidget {
   }
 
   Widget _buildBarrierInfo() {
-    final progress = barrier!.getProgress(fuba, generatorsOwned);
-
-    return Column(
-      children: [
-        Text(
-          '🔒 ${barrier!.description}',
-          style: const TextStyle(
-            fontSize: 10,
-            color: Colors.orange,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 6,
-            backgroundColor: Colors.grey.shade800,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.orange),
-          ),
-        ),
-        Text(
-          '${(progress * 100).toStringAsFixed(1)}%',
-          style: TextStyle(fontSize: 8, color: Colors.grey.shade400),
-        ),
-      ],
+    return Consumer(
+      builder: (context, ref, child) {
+        final progress = ref.watch(barrierProgressProvider(upgrade.id));
+        
+        return Column(
+          children: [
+            Text(
+              '🔒 ${barrier!.description}',
+              style: const TextStyle(
+                fontSize: 10,
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6,
+                backgroundColor: Colors.grey.shade800,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.orange),
+              ),
+            ),
+            Text(
+              '${(progress * 100).toStringAsFixed(1)}%',
+              style: TextStyle(fontSize: 8, color: Colors.grey.shade400),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -533,5 +539,10 @@ class HexagonalPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    if (oldDelegate is! HexagonalPainter) return true;
+    return oldDelegate.gradient != gradient ||
+           oldDelegate.borderColor != borderColor ||
+           oldDelegate.isLocked != isLocked;
+  }
 }

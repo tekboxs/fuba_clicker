@@ -238,4 +238,97 @@ class GameConstants {
     
     return '${isNegative ? '-' : ''}$formattedResult${baseSuffixes[magnitude]}';
   }
+
+}
+
+/// Classe para trabalhar com números grandes usando siglas
+class SuffixNumber {
+  final double value;
+  final int magnitude;
+  final String suffix;
+  
+  SuffixNumber(this.value, this.magnitude, this.suffix);
+  
+  /// Converte BigDecimal para SuffixNumber
+  static SuffixNumber fromBigDecimal(BigDecimal number) {
+    if (number.compareTo(BigDecimal.zero) == 0) {
+      return SuffixNumber(0.0, 0, '');
+    }
+    
+    bool isNegative = number.compareTo(BigDecimal.zero) < 0;
+    BigDecimal absNumber = isNegative ? (-number) : number;
+    
+    String numberString = absNumber.toPlainString();
+    int exponent = 0;
+    
+    int decimalPointIndex = numberString.indexOf('.');
+    if (decimalPointIndex != -1) {
+      exponent = decimalPointIndex - 1;
+    } else {
+      exponent = numberString.length - 1;
+    }
+    
+    if (exponent < 3) {
+      return SuffixNumber(absNumber.toDouble(), 0, '');
+    }
+    
+    int magnitude = (exponent / 3).floor();
+    const List<String> baseSuffixes = [
+      '', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No',
+      'Dc', 'Ud', 'Dd', 'Td', 'Qad', 'Qid', 'Sxd', 'Spd', 'Ocd', 'Nod',
+      'Vg', 'Uvg', 'Dvg', 'Tvg', 'Qavg', 'Qivg', 'Sxvg', 'Spvg', 'Ocvg', 'Novg',
+      'Tg', 'Utg', 'Dtg', 'Ttg', 'Qatg', 'Qitg', 'Sxtg', 'Sptg', 'Octg', 'Notg',
+      'Qag', 'Uqag', 'Dqag', 'Tqag', 'Qaqag', 'Qiqag', 'Sxqag', 'Spqag', 'Ocqag', 'Noqag',
+      'Qig', 'Uqig', 'Dqig', 'Tqig', 'Qaqig', 'Qiqig', 'Sxqig', 'Spqig', 'Ocqig', 'Noqig',
+      'Sxg', 'Usxg', 'Dsxg', 'Tsxg', 'Qasxg', 'Qisxg', 'Sxsxg', 'Spsxg', 'Ocsxg', 'Nosxg',
+      'Spg', 'Uspg', 'Dspg', 'Tspg', 'Qaspg', 'Qispg', 'Spspg', 'Spspg', 'Ocspg', 'Nospg',
+      'Ocog', 'Uocog', 'Docog', 'Tocog', 'Qaocog', 'Qiocog', 'Sxocog', 'Spocog', 'Ococog', 'Noocog',
+      'Nog', 'Unog', 'Dnog', 'Tnog', 'Qanog', 'Qinog', 'Sxnog', 'Spnog', 'Ocnog', 'Nonog',
+      'Ct', 'Uct', 'Dct', 'Tct', 'Qact', 'Qict', 'Sxct', 'Spct', 'Occt', 'Noct',
+      'Cg', 'Ucg', 'Dcg', 'Tcg', 'Qacg', 'Qicg', 'Sxcg', 'Spcg', 'Occg', 'Nocg',
+      'Cag', 'Ucag', 'Dcag', 'Tcag', 'Qacag', 'Qicag', 'Sxcag', 'Spcag', 'Occag', 'Nocag',
+      'Cig', 'Ucig', 'Dcig'
+    ];
+    
+    if (magnitude >= baseSuffixes.length) {
+      return SuffixNumber(1.0, 999, 'Fubinity');
+    }
+    
+    BigDecimal divisor = BigDecimal.parse('1${'0' * (magnitude * 3)}');
+    BigDecimal result = absNumber.divide(divisor, scale: 6, roundingMode: RoundingMode.HALF_UP);
+    
+    return SuffixNumber(
+      isNegative ? -result.toDouble() : result.toDouble(),
+      magnitude,
+      baseSuffixes[magnitude]
+    );
+  }
+  
+  /// Compara dois SuffixNumber
+  int compareTo(SuffixNumber other) {
+    if (magnitude != other.magnitude) {
+      return magnitude.compareTo(other.magnitude);
+    }
+    return value.compareTo(other.value);
+  }
+  
+  /// Verifica se é maior ou igual
+  bool isGreaterOrEqual(SuffixNumber other) {
+    return compareTo(other) >= 0;
+  }
+  
+  /// Converte de volta para BigDecimal (aproximado)
+  BigDecimal toBigDecimal() {
+    if (magnitude == 0) {
+      return BigDecimal.parse(value.toString());
+    }
+    
+    final multiplier = BigDecimal.parse('1${'0' * (magnitude * 3)}');
+    return BigDecimal.parse(value.toString()) * multiplier;
+  }
+  
+  @override
+  String toString() {
+    return '${value.toStringAsFixed(1)}$suffix';
+  }
 }

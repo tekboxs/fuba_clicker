@@ -26,7 +26,33 @@ class DifficultyBarrier {
   }
 
   double getProgress(BigDecimal currentFuba, List<int> generatorsOwned) {
-    final fubaProgress = currentFuba.divide(requiredFuba, scale: 10, roundingMode: RoundingMode.HALF_UP).toDouble().clamp(0.0, 1.0);
+    // Otimização: evita divisões BigDecimal custosas para grandes números
+    double fubaProgress;
+    
+    if (currentFuba.compareTo(requiredFuba) >= 0) {
+      fubaProgress = 1.0;
+    } else {
+      // Otimização adicional: compara strings para evitar operações BigDecimal custosas
+      final currentStr = currentFuba.toString();
+      final requiredStr = requiredFuba.toString();
+      
+      // Se o fuba atual é muito menor que o requerido, retorna 0 sem cálculos
+      if (currentStr.length < requiredStr.length - 2) {
+        fubaProgress = 0.0;
+      } else {
+        // Usa comparação de magnitude para evitar divisões custosas
+        final currentMagnitude = currentFuba.scale;
+        final requiredMagnitude = requiredFuba.scale;
+        
+        if (currentMagnitude - requiredMagnitude > 10) {
+          // Se a diferença de magnitude é muito grande, usa aproximação
+          fubaProgress = 0.0;
+        } else {
+          // Só faz divisão se os números são comparáveis
+          fubaProgress = currentFuba.divide(requiredFuba, scale: 4, roundingMode: RoundingMode.HALF_UP).toDouble().clamp(0.0, 1.0);
+        }
+      }
+    }
     
     if (requiredGeneratorTier >= generatorsOwned.length) return fubaProgress;
     

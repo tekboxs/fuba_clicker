@@ -98,6 +98,7 @@ class RebirthUpgradesPage extends ConsumerWidget {
                   final barrier = _getBarrierForUpgrade(upgrade);
 
                   return HexagonalUpgradeCard(
+                    key: ValueKey('upgrade_${upgrade.id}'),
                     upgrade: upgrade,
                     rebirthData: rebirthData,
                     isBarrierLocked: isBarrierLocked,

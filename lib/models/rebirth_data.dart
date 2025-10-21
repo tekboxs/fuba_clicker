@@ -43,12 +43,39 @@ extension RebirthTierExtension on RebirthTier {
   double getRequirement(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return 1e15 * pow(10, currentCount * 0.8);
+        return _safeCalculateRequirement(1e15, 10, currentCount * 0.8);
       case RebirthTier.ascension:
-        return (500e27 * pow(20, currentCount)).toDouble();
+        return _safeCalculateRequirement(500e27, 20, currentCount.toDouble());
       case RebirthTier.transcendence:
-        return 1e45 * pow(50, currentCount);
+        return _safeCalculateRequirement(1e45, 50, currentCount.toDouble());
     }
+  }
+  
+  double _safeCalculateRequirement(double base, double multiplier, double exponent) {
+    // Evita overflow usando logaritmos para cálculos grandes
+    if (exponent > 30) {
+      // Para expoentes grandes, usa aproximação logarítmica
+      final logBase = log(base);
+      final logMultiplier = log(multiplier);
+      final logResult = logBase + (logMultiplier * exponent);
+      
+      // Se o resultado é muito grande, retorna um valor máximo seguro
+      if (logResult > 300) { // e^300 é aproximadamente 1e130
+        return 1e100; // Valor máximo seguro para double
+      }
+      
+      return exp(logResult);
+    }
+    
+    // Para expoentes pequenos, usa cálculo direto
+    final result = base * pow(multiplier, exponent);
+    
+    // Verifica se o resultado é finito
+    if (result.isInfinite || result.isNaN) {
+      return 1e100; // Valor máximo seguro
+    }
+    
+    return result;
   }
 
   double getMultiplierGain(int currentCount) {
@@ -112,17 +139,41 @@ class RebirthData {
   double getTotalMultiplier() {
     double multiplier = 1.0;
 
-    multiplier *= 1.0 + (RebirthTier.rebirth.getMultiplierGain(0) * rebirthCount);
+    // Otimização: evita cálculos custosos para números muito grandes
+    if (rebirthCount > 0) {
+      multiplier *= 1.0 + (RebirthTier.rebirth.getMultiplierGain(0) * rebirthCount);
+    }
 
-    multiplier *= pow(
-      RebirthTier.ascension.getMultiplierGain(0),
-      ascensionCount,
-    ).toDouble();
+    if (ascensionCount > 0) {
+      // Para muitas ascensões, usa aproximação logarítmica
+      if (ascensionCount > 50) {
+        final logMultiplier = ascensionCount * log(RebirthTier.ascension.getMultiplierGain(0));
+        multiplier *= exp(logMultiplier);
+      } else {
+        multiplier *= pow(
+          RebirthTier.ascension.getMultiplierGain(0),
+          ascensionCount,
+        ).toDouble();
+      }
+    }
 
-    multiplier *= pow(
-      RebirthTier.transcendence.getMultiplierGain(0),
-      transcendenceCount,
-    ).toDouble();
+    if (transcendenceCount > 0) {
+      // Para muitas transcendências, usa aproximação logarítmica
+      if (transcendenceCount > 30) {
+        final logMultiplier = transcendenceCount * log(RebirthTier.transcendence.getMultiplierGain(0));
+        multiplier *= exp(logMultiplier);
+      } else {
+        multiplier *= pow(
+          RebirthTier.transcendence.getMultiplierGain(0),
+          transcendenceCount,
+        ).toDouble();
+      }
+    }
+
+    // Verifica se o resultado é finito
+    if (multiplier.isInfinite || multiplier.isNaN) {
+      return 1e50; // Valor máximo seguro
+    }
 
     return multiplier;
   }

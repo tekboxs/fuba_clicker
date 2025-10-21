@@ -28,6 +28,13 @@ import 'achievements_page.dart';
 import 'rebirth_upgrades_page.dart';
 import 'achievement_popup.dart';
 
+BigDecimal _safeParseMultiplier(double value) {
+  if (value.isInfinite || value.isNaN) {
+    return BigDecimal.parse('1e50');
+  }
+  return BigDecimal.parse(value.toString());
+}
+
 /// Página principal do jogo
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -129,7 +136,9 @@ class _HomePageState extends ConsumerState<HomePage>
                 oneTimeMultiplier;
 
             final autoClickValue = autoClickerRate * totalClickMultiplier;
-            totalProduction += BigDecimal.parse(autoClickValue.toString());
+            if (autoClickValue.isFinite) {
+              totalProduction += BigDecimal.parse(autoClickValue.toString());
+            }
 
             // Contar cliques automáticos para conquistas
             _processAutoClicks(autoClickerRate, autoClickValue);
@@ -354,9 +363,9 @@ class _HomePageState extends ConsumerState<HomePage>
 
     final clickValue = 1 * totalClickMultiplier;
 
-    ref.read(fubaProvider.notifier).state += BigDecimal.parse(
-      clickValue.toString(),
-    );
+    if (clickValue.isFinite) {
+      ref.read(fubaProvider.notifier).state += _safeParseMultiplier(clickValue);
+    }
 
     // Rastreamento de cliques para conquistas
     _updateClickTracking(clickValue);
@@ -504,7 +513,7 @@ class _HomePageState extends ConsumerState<HomePage>
         const SizedBox(height: 5),
 
         Text(
-          'Multiplicador Total: x${GameConstants.formatNumber(BigDecimal.parse(totalMultiplier.toStringAsFixed(2)))}',
+          'Multiplicador Total: x${GameConstants.formatNumber(_safeParseMultiplier(totalMultiplier))}',
           style: const TextStyle(
             fontSize: 12,
             color: Colors.amber,
@@ -602,7 +611,7 @@ class _HomePageState extends ConsumerState<HomePage>
           ),
           ElevatedButton(
             onPressed: () {
-              ref.read(fubaProvider.notifier).state *= BigDecimal.parse('1000');
+              ref.read(fubaProvider.notifier).state *= BigDecimal.parse('1e90');
             },
             child: const Text('mult'),
           ),
@@ -644,7 +653,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 ),
               if (rebirthMultiplier > 1)
                 Text(
-                  '🔄 x${rebirthMultiplier.toStringAsFixed(2)}',
+                  '🔄 x${GameConstants.formatNumber(BigDecimal.parse(rebirthMultiplier.toStringAsFixed(2)))}',
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.blue,
