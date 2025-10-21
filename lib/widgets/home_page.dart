@@ -997,37 +997,71 @@ class _HomePageState extends ConsumerState<HomePage>
                     ],
                   ),
                   SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () {
-                      // Aqui você pode implementar a funcionalidade de copiar
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Chave PIX copiada!'),
-                          backgroundColor: Colors.green,
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withAlpha(100),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.green.withAlpha(150),
-                          width: 1,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            // Aqui você pode implementar a funcionalidade de copiar
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Chave PIX copiada!'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withAlpha(100),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.green.withAlpha(150),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              'tekboxs@gmail.com',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      child: Text(
-                        'tekboxs@gmail.com',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      SizedBox(width: 12),
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.green.withAlpha(150),
+                            width: 1,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            'assets/images/qrcode.png',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey.withAlpha(100),
+                                child: Icon(
+                                  Icons.qr_code,
+                                  color: Colors.grey,
+                                  size: 40,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -1073,7 +1107,7 @@ class _HomePageState extends ConsumerState<HomePage>
                         final code = _codeController.text;
                         if (code == 'ivi100') {
                           final rebirthData = ref.read(rebirthDataProvider);
-                          
+
                           if (rebirthData.usedCoupons.contains('ivi100')) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -1084,13 +1118,14 @@ class _HomePageState extends ConsumerState<HomePage>
                             );
                             return;
                           }
-                          
-                          ref.read(rebirthDataProvider.notifier).state = 
-                              rebirthData.copyWith(
-                                hasUsedOneTimeMultiplier: true,
-                                usedCoupons: {...rebirthData.usedCoupons, 'ivi100'},
-                              );
-                          
+
+                          ref
+                              .read(rebirthDataProvider.notifier)
+                              .state = rebirthData.copyWith(
+                            hasUsedOneTimeMultiplier: true,
+                            usedCoupons: {...rebirthData.usedCoupons, 'ivi100'},
+                          );
+
                           ref
                               .read(saveNotifierProvider.notifier)
                               .saveImmediate();
@@ -1106,7 +1141,7 @@ class _HomePageState extends ConsumerState<HomePage>
                           Navigator.of(context).pop();
                         } else if (code == 'milkyde4') {
                           final rebirthData = ref.read(rebirthDataProvider);
-                          
+
                           if (rebirthData.usedCoupons.contains('milkyde4')) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -1117,20 +1152,26 @@ class _HomePageState extends ConsumerState<HomePage>
                             );
                             return;
                           }
-                          
-                          ref.read(rebirthDataProvider.notifier).state = 
-                              rebirthData.copyWith(
-                                celestialTokens: rebirthData.celestialTokens + 8.0,
-                                usedCoupons: {...rebirthData.usedCoupons, 'milkyde4'},
-                              );
-                          
+
+                          ref
+                              .read(rebirthDataProvider.notifier)
+                              .state = rebirthData.copyWith(
+                            celestialTokens: rebirthData.celestialTokens + 8.0,
+                            usedCoupons: {
+                              ...rebirthData.usedCoupons,
+                              'milkyde4',
+                            },
+                          );
+
                           ref
                               .read(saveNotifierProvider.notifier)
                               .saveImmediate();
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('✅ 8 Tokens Celestiais adicionados! 💎'),
+                              content: Text(
+                                '✅ 8 Tokens Celestiais adicionados! 💎',
+                              ),
                               backgroundColor: Colors.green,
                               duration: Duration(seconds: 3),
                             ),
@@ -1139,8 +1180,10 @@ class _HomePageState extends ConsumerState<HomePage>
                           Navigator.of(context).pop();
                         } else if (code == 'oliveiralindo') {
                           final rebirthData = ref.read(rebirthDataProvider);
-                          
-                          if (rebirthData.usedCoupons.contains('oliveiralindo')) {
+
+                          if (rebirthData.usedCoupons.contains(
+                            'oliveiralindo',
+                          )) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('❌ Este cupom já foi usado!'),
@@ -1150,13 +1193,17 @@ class _HomePageState extends ConsumerState<HomePage>
                             );
                             return;
                           }
-                          
-                          ref.read(rebirthDataProvider.notifier).state = 
-                              rebirthData.copyWith(
-                                diamonds: rebirthData.diamonds + 69,
-                                usedCoupons: {...rebirthData.usedCoupons, 'oliveiralindo'},
-                              );
-                          
+
+                          ref
+                              .read(rebirthDataProvider.notifier)
+                              .state = rebirthData.copyWith(
+                            celestialTokens: rebirthData.celestialTokens + 69,
+                            usedCoupons: {
+                              ...rebirthData.usedCoupons,
+                              'oliveiralindo',
+                            },
+                          );
+
                           ref
                               .read(saveNotifierProvider.notifier)
                               .saveImmediate();
