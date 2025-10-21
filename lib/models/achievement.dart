@@ -195,7 +195,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.clicks,
     difficulty: AchievementDifficulty.common,
     targetValue: 1000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 1),
   ),
   Achievement(
     id: 'click_10000_daily',
@@ -205,7 +205,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.clicks,
     difficulty: AchievementDifficulty.uncommon,
     targetValue: 10000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 10),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 2),
   ),
   Achievement(
     id: 'click_100000_daily',
@@ -215,7 +215,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.clicks,
     difficulty: AchievementDifficulty.rare,
     targetValue: 100000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 3),
   ),
   Achievement(
     id: 'click_1000000_daily',
@@ -225,7 +225,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.clicks,
     difficulty: AchievementDifficulty.epic,
     targetValue: 1000000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 40),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
   ),
   Achievement(
     id: 'click_10000000_daily',
@@ -235,7 +235,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.clicks,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 10000000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 80),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 15),
   ),
   Achievement(
     id: 'production_1k',
@@ -315,7 +315,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.production,
     difficulty: AchievementDifficulty.common,
     targetValue: 1e9,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 1),
   ),
   Achievement(
     id: 'production_1t_daily',
@@ -325,7 +325,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.production,
     difficulty: AchievementDifficulty.uncommon,
     targetValue: 1e12,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 10),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 2),
   ),
   Achievement(
     id: 'production_1q_daily',
@@ -335,7 +335,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.production,
     difficulty: AchievementDifficulty.rare,
     targetValue: 1e15,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 3),
   ),
   Achievement(
     id: 'production_1qi_daily',
@@ -345,7 +345,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.production,
     difficulty: AchievementDifficulty.epic,
     targetValue: 1e18,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 40),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
   ),
   Achievement(
     id: 'first_generator',
@@ -389,7 +389,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.common,
     targetValue: 5,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 1),
   ),
   Achievement(
     id: 'generator_10_daily',
@@ -399,7 +399,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.uncommon,
     targetValue: 10,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 10),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 2),
   ),
   Achievement(
     id: 'generator_15_daily',
@@ -409,7 +409,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.rare,
     targetValue: 15,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 15),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 3),
   ),
   Achievement(
     id: 'generator_20_daily',
@@ -419,7 +419,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.epic,
     targetValue: 20,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 25),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 4),
   ),
   Achievement(
     id: 'generator_25_daily',
@@ -429,7 +429,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 25,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 40),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 8),
   ),
   Achievement(
     id: 'generator_30_daily',
@@ -439,7 +439,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 30,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 60),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 12),
   ),
   Achievement(
     id: 'generator_40_daily',
@@ -449,7 +449,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 40,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 80),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 15),
   ),
   Achievement(
     id: 'generator_50_daily',
@@ -459,7 +459,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 50,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 100),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
   ),
   Achievement(
     id: 'generator_60_daily',
@@ -469,7 +469,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.generators,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 60,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 150),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 25),
   ),
   Achievement(
     id: 'first_accessory',
@@ -519,7 +519,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.accessories,
     difficulty: AchievementDifficulty.common,
     targetValue: 10,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 1),
   ),
   Achievement(
     id: 'accessory_25_daily',
@@ -529,7 +529,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.accessories,
     difficulty: AchievementDifficulty.uncommon,
     targetValue: 25,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 10),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 2),
   ),
   Achievement(
     id: 'accessory_50_daily',
@@ -539,7 +539,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.accessories,
     difficulty: AchievementDifficulty.rare,
     targetValue: 50,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 3),
   ),
   Achievement(
     id: 'accessory_100_daily',
@@ -549,7 +549,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.accessories,
     difficulty: AchievementDifficulty.epic,
     targetValue: 100,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 40),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
   ),
   Achievement(
     id: 'lootbox_10',
@@ -579,7 +579,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.common,
     targetValue: 5,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 1),
   ),
   Achievement(
     id: 'lootbox_20_daily',
@@ -589,7 +589,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.uncommon,
     targetValue: 20,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 10),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 2),
   ),
   Achievement(
     id: 'lootbox_50_daily',
@@ -599,7 +599,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.rare,
     targetValue: 50,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 3),
   ),
   Achievement(
     id: 'lootbox_100_daily',
@@ -609,7 +609,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.lootBoxes,
     difficulty: AchievementDifficulty.epic,
     targetValue: 100,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 40),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
   ),
   Achievement(
     id: 'lootbox_500',
@@ -1069,7 +1069,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.rebirth,
     difficulty: AchievementDifficulty.rare,
     targetValue: 1,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 2),
   ),
   Achievement(
     id: 'first_transcendence',
@@ -1079,7 +1079,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.rebirth,
     difficulty: AchievementDifficulty.epic,
     targetValue: 1,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 10),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 3),
   ),
   Achievement(
     id: 'rebirth_5_daily',
@@ -1089,7 +1089,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.rebirth,
     difficulty: AchievementDifficulty.common,
     targetValue: 5,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 1),
   ),
   Achievement(
     id: 'rebirth_25_daily',
@@ -1099,7 +1099,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.rebirth,
     difficulty: AchievementDifficulty.uncommon,
     targetValue: 25,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 15),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 2),
   ),
   Achievement(
     id: 'rebirth_50_daily',
@@ -1109,7 +1109,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.rebirth,
     difficulty: AchievementDifficulty.rare,
     targetValue: 50,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 30),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 3),
   ),
   Achievement(
     id: 'rebirth_100_daily',
@@ -1119,7 +1119,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.rebirth,
     difficulty: AchievementDifficulty.epic,
     targetValue: 100,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 50),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
   ),
   Achievement(
     id: 'rebirth_250_daily',
@@ -1129,7 +1129,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.rebirth,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 250,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 100),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 10),
   ),
   Achievement(
     id: 'click_speed_5',
@@ -1273,7 +1273,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.secret,
     difficulty: AchievementDifficulty.epic,
     targetValue: 100000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 10),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 3),
   ),
   Achievement(
     id: 'secret_midnight_clicker',
@@ -1293,7 +1293,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.secret,
     difficulty: AchievementDifficulty.epic,
     targetValue: 1000,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 15),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 4),
   ),
   Achievement(
     id: 'secret_perfectionist',
@@ -1323,7 +1323,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.secret,
     difficulty: AchievementDifficulty.epic,
     targetValue: 86400,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 25),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 5),
   ),
   Achievement(
     id: 'secret_rainbow_collector',
@@ -1353,7 +1353,7 @@ const List<Achievement> allAchievements = [
     category: AchievementCategory.secret,
     difficulty: AchievementDifficulty.legendary,
     targetValue: 10,
-    reward: AchievementReward(type: AchievementRewardType.tokens, value: 20),
+    reward: AchievementReward(type: AchievementRewardType.tokens, value: 8),
   ),
   Achievement(
     id: 'secret_zen_master',
