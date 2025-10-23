@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final unlockedSecretsProvider = StateProvider<Set<String>>((ref) {
-  return {};
+final unlockedSecretsProvider = StateProvider<List<String>>((ref) {
+  return [];
 });
 
 class SecretNotifier {
@@ -11,10 +11,10 @@ class SecretNotifier {
   void unlockSecret(String secretId) {
     final unlocked = ref.read(unlockedSecretsProvider);
     if (!unlocked.contains(secretId)) {
-      ref.read(unlockedSecretsProvider.notifier).state = {
+      ref.read(unlockedSecretsProvider.notifier).state = [
         ...unlocked,
         secretId,
-      };
+      ];
     }
   }
 

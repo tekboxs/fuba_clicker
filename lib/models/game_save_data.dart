@@ -21,7 +21,7 @@ class GameSaveData {
   final RebirthData rebirthData;
   
   @HiveField(5)
-  final Set<String> achievements;
+  final List<String> achievements;
   
   @HiveField(6)
   final Map<String, double> achievementStats;
@@ -48,7 +48,7 @@ class GameSaveData {
       'inventory': inventory,
       'equipped': equipped,
       'rebirthData': rebirthData.toJson(),
-      'achievements': achievements.toList(),
+      'achievements': achievements,
       'achievementStats': achievementStats,
       'upgrades': upgrades,
     };
@@ -61,7 +61,7 @@ class GameSaveData {
       inventory: Map<String, int>.from(json['inventory'] ?? {}),
       equipped: List<String>.from(json['equipped'] ?? []),
       rebirthData: RebirthData.fromJson(json['rebirthData'] ?? {}),
-      achievements: Set<String>.from(json['achievements'] ?? []),
+      achievements: List<String>.from(json['achievements'] ?? []),
       achievementStats: Map<String, double>.from(json['achievementStats'] ?? {}),
       upgrades: Map<String, int>.from(json['upgrades'] ?? {}),
     );

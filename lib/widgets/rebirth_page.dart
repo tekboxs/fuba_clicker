@@ -161,11 +161,18 @@ class RebirthPage extends ConsumerWidget {
     final fuba = ref.watch(fubaProvider);
     final generatorsOwned = ref.watch(generatorsProvider);
 
-    final currentCount = switch (tier) {
-      RebirthTier.rebirth => rebirthData.rebirthCount,
-      RebirthTier.ascension => rebirthData.ascensionCount,
-      RebirthTier.transcendence => rebirthData.transcendenceCount,
-    };
+    final int currentCount;
+    switch (tier) {
+      case RebirthTier.rebirth:
+        currentCount = rebirthData.rebirthCount;
+        break;
+      case RebirthTier.ascension:
+        currentCount = rebirthData.ascensionCount;
+        break;
+      case RebirthTier.transcendence:
+        currentCount = rebirthData.transcendenceCount;
+        break;
+    }
 
     final requirement = tier.getRequirement(currentCount);
     final multiplierGain = tier.getMultiplierGain(currentCount);
@@ -232,7 +239,7 @@ class RebirthPage extends ConsumerWidget {
                             color: Colors.black.withAlpha(150),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Icon(Icons.lock, color: Colors.grey, size: 20),
+                          child: const Icon(Icons.lock, color: Colors.grey, size: 20),
                         ),
                     ],
                   ),
@@ -252,7 +259,7 @@ class RebirthPage extends ConsumerWidget {
                         if (isLocked && barrier != null) ...[
                           Text(
                             '🔒 ${barrier.description}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               color: Colors.orange,
                               fontWeight: FontWeight.bold,
@@ -291,7 +298,7 @@ class RebirthPage extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.grey.withAlpha(100)),
                   ),
-                  child: Text(
+                  child: const Text(
                     'BLOQUEADO',
                     style: TextStyle(
                       color: Colors.grey,
@@ -409,7 +416,7 @@ class RebirthPage extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              Text(
+              const Text(
                 'Requisitos:',
                 style: TextStyle(
                   fontSize: 12,
@@ -420,12 +427,12 @@ class RebirthPage extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 '🌽 ${GameConstants.formatNumber(barrier.requiredFuba)} fubá',
-                style: TextStyle(fontSize: 11, color: Colors.white70),
+                style: const TextStyle(fontSize: 11, color: Colors.white70),
               ),
               if (barrier.requiredGeneratorTier < generatorsOwned.length)
                 Text(
                   '${availableGenerators[barrier.requiredGeneratorTier].emoji} ${barrier.requiredGeneratorCount}x ${availableGenerators[barrier.requiredGeneratorTier].name}',
-                  style: TextStyle(fontSize: 11, color: Colors.white70),
+                  style: const TextStyle(fontSize: 11, color: Colors.white70),
                 ),
             ],
           ),
@@ -507,11 +514,18 @@ class RebirthPage extends ConsumerWidget {
     int count,
   ) {
     final rebirthData = ref.read(rebirthDataProvider);
-    final currentCount = switch (tier) {
-      RebirthTier.rebirth => rebirthData.rebirthCount,
-      RebirthTier.ascension => rebirthData.ascensionCount,
-      RebirthTier.transcendence => rebirthData.transcendenceCount,
-    };
+    final int currentCount;
+    switch (tier) {
+      case RebirthTier.rebirth:
+        currentCount = rebirthData.rebirthCount;
+        break;
+      case RebirthTier.ascension:
+        currentCount = rebirthData.ascensionCount;
+        break;
+      case RebirthTier.transcendence:
+        currentCount = rebirthData.transcendenceCount;
+        break;
+    }
 
     int totalTokenReward = 0;
     double totalMultiplierGain = 0;

@@ -37,7 +37,7 @@ class _BackupManagerState extends State<BackupManager> {
         inventory: widget.currentSave.inventory,
         equipped: widget.currentSave.equipped,
         rebirthData: widget.currentSave.rebirthData,
-        achievements: widget.currentSave.achievements,
+        achievements: widget.currentSave.achievements.toList(),
         achievementStats: widget.currentSave.achievementStats,
         upgrades: widget.currentSave.upgrades,
       );

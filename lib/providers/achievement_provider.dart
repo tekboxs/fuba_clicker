@@ -9,8 +9,8 @@ import 'game_providers.dart';
 import 'accessory_provider.dart';
 import '../models/cake_accessory.dart';
 
-final unlockedAchievementsProvider = StateProvider<Set<String>>((ref) {
-  return {};
+final unlockedAchievementsProvider = StateProvider<List<String>>((ref) {
+  return [];
 });
 
 final appContextProvider = StateProvider<BuildContext?>((ref) {
@@ -182,10 +182,10 @@ class AchievementNotifier {
     final unlocked = ref.read(unlockedAchievementsProvider);
     if (unlocked.contains(achievementId)) return;
 
-    ref.read(unlockedAchievementsProvider.notifier).state = {
+    ref.read(unlockedAchievementsProvider.notifier).state = [
       ...unlocked,
       achievementId,
-    };
+    ];
 
     final achievement =
         allAchievements.firstWhere((a) => a.id == achievementId);

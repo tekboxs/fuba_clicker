@@ -19,8 +19,8 @@ flutter config --enable-web
 flutter create . --platforms web
 flutter pub get
 
-# Generate Hive files
-dart run build_runner build --delete-conflicting-outputs
+# # Generate Hive files
+# dart run build_runner build --delete-conflicting-outputs
 
 # Build the project
 flutter build web --release --wasm --base-href /

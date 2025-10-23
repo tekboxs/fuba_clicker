@@ -218,7 +218,7 @@ class _HomePageState extends ConsumerState<HomePage>
         const SizedBox(height: 4),
         _buildCakeButton(),
         const SizedBox(height: 8),
-        Expanded(child: GeneratorSection()),
+        const Expanded(child: GeneratorSection()),
       ],
     );
   }
@@ -253,14 +253,14 @@ class _HomePageState extends ConsumerState<HomePage>
         ),
         const SizedBox(width: 20),
         // Lado direito - Geradores
-        Expanded(flex: 3, child: GeneratorSection()),
+        const Expanded(flex: 3, child: GeneratorSection()),
       ],
     );
   }
 
   /// Constrói o título do jogo
   Widget _buildTitle() {
-    return Text(
+    return const Text(
       'FUBÁ',
       style: TextStyle(
         // fontSize: GameConstants.getTitleFontSize(context) + 6,
@@ -569,7 +569,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 ref.read(rebirthDataProvider.notifier).state =
                     const RebirthData();
                 ref.read(unlockedAchievementsProvider.notifier).state =
-                    <String>{};
+                    <String>[];
                 ref.read(achievementStatsProvider.notifier).state =
                     <String, double>{};
                 ref.read(upgradesLevelProvider.notifier).state =
@@ -761,7 +761,7 @@ class _HomePageState extends ConsumerState<HomePage>
                                     : 'Aproveita a obra de arte'
                               : 'Tem certeza que vai perder a obra de arte?'
                         : 'Escute a musica do bolo de fuba ;-;',
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
 
                   backgroundColor: Colors.red,
@@ -884,9 +884,9 @@ class _HomePageState extends ConsumerState<HomePage>
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     colors: [Colors.purple, Colors.deepPurple, Colors.indigo],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -900,7 +900,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     ),
                   ],
                 ),
-                child: Icon(Icons.favorite, color: Colors.white, size: 28),
+                child: const Icon(Icons.favorite, color: Colors.white, size: 28),
               )
               .animate(
                 autoPlay: true,
@@ -912,7 +912,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 color: Colors.white.withAlpha(100),
               ),
           const SizedBox(height: 10),
-          Text(
+          const Text(
             'Fubádor',
             style: TextStyle(
               color: Colors.white,
@@ -934,7 +934,7 @@ class _HomePageState extends ConsumerState<HomePage>
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: Colors.purple.withAlpha(150), width: 2),
         ),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.favorite, color: Colors.pink, size: 28),
             SizedBox(width: 8),
@@ -952,13 +952,13 @@ class _HomePageState extends ConsumerState<HomePage>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Se você está gostando do Fubá Clicker, considere apoiar o desenvolvimento!',
               style: TextStyle(color: Colors.white70, fontSize: 14),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Container(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.green.withAlpha(30),
                 borderRadius: BorderRadius.circular(12),
@@ -970,7 +970,7 @@ class _HomePageState extends ConsumerState<HomePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
                       Icon(Icons.qr_code, color: Colors.green, size: 20),
                       SizedBox(width: 8),
@@ -984,7 +984,7 @@ class _HomePageState extends ConsumerState<HomePage>
                       ),
                     ],
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -992,7 +992,7 @@ class _HomePageState extends ConsumerState<HomePage>
                           onTap: () {
                             // Aqui você pode implementar a funcionalidade de copiar
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
+                              const SnackBar(
                                 content: Text('Chave PIX copiada!'),
                                 backgroundColor: Colors.green,
                                 duration: Duration(seconds: 2),
@@ -1000,7 +1000,7 @@ class _HomePageState extends ConsumerState<HomePage>
                             );
                           },
                           child: Container(
-                            padding: EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.black.withAlpha(100),
                               borderRadius: BorderRadius.circular(8),
@@ -1009,7 +1009,7 @@ class _HomePageState extends ConsumerState<HomePage>
                                 width: 1,
                               ),
                             ),
-                            child: Text(
+                            child: const Text(
                               'tekboxs@gmail.com',
                               style: TextStyle(
                                 color: Colors.white,
@@ -1020,7 +1020,7 @@ class _HomePageState extends ConsumerState<HomePage>
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Container(
                         width: 80,
                         height: 80,
@@ -1039,7 +1039,7 @@ class _HomePageState extends ConsumerState<HomePage>
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
                                 color: Colors.grey.withAlpha(100),
-                                child: Icon(
+                                child: const Icon(
                                   Icons.qr_code,
                                   color: Colors.grey,
                                   size: 40,
@@ -1054,14 +1054,14 @@ class _HomePageState extends ConsumerState<HomePage>
                 ],
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Container(
-              padding: EdgeInsets.all(12),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.blue.withAlpha(30),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.info, color: Colors.blue, size: 16),
                   SizedBox(width: 8),
@@ -1080,7 +1080,7 @@ class _HomePageState extends ConsumerState<HomePage>
                 Expanded(
                   child: TextField(
                     controller: _codeController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Código',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.qr_code),
@@ -1111,7 +1111,7 @@ class _HomePageState extends ConsumerState<HomePage>
                               .read(rebirthDataProvider.notifier)
                               .state = rebirthData.copyWith(
                             hasUsedOneTimeMultiplier: true,
-                            usedCoupons: {...rebirthData.usedCoupons, 'ivi100'},
+                            usedCoupons: [...rebirthData.usedCoupons, 'ivi100'],
                           );
 
                           ref
@@ -1145,10 +1145,10 @@ class _HomePageState extends ConsumerState<HomePage>
                               .read(rebirthDataProvider.notifier)
                               .state = rebirthData.copyWith(
                             celestialTokens: rebirthData.celestialTokens + 8.0,
-                            usedCoupons: {
+                            usedCoupons: [
                               ...rebirthData.usedCoupons,
                               'milkyde4',
-                            },
+                            ],
                           );
 
                           ref
@@ -1186,10 +1186,10 @@ class _HomePageState extends ConsumerState<HomePage>
                               .read(rebirthDataProvider.notifier)
                               .state = rebirthData.copyWith(
                             celestialTokens: rebirthData.celestialTokens + 69,
-                            usedCoupons: {
+                            usedCoupons: [
                               ...rebirthData.usedCoupons,
                               'oliveiralindo',
-                            },
+                            ],
                           );
 
                           ref
@@ -1223,10 +1223,10 @@ class _HomePageState extends ConsumerState<HomePage>
                               .read(rebirthDataProvider.notifier)
                               .state = rebirthData.copyWith(
                             hasUsedOneTimeMultiplier: true,
-                            usedCoupons: {
+                            usedCoupons: [
                               ...rebirthData.usedCoupons,
                               'fubaadm',
-                            },
+                            ],
                           );
 
                           ref
@@ -1252,7 +1252,7 @@ class _HomePageState extends ConsumerState<HomePage>
                         //   }
                         // }
                       },
-                      icon: Icon(Icons.confirmation_num),
+                      icon: const Icon(Icons.confirmation_num),
                     );
                   },
                 ),
@@ -1263,7 +1263,7 @@ class _HomePageState extends ConsumerState<HomePage>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
+            child: const Text(
               'Fechar',
               style: TextStyle(
                 color: Colors.purple,

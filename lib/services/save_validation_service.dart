@@ -27,7 +27,7 @@ class SaveValidationService {
 
     _validateGeneralConsistency(data, issues, warnings);
 
-    final isValid = true;
+    const isValid = true;
     final severity = issues.isNotEmpty
         ? ValidationSeverity.critical
         : warnings.isNotEmpty
@@ -290,7 +290,9 @@ class SaveValidationService {
 
   static GameSaveData? restoreFromBackupCode(String code) {
     try {
-      final (compressed, hash) = _decodeBackupCode(code);
+      final result = _decodeBackupCode(code);
+      final compressed = result['compressed']!;
+      final hash = result['hash']!;
       final jsonString = _decompressBackupCode(compressed);
 
       // Validar hash
@@ -351,7 +353,7 @@ class SaveValidationService {
     return chunks.join('-');
   }
 
-  static (String compressed, String hash) _decodeBackupCode(String code) {
+  static Map<String, String> _decodeBackupCode(String code) {
     final encoded = code.replaceAll('-', '');
     final combined = utf8.decode(base64Decode(encoded));
     final parts = combined.split('|');
@@ -360,7 +362,7 @@ class SaveValidationService {
       throw Exception('Código de backup inválido');
     }
 
-    return (parts[0], parts[1]);
+    return {'compressed': parts[0], 'hash': parts[1]};
   }
 }
 

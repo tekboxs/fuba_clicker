@@ -123,7 +123,7 @@ class RebirthData {
   final bool hasUsedOneTimeMultiplier;
   
   @HiveField(5)
-  final Set<String> usedCoupons;
+  final List<String> usedCoupons;
   
 
   const RebirthData({
@@ -132,7 +132,7 @@ class RebirthData {
     this.transcendenceCount = 0,
     this.celestialTokens = 0.0,
     this.hasUsedOneTimeMultiplier = false,
-    this.usedCoupons = const {},
+    this.usedCoupons = const [],
   });
 
   RebirthData copyWith({
@@ -141,7 +141,7 @@ class RebirthData {
     int? transcendenceCount,
     double? celestialTokens,
     bool? hasUsedOneTimeMultiplier,
-    Set<String>? usedCoupons,
+    List<String>? usedCoupons,
   }) {
     return RebirthData(
       rebirthCount: rebirthCount ?? this.rebirthCount,
@@ -187,7 +187,7 @@ class RebirthData {
       'transcendence_count': transcendenceCount,
       'celestial_tokens': celestialTokens,
       'has_used_one_time_multiplier': hasUsedOneTimeMultiplier,
-      'used_coupons': usedCoupons.toList(),
+      'used_coupons': usedCoupons,
     };
   }
 
@@ -198,7 +198,7 @@ class RebirthData {
       transcendenceCount: json['transcendence_count'] ?? 0,
       celestialTokens: (json['celestial_tokens'] ?? 0).toDouble(),
       hasUsedOneTimeMultiplier: json['has_used_one_time_multiplier'] ?? false,
-      usedCoupons: Set<String>.from(json['used_coupons'] ?? []),
+      usedCoupons: List<String>.from(json['used_coupons'] ?? []),
     );
   }
 }

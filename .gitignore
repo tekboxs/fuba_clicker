@@ -73,7 +73,6 @@ coverage/
 **/lib/firebase_options.dart
 
 # Generated files
-*.g.dart
 *.freezed.dart
 *.gr.dart
 

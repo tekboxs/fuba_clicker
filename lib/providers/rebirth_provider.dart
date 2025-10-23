@@ -29,12 +29,18 @@ final canRebirthProvider = Provider.family<bool, RebirthTier>((ref, tier) {
   final fuba = ref.watch(fubaProvider);
   final rebirthData = ref.watch(rebirthDataProvider);
 
-  final requirement = switch (tier) {
-    RebirthTier.rebirth => tier.getRequirement(rebirthData.rebirthCount),
-    RebirthTier.ascension => tier.getRequirement(rebirthData.ascensionCount),
-    RebirthTier.transcendence =>
-      tier.getRequirement(rebirthData.transcendenceCount),
-  };
+  final double requirement;
+  switch (tier) {
+    case RebirthTier.rebirth:
+      requirement = tier.getRequirement(rebirthData.rebirthCount);
+      break;
+    case RebirthTier.ascension:
+      requirement = tier.getRequirement(rebirthData.ascensionCount);
+      break;
+    case RebirthTier.transcendence:
+      requirement = tier.getRequirement(rebirthData.transcendenceCount);
+      break;
+  }
 
   final requirementString = requirement.toString();
   if (requirementString == 'Infinity' || requirementString == 'NaN') {
@@ -53,29 +59,41 @@ class RebirthNotifier {
 
     if (!canRebirth) return;
 
-    final tokenReward = switch (tier) {
-      RebirthTier.rebirth => tier.getTokenReward(currentData.rebirthCount),
-      RebirthTier.ascension => tier.getTokenReward(currentData.ascensionCount),
-      RebirthTier.transcendence =>
-        tier.getTokenReward(currentData.transcendenceCount),
-    };
+    final double tokenReward;
+    switch (tier) {
+      case RebirthTier.rebirth:
+        tokenReward = tier.getTokenReward(currentData.rebirthCount);
+        break;
+      case RebirthTier.ascension:
+        tokenReward = tier.getTokenReward(currentData.ascensionCount);
+        break;
+      case RebirthTier.transcendence:
+        tokenReward = tier.getTokenReward(currentData.transcendenceCount);
+        break;
+    }
 
     _resetProgress(tier);
 
-    ref.read(rebirthDataProvider.notifier).state = switch (tier) {
-      RebirthTier.rebirth => currentData.copyWith(
+    switch (tier) {
+      case RebirthTier.rebirth:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           rebirthCount: currentData.rebirthCount + 1,
           celestialTokens: currentData.celestialTokens + tokenReward,
-        ),
-      RebirthTier.ascension => currentData.copyWith(
+        );
+        break;
+      case RebirthTier.ascension:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           ascensionCount: currentData.ascensionCount + 1,
           celestialTokens: currentData.celestialTokens + tokenReward,
-        ),
-      RebirthTier.transcendence => currentData.copyWith(
+        );
+        break;
+      case RebirthTier.transcendence:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           transcendenceCount: currentData.transcendenceCount + 1,
           celestialTokens: currentData.celestialTokens + tokenReward,
-        ),
-    };
+        );
+        break;
+    }
   }
 
   void _resetProgress(RebirthTier tier) {
@@ -124,11 +142,18 @@ class RebirthNotifier {
     
     int actualCount = 0;
     
-    final currentTierCount = switch (tier) {
-      RebirthTier.rebirth => currentData.rebirthCount,
-      RebirthTier.ascension => currentData.ascensionCount,
-      RebirthTier.transcendence => currentData.transcendenceCount,
-    };
+    final int currentTierCount;
+    switch (tier) {
+      case RebirthTier.rebirth:
+        currentTierCount = currentData.rebirthCount;
+        break;
+      case RebirthTier.ascension:
+        currentTierCount = currentData.ascensionCount;
+        break;
+      case RebirthTier.transcendence:
+        currentTierCount = currentData.transcendenceCount;
+        break;
+    }
     
     // Limites máximos seguros para evitar travamentos
     const maxRebirths = 50;
@@ -158,11 +183,18 @@ class RebirthNotifier {
     // Otimização: para números muito grandes, usa lógica especial
     if (fubaSuffix.magnitude > 20) { // Para números muito grandes (acima de 10^60)
       // Para números extremos, permite mais rebirths baseado na magnitude
-      final adjustedMaxIterations = switch (tier) {
-        RebirthTier.rebirth => fubaSuffix.magnitude > 30 ? 50 : 25,
-        RebirthTier.ascension => fubaSuffix.magnitude > 35 ? 10 : 5,
-        RebirthTier.transcendence => fubaSuffix.magnitude > 40 ? 5 : 3,
-      };
+      final int adjustedMaxIterations;
+      switch (tier) {
+        case RebirthTier.rebirth:
+          adjustedMaxIterations = fubaSuffix.magnitude > 30 ? 50 : 25;
+          break;
+        case RebirthTier.ascension:
+          adjustedMaxIterations = fubaSuffix.magnitude > 35 ? 10 : 5;
+          break;
+        case RebirthTier.transcendence:
+          adjustedMaxIterations = fubaSuffix.magnitude > 40 ? 5 : 3;
+          break;
+      }
       
       if (adjustedMaxIterations > maxIterations) {
         // Usa o limite maior para números extremos com custo progressivo
@@ -227,20 +259,26 @@ class RebirthNotifier {
           
           _resetProgress(tier);
           
-          ref.read(rebirthDataProvider.notifier).state = switch (tier) {
-            RebirthTier.rebirth => currentData.copyWith(
+          switch (tier) {
+            case RebirthTier.rebirth:
+              ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
                 rebirthCount: currentData.rebirthCount + actualCount,
                 celestialTokens: currentData.celestialTokens + totalTokenReward,
-              ),
-            RebirthTier.ascension => currentData.copyWith(
+              );
+              break;
+            case RebirthTier.ascension:
+              ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
                 ascensionCount: currentData.ascensionCount + actualCount,
                 celestialTokens: currentData.celestialTokens + totalTokenReward,
-              ),
-            RebirthTier.transcendence => currentData.copyWith(
+              );
+              break;
+            case RebirthTier.transcendence:
+              ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
                 transcendenceCount: currentData.transcendenceCount + actualCount,
                 celestialTokens: currentData.celestialTokens + totalTokenReward,
-              ),
-          };
+              );
+              break;
+          }
         }
         return;
       }
@@ -346,20 +384,26 @@ class RebirthNotifier {
     
     _resetProgress(tier);
     
-    ref.read(rebirthDataProvider.notifier).state = switch (tier) {
-      RebirthTier.rebirth => currentData.copyWith(
+    switch (tier) {
+      case RebirthTier.rebirth:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           rebirthCount: currentData.rebirthCount + actualCount,
           celestialTokens: currentData.celestialTokens + totalTokenReward,
-        ),
-      RebirthTier.ascension => currentData.copyWith(
+        );
+        break;
+      case RebirthTier.ascension:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           ascensionCount: currentData.ascensionCount + actualCount,
           celestialTokens: currentData.celestialTokens + totalTokenReward,
-        ),
-      RebirthTier.transcendence => currentData.copyWith(
+        );
+        break;
+      case RebirthTier.transcendence:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           transcendenceCount: currentData.transcendenceCount + actualCount,
           celestialTokens: currentData.celestialTokens + totalTokenReward,
-        ),
-    };
+        );
+        break;
+    }
   }
 }
 
@@ -371,11 +415,18 @@ int calculateMaxOperations(RebirthTier tier, BigDecimal fuba, RebirthData rebirt
   int count = 0;
   BigDecimal remainingFuba = fuba;
   
-  final currentCount = switch (tier) {
-    RebirthTier.rebirth => rebirthData.rebirthCount,
-    RebirthTier.ascension => rebirthData.ascensionCount,
-    RebirthTier.transcendence => rebirthData.transcendenceCount,
-  };
+  final int currentCount;
+  switch (tier) {
+    case RebirthTier.rebirth:
+      currentCount = rebirthData.rebirthCount;
+      break;
+    case RebirthTier.ascension:
+      currentCount = rebirthData.ascensionCount;
+      break;
+    case RebirthTier.transcendence:
+      currentCount = rebirthData.transcendenceCount;
+      break;
+  }
   
   // Limites máximos seguros para evitar travamentos
   const maxRebirths = 50;

@@ -91,8 +91,8 @@ class SaveService {
 
     final achievementsJson = prefs.getString(_achievementsKey);
     final achievements = achievementsJson != null
-        ? Set<String>.from(jsonDecode(_decompress(achievementsJson)))
-        : <String>{};
+        ? List<String>.from(jsonDecode(_decompress(achievementsJson)))
+        : <String>[];
 
     final achievementStatsJson = prefs.getString(_achievementStatsKey);
     final achievementStats = achievementStatsJson != null
@@ -135,7 +135,7 @@ class SaveService {
     required Map<String, int> inventory,
     required List<String> equipped,
     required RebirthData rebirthData,
-    required Set<String> achievements,
+    required List<String> achievements,
     required Map<String, double> achievementStats,
     required Map<String, int> upgrades,
   }) async {
@@ -180,7 +180,7 @@ class SaveService {
     required Map<String, int> inventory,
     required List<String> equipped,
     required RebirthData rebirthData,
-    required Set<String> achievements,
+    required List<String> achievements,
     required Map<String, double> achievementStats,
     required Map<String, int> upgrades,
   }) {
@@ -205,7 +205,7 @@ class SaveService {
     required Map<String, int> inventory,
     required List<String> equipped,
     required RebirthData rebirthData,
-    required Set<String> achievements,
+    required List<String> achievements,
     required Map<String, double> achievementStats,
     required Map<String, int> upgrades,
   }) {
@@ -233,7 +233,7 @@ class SaveService {
       inventory: oldSaveData.inventory,
       equipped: oldSaveData.equipped,
       rebirthData: oldSaveData.rebirthData,
-      achievements: oldSaveData.achievements,
+      achievements: oldSaveData.achievements.toList(),
       achievementStats: oldSaveData.achievementStats,
       upgrades: oldSaveData.upgrades,
     );
@@ -262,7 +262,7 @@ class SaveService {
       inventory: <String, int>{},
       equipped: <String>[],
       rebirthData: const RebirthData(),
-      achievements: <String>{},
+      achievements: <String>[],
       achievementStats: <String, double>{},
       upgrades: <String, int>{},
     );
