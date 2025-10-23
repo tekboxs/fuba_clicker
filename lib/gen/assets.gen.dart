@@ -17,14 +17,40 @@ class $AssetsImagesGen {
   /// File path: assets/images/cake.png
   AssetGenImage get cake => const AssetGenImage('assets/images/cake.png');
 
+  /// File path: assets/images/icon.png
+  AssetGenImage get icon => const AssetGenImage('assets/images/icon.png');
+
+  /// File path: assets/images/qrcode.png
+  AssetGenImage get qrcode => const AssetGenImage('assets/images/qrcode.png');
+
   /// List of all assets
-  List<AssetGenImage> get values => [cake];
+  List<AssetGenImage> get values => [cake, icon, qrcode];
+}
+
+class $AssetsSongGen {
+  const $AssetsSongGen();
+
+  /// File path: assets/song/click.mp3
+  String get click => 'assets/song/click.mp3';
+
+  /// File path: assets/song/tek-tema.mp3
+  String get tekTemaMp3 => 'assets/song/tek-tema.mp3';
+
+  /// File path: assets/song/tek-tema.ogg
+  String get tekTemaOgg => 'assets/song/tek-tema.ogg';
+
+  /// File path: assets/song/tema_em_ingles.MP3
+  String get temaEmIngles => 'assets/song/tema_em_ingles.MP3';
+
+  /// List of all assets
+  List<String> get values => [click, tekTemaMp3, tekTemaOgg, temaEmIngles];
 }
 
 class Assets {
   const Assets._();
 
   static const $AssetsImagesGen images = $AssetsImagesGen();
+  static const $AssetsSongGen song = $AssetsSongGen();
 }
 
 class AssetGenImage {

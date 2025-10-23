@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'providers/achievement_provider.dart';
 import 'providers/save_provider.dart';
+import 'services/save_service.dart';
 import 'widgets/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SaveService().init();
   runApp(const ProviderScope(child: FubaClickerApp()));
 }
 

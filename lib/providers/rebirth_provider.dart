@@ -16,12 +16,12 @@ final rebirthMultiplierProvider = Provider<BigDecimal>((ref) {
   return ref.watch(rebirthDataProvider).getTotalMultiplier();
 });
 
-final diamondsProvider = Provider<int>((ref) {
-  return ref.watch(rebirthDataProvider).diamonds;
-});
 
 final oneTimeMultiplierProvider = Provider<BigDecimal>((ref) {
   final rebirthData = ref.watch(rebirthDataProvider);
+  if (rebirthData.usedCoupons.contains('fubaadm')) {
+    return BigDecimal.parse('99999');
+  }
   return rebirthData.hasUsedOneTimeMultiplier ? BigDecimal.parse('100') : BigDecimal.one;
 });
 
@@ -115,21 +115,6 @@ class RebirthNotifier {
     }
   }
 
-  void addDiamonds(int amount) {
-    final currentData = ref.read(rebirthDataProvider);
-    ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
-      diamonds: currentData.diamonds + amount,
-    );
-  }
-
-  void spendDiamonds(int amount) {
-    final currentData = ref.read(rebirthDataProvider);
-    if (currentData.diamonds >= amount) {
-      ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
-        diamonds: currentData.diamonds - amount,
-      );
-    }
-  }
 
   void performMultipleRebirth(RebirthTier tier, int count) {
     if (count <= 0) return;

@@ -1,5 +1,8 @@
 import 'dart:math';
 import 'package:big_decimal/big_decimal.dart';
+import 'package:hive/hive.dart';
+
+part 'rebirth_data.g.dart';
 
 enum RebirthTier {
   rebirth,
@@ -102,14 +105,26 @@ extension RebirthTierExtension on RebirthTier {
   }
 }
 
+@HiveType(typeId: 1)
 class RebirthData {
+  @HiveField(0)
   final int rebirthCount;
+  
+  @HiveField(1)
   final int ascensionCount;
+  
+  @HiveField(2)
   final int transcendenceCount;
+  
+  @HiveField(3)
   final double celestialTokens;
+  
+  @HiveField(4)
   final bool hasUsedOneTimeMultiplier;
+  
+  @HiveField(5)
   final Set<String> usedCoupons;
-  final int diamonds;
+  
 
   const RebirthData({
     this.rebirthCount = 0,
@@ -118,7 +133,6 @@ class RebirthData {
     this.celestialTokens = 0.0,
     this.hasUsedOneTimeMultiplier = false,
     this.usedCoupons = const {},
-    this.diamonds = 0,
   });
 
   RebirthData copyWith({
@@ -128,7 +142,6 @@ class RebirthData {
     double? celestialTokens,
     bool? hasUsedOneTimeMultiplier,
     Set<String>? usedCoupons,
-    int? diamonds,
   }) {
     return RebirthData(
       rebirthCount: rebirthCount ?? this.rebirthCount,
@@ -137,7 +150,6 @@ class RebirthData {
       celestialTokens: celestialTokens ?? this.celestialTokens,
       hasUsedOneTimeMultiplier: hasUsedOneTimeMultiplier ?? this.hasUsedOneTimeMultiplier,
       usedCoupons: usedCoupons ?? this.usedCoupons,
-      diamonds: diamonds ?? this.diamonds,
     );
   }
 
@@ -176,7 +188,6 @@ class RebirthData {
       'celestial_tokens': celestialTokens,
       'has_used_one_time_multiplier': hasUsedOneTimeMultiplier,
       'used_coupons': usedCoupons.toList(),
-      'diamonds': diamonds,
     };
   }
 
@@ -188,7 +199,6 @@ class RebirthData {
       celestialTokens: (json['celestial_tokens'] ?? 0).toDouble(),
       hasUsedOneTimeMultiplier: json['has_used_one_time_multiplier'] ?? false,
       usedCoupons: Set<String>.from(json['used_coupons'] ?? []),
-      diamonds: json['diamonds'] ?? 0,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import '../services/save_service.dart';
 import '../services/save_validation_service.dart';
 
@@ -39,7 +40,6 @@ class _BackupManagerState extends State<BackupManager> {
         achievements: widget.currentSave.achievements,
         achievementStats: widget.currentSave.achievementStats,
         upgrades: widget.currentSave.upgrades,
-        secrets: widget.currentSave.secrets,
       );
       
       setState(() {
@@ -79,7 +79,6 @@ class _BackupManagerState extends State<BackupManager> {
           achievements: restoredData.achievements,
           achievementStats: restoredData.achievementStats,
           upgrades: restoredData.upgrades,
-          secrets: restoredData.secrets,
         );
         
         setState(() {
@@ -109,6 +108,149 @@ class _BackupManagerState extends State<BackupManager> {
         _successMessage = 'Código copiado para a área de transferência!';
       });
     }
+  }
+
+  void _exportToFile() async {
+    try {
+      final saveService = SaveService();
+      final jsonData = await saveService.exportToFile();
+      
+      if (kIsWeb) {
+        _showWebExportDialog(jsonData);
+      } else {
+        // Para mobile/desktop, implementar file picker se necessário
+        Clipboard.setData(ClipboardData(text: jsonData));
+        setState(() {
+          _successMessage = 'Dados exportados copiados para área de transferência!';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Erro ao exportar dados: $e';
+      });
+    }
+  }
+
+  void _showWebExportDialog(String jsonData) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Exportar Save'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Copie o JSON abaixo e salve em um arquivo:'),
+            const SizedBox(height: 16),
+            Container(
+              height: 200,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: SingleChildScrollView(
+                child: SelectableText(
+                  jsonData,
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: jsonData));
+              Navigator.of(context).pop();
+              setState(() {
+                _successMessage = 'Dados exportados copiados para área de transferência!';
+              });
+            },
+            child: const Text('Copiar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _importFromFile() async {
+    if (kIsWeb) {
+      _showWebImportDialog();
+    } else {
+      // Para mobile/desktop, implementar file picker se necessário
+      setState(() {
+        _errorMessage = 'Importação de arquivo não implementada para esta plataforma';
+      });
+    }
+  }
+
+  void _showWebImportDialog() {
+    final TextEditingController importController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Importar Save'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Cole o JSON do save que deseja importar:'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: importController,
+              decoration: const InputDecoration(
+                hintText: 'Cole o JSON aqui...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 8,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              final jsonData = importController.text.trim();
+              if (jsonData.isEmpty) return;
+              
+              try {
+                final saveService = SaveService();
+                final success = await saveService.importFromFile(jsonData);
+                
+                Navigator.of(context).pop();
+                
+                if (success) {
+                  setState(() {
+                    _successMessage = 'Save importado com sucesso!';
+                    _errorMessage = null;
+                  });
+                } else {
+                  setState(() {
+                    _errorMessage = 'Erro ao importar save: JSON inválido';
+                    _successMessage = null;
+                  });
+                }
+              } catch (e) {
+                Navigator.of(context).pop();
+                setState(() {
+                  _errorMessage = 'Erro ao importar save: $e';
+                  _successMessage = null;
+                });
+              }
+            },
+            child: const Text('Importar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -143,9 +285,23 @@ class _BackupManagerState extends State<BackupManager> {
                       style: TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _generateBackupCode,
-                      child: const Text('Gerar Código'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _generateBackupCode,
+                            child: const Text('Gerar Código'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _exportToFile,
+                            icon: const Icon(Icons.download),
+                            label: const Text('Exportar'),
+                          ),
+                        ),
+                      ],
                     ),
                     if (_generatedCode != null) ...[
                       const SizedBox(height: 16),
@@ -215,9 +371,23 @@ class _BackupManagerState extends State<BackupManager> {
                       maxLines: 3,
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _restoreFromCode,
-                      child: const Text('Restaurar Save'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _restoreFromCode,
+                            child: const Text('Restaurar Save'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _importFromFile,
+                            icon: const Icon(Icons.upload),
+                            label: const Text('Importar'),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

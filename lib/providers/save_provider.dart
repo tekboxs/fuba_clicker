@@ -9,7 +9,6 @@ import 'accessory_provider.dart';
 import 'rebirth_provider.dart';
 import 'achievement_provider.dart';
 import 'rebirth_upgrade_provider.dart';
-import 'secret_provider.dart';
 
 class SaveNotifier extends StateNotifier<bool> {
   SaveNotifier(this.ref) : super(false) {
@@ -38,7 +37,6 @@ class SaveNotifier extends StateNotifier<bool> {
       final achievements = ref.read(unlockedAchievementsProvider);
       final achievementStats = ref.read(achievementStatsProvider);
       final upgrades = ref.read(upgradesLevelProvider);
-      final secrets = ref.read(unlockedSecretsProvider);
 
       await _saveService.saveGame(
         fuba: fuba.toDouble(),
@@ -49,7 +47,6 @@ class SaveNotifier extends StateNotifier<bool> {
         achievements: achievements,
         achievementStats: achievementStats,
         upgrades: upgrades,
-        secrets: secrets,
       );
       state = false;
     } catch (e) {
@@ -113,7 +110,6 @@ class SaveNotifier extends StateNotifier<bool> {
       final mergedStats = {...defaultStats, ...data.achievementStats};
       ref.read(achievementStatsProvider.notifier).state = Map<String, double>.from(mergedStats);
       ref.read(upgradesLevelProvider.notifier).state = data.upgrades;
-      ref.read(unlockedSecretsProvider.notifier).state = data.secrets;
     } catch (e) {
       return;
     }

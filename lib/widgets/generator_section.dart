@@ -5,7 +5,6 @@ import 'package:big_decimal/big_decimal.dart';
 import '../models/fuba_generator.dart';
 import '../providers/game_providers.dart';
 import '../providers/achievement_provider.dart';
-import '../providers/secret_provider.dart';
 import '../providers/save_provider.dart';
 import '../utils/constants.dart';
 import 'particle_system.dart';
@@ -28,7 +27,6 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
   Widget build(BuildContext context) {
     final generators = ref.watch(generatorsProvider);
     final fuba = ref.watch(fubaProvider);
-    final unlockedSecrets = ref.watch(unlockedSecretsProvider);
 
     return Container(
       padding: EdgeInsets.all(GameConstants.getCardPadding(context)),
@@ -65,7 +63,7 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
                 final generator = availableGenerators[index];
                 final owned = generators[index];
                 final cost = generator.getCost(owned);
-                final isUnlocked = generator.isUnlocked(generators, unlockedSecrets);
+                final isUnlocked = generator.isUnlocked(generators, <String>{});
                 final canAfford = fuba.compareTo(cost) >= 0 && isUnlocked;
 
                 return InkWell(

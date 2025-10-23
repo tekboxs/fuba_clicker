@@ -426,9 +426,9 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.15,
           AccessoryRarity.cosmic: 0.20,
           AccessoryRarity.infinite: 0.25,
-          AccessoryRarity.omniversal: 0.20,
-          AccessoryRarity.reality: 0.15,
-          AccessoryRarity.tek: 0.0,
+          AccessoryRarity.omniversal: 0.020,
+          AccessoryRarity.reality: 0.015,
+          AccessoryRarity.tek: 0.001,
           AccessoryRarity.absolute: 0.0,
         };
       case LootBoxTier.absolute:
@@ -446,8 +446,8 @@ enum LootBoxTier {
           AccessoryRarity.infinite: 0.20,
           AccessoryRarity.omniversal: 0.25,
           AccessoryRarity.reality: 0.20,
-          AccessoryRarity.tek: 0.10,
-          AccessoryRarity.absolute: 0.0,
+          AccessoryRarity.tek: 0.01,
+          AccessoryRarity.absolute: 0.001,
         };
     }
   }

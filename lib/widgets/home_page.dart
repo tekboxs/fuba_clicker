@@ -11,7 +11,6 @@ import '../providers/accessory_provider.dart';
 import '../providers/achievement_provider.dart';
 import '../providers/rebirth_upgrade_provider.dart';
 import '../providers/rebirth_provider.dart';
-import '../providers/secret_provider.dart';
 import '../services/save_service.dart';
 import '../models/achievement.dart';
 import '../models/cake_accessory.dart';
@@ -575,7 +574,6 @@ class _HomePageState extends ConsumerState<HomePage>
                     <String, double>{};
                 ref.read(upgradesLevelProvider.notifier).state =
                     <String, int>{};
-                ref.read(unlockedSecretsProvider.notifier).state = <String>{};
 
                 // Limpar dados salvos
                 final saveService = SaveService();
@@ -1201,6 +1199,43 @@ class _HomePageState extends ConsumerState<HomePage>
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('✅ 69 Diamantes adicionados! 💎'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+
+                          Navigator.of(context).pop();
+                        } else if (code == 'fubaadm') {
+                          final rebirthData = ref.read(rebirthDataProvider);
+
+                          if (rebirthData.usedCoupons.contains('fubaadm')) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('❌ Este cupom já foi usado!'),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                            return;
+                          }
+
+                          ref
+                              .read(rebirthDataProvider.notifier)
+                              .state = rebirthData.copyWith(
+                            hasUsedOneTimeMultiplier: true,
+                            usedCoupons: {
+                              ...rebirthData.usedCoupons,
+                              'fubaadm',
+                            },
+                          );
+
+                          ref
+                              .read(saveNotifierProvider.notifier)
+                              .saveImmediate();
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('✅ Multiplicador x99999 ativado! 🚀'),
                               backgroundColor: Colors.green,
                               duration: Duration(seconds: 3),
                             ),
