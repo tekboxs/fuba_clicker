@@ -5,12 +5,11 @@ import 'package:crypto/crypto.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/rebirth_data.dart';
 import '../models/game_save_data.dart';
-import 'save_validation_service.dart' hide GameSaveData;
-
+ 
 class SaveService {
   static const String _boxName = 'fuba_save';
   static const String _saveKey = 'game_data';
-  
+
   // Chaves antigas para migração
   static const String _fubaKey = 'fuba_count';
   static const String _generatorsKey = 'generators';
@@ -20,22 +19,22 @@ class SaveService {
   static const String _achievementsKey = 'achievements';
   static const String _achievementStatsKey = 'achievement_stats';
   static const String _upgradesKey = 'upgrades';
-  
+
   static Box<GameSaveData>? _box;
 
   Future<void> init() async {
     await Hive.initFlutter();
-    
+
     Hive.registerAdapter(GameSaveDataAdapter());
     Hive.registerAdapter(RebirthDataAdapter());
-    
+
     final key = _deriveEncryptionKey('fuba_secret_key_2024');
-    
+
     _box = await Hive.openBox<GameSaveData>(
       _boxName,
       encryptionCipher: HiveAesCipher(key),
     );
-    
+
     await _migrateFromSharedPreferences();
   }
 
@@ -47,7 +46,7 @@ class SaveService {
 
   Future<void> _migrateFromSharedPreferences() async {
     if (_box == null || _box!.isNotEmpty) return;
-    
+
     final prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey(_fubaKey)) {
       final oldData = await _loadFromSharedPreferences(prefs);
@@ -56,7 +55,8 @@ class SaveService {
     }
   }
 
-  Future<GameSaveData> _loadFromSharedPreferences(SharedPreferences prefs) async {
+  Future<GameSaveData> _loadFromSharedPreferences(
+      SharedPreferences prefs) async {
     double fuba = 0.0;
 
     final fubaString = prefs.getString(_fubaKey);
@@ -172,71 +172,6 @@ class SaveService {
   Future<void> clearSave() async {
     if (_box == null) return;
     await _box!.clear();
-  }
-
-  String generateBackupCode({
-    required double fuba,
-    required List<int> generators,
-    required Map<String, int> inventory,
-    required List<String> equipped,
-    required RebirthData rebirthData,
-    required List<String> achievements,
-    required Map<String, double> achievementStats,
-    required Map<String, int> upgrades,
-  }) {
-    // Criar dados no formato antigo para compatibilidade
-    final oldSaveData = _createOldGameSaveData(
-      fuba: fuba,
-      generators: generators,
-      inventory: inventory,
-      equipped: equipped,
-      rebirthData: rebirthData,
-      achievements: achievements,
-      achievementStats: achievementStats,
-      upgrades: upgrades,
-    );
-
-    return SaveValidationService.generateBackupCode(oldSaveData);
-  }
-
-  dynamic _createOldGameSaveData({
-    required double fuba,
-    required List<int> generators,
-    required Map<String, int> inventory,
-    required List<String> equipped,
-    required RebirthData rebirthData,
-    required List<String> achievements,
-    required Map<String, double> achievementStats,
-    required Map<String, int> upgrades,
-  }) {
-    // Usar reflection ou criar um objeto compatível
-    // Por enquanto, vou usar um Map para simular o objeto antigo
-    return {
-      'fuba': fuba,
-      'generators': generators,
-      'inventory': inventory,
-      'equipped': equipped,
-      'rebirthData': rebirthData,
-      'achievements': achievements,
-      'achievementStats': achievementStats,
-      'upgrades': upgrades,
-    };
-  }
-
-  GameSaveData? restoreFromBackupCode(String code) {
-    final oldSaveData = SaveValidationService.restoreFromBackupCode(code);
-    if (oldSaveData == null) return null;
-    
-    return GameSaveData(
-      fuba: oldSaveData.fuba,
-      generators: oldSaveData.generators,
-      inventory: oldSaveData.inventory,
-      equipped: oldSaveData.equipped,
-      rebirthData: oldSaveData.rebirthData,
-      achievements: oldSaveData.achievements.toList(),
-      achievementStats: oldSaveData.achievementStats,
-      upgrades: oldSaveData.upgrades,
-    );
   }
 
   Future<String> exportToFile() async {

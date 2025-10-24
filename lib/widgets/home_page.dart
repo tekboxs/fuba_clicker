@@ -27,7 +27,6 @@ import 'achievements_page.dart';
 import 'rebirth_upgrades_page.dart';
 import 'achievement_popup.dart';
 
-
 /// Página principal do jogo
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -83,8 +82,8 @@ class _HomePageState extends ConsumerState<HomePage>
       duration: GameConstants.parallaxAnimationDuration,
     );
 
-    _parallaxController.forward();
-    _parallaxController.addListener(_handleParallaxAnimation);
+    // _parallaxController.forward();
+    // _parallaxController.addListener(_handleParallaxAnimation);
   }
 
   /// Manipula a animação de paralaxe (ida e volta)
@@ -104,16 +103,14 @@ class _HomePageState extends ConsumerState<HomePage>
       (timer) {
         if (mounted) {
           final autoProduction = ref.read(autoProductionProvider);
-          final autoClickerRate = ref
-              .read(upgradeNotifierProvider)
-              .getAutoClickerRate();
+          final autoClickerRate =
+              ref.read(upgradeNotifierProvider).getAutoClickerRate();
 
           BigDecimal totalProduction = autoProduction;
 
           if (autoClickerRate > 0) {
-            final clickMultiplier = ref
-                .read(upgradeNotifierProvider)
-                .getClickMultiplier();
+            final clickMultiplier =
+                ref.read(upgradeNotifierProvider).getClickMultiplier();
             final achievementMultiplier = ref.watch(
               achievementMultiplierProvider,
             );
@@ -121,14 +118,15 @@ class _HomePageState extends ConsumerState<HomePage>
             final rebirthMultiplier = ref.read(rebirthMultiplierProvider);
             final oneTimeMultiplier = ref.read(oneTimeMultiplierProvider);
 
-            final totalClickMultiplier =
-                clickMultiplier *
+            final totalClickMultiplier = clickMultiplier *
                 achievementMultiplier *
                 accessoryMultiplier *
                 rebirthMultiplier *
                 oneTimeMultiplier;
 
-            final autoClickValue = BigDecimal.parse(autoClickerRate.toString()) * totalClickMultiplier;
+            final autoClickValue =
+                BigDecimal.parse(autoClickerRate.toString()) *
+                    totalClickMultiplier;
             totalProduction += autoClickValue;
 
             // Contar cliques automáticos para conquistas
@@ -140,9 +138,7 @@ class _HomePageState extends ConsumerState<HomePage>
               return state + totalProduction;
             });
 
-            ref
-                .read(achievementNotifierProvider)
-                .incrementStat(
+            ref.read(achievementNotifierProvider).incrementStat(
                   'total_production',
                   totalProduction.toDouble(),
                   context,
@@ -171,7 +167,6 @@ class _HomePageState extends ConsumerState<HomePage>
           children: [
             ParallaxBackground(parallaxController: _parallaxController),
             _buildMainContent(),
-
             _buildTopRightButtons(),
             _buildTopLeftButtons(),
           ],
@@ -272,13 +267,13 @@ class _HomePageState extends ConsumerState<HomePage>
   /// Constrói o contador de fubá com animação
   Widget _buildCounter() {
     return Text(
-          GameConstants.formatNumber(ref.watch(fubaProvider)),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: GameConstants.getCounterFontSize(context),
-            fontWeight: FontWeight.bold,
-          ),
-        )
+      GameConstants.formatNumber(ref.watch(fubaProvider)),
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: GameConstants.getCounterFontSize(context),
+        fontWeight: FontWeight.bold,
+      ),
+    )
         .animate(
           autoPlay: true,
           onComplete: (controller) => controller.repeat(),
@@ -337,16 +332,14 @@ class _HomePageState extends ConsumerState<HomePage>
       ref.read(clickSoundNotifierProvider).playClickSound();
     }
 
-    final clickMultiplier = ref
-        .read(upgradeNotifierProvider)
-        .getClickMultiplier();
+    final clickMultiplier =
+        ref.read(upgradeNotifierProvider).getClickMultiplier();
     final achievementMultiplier = ref.watch(achievementMultiplierProvider);
     final accessoryMultiplier = ref.read(accessoryMultiplierProvider);
     final rebirthMultiplier = ref.read(rebirthMultiplierProvider);
     final oneTimeMultiplier = ref.read(oneTimeMultiplierProvider);
 
-    final totalClickMultiplier =
-        clickMultiplier *
+    final totalClickMultiplier = clickMultiplier *
         achievementMultiplier *
         accessoryMultiplier *
         rebirthMultiplier *
@@ -460,8 +453,7 @@ class _HomePageState extends ConsumerState<HomePage>
         .incrementStat('total_clicks', clickRate, context);
 
     // Calcular velocidade de cliques automáticos (cliques por segundo)
-    final clicksPerSecond =
-        clickRate /
+    final clicksPerSecond = clickRate /
         (GameConstants.autoProductionInterval.inMilliseconds / 1000);
     ref
         .read(achievementNotifierProvider)
@@ -490,8 +482,7 @@ class _HomePageState extends ConsumerState<HomePage>
     final oneTimeMultiplier = ref.watch(oneTimeMultiplierProvider);
     final equippedIds = ref.watch(equippedAccessoriesProvider);
 
-    final manualTotal =
-        accessoryMultiplier *
+    final manualTotal = accessoryMultiplier *
         rebirthMultiplier *
         upgradeMultiplier *
         achievementMultiplier *
@@ -500,7 +491,6 @@ class _HomePageState extends ConsumerState<HomePage>
     return Column(
       children: [
         const SizedBox(height: 5),
-
         Text(
           'Multiplicador Total: x${GameConstants.formatNumber(totalMultiplier)}',
           style: const TextStyle(
@@ -756,14 +746,13 @@ class _HomePageState extends ConsumerState<HomePage>
                   content: Text(
                     counter > 1
                         ? counter > 2
-                              ? counter > 3
-                                    ? 'Agora fica sem musica tmb infeliz >:('
-                                    : 'Aproveita a obra de arte'
-                              : 'Tem certeza que vai perder a obra de arte?'
+                            ? counter > 3
+                                ? 'Agora fica sem musica tmb infeliz >:('
+                                : 'Aproveita a obra de arte'
+                            : 'Tem certeza que vai perder a obra de arte?'
                         : 'Escute a musica do bolo de fuba ;-;',
                     style: const TextStyle(color: Colors.white),
                   ),
-
                   backgroundColor: Colors.red,
                 ),
               );
@@ -884,24 +873,24 @@ class _HomePageState extends ConsumerState<HomePage>
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.purple, Colors.deepPurple, Colors.indigo],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purple.withAlpha(100),
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    ),
-                  ],
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Colors.purple, Colors.deepPurple, Colors.indigo],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.purple.withAlpha(100),
+                  blurRadius: 15,
+                  spreadRadius: 2,
                 ),
-                child: const Icon(Icons.favorite, color: Colors.white, size: 28),
-              )
+              ],
+            ),
+            child: const Icon(Icons.favorite, color: Colors.white, size: 28),
+          )
               .animate(
                 autoPlay: true,
                 onComplete: (controller) => controller.repeat(),
@@ -1107,9 +1096,8 @@ class _HomePageState extends ConsumerState<HomePage>
                             return;
                           }
 
-                          ref
-                              .read(rebirthDataProvider.notifier)
-                              .state = rebirthData.copyWith(
+                          ref.read(rebirthDataProvider.notifier).state =
+                              rebirthData.copyWith(
                             hasUsedOneTimeMultiplier: true,
                             usedCoupons: [...rebirthData.usedCoupons, 'ivi100'],
                           );
@@ -1141,9 +1129,8 @@ class _HomePageState extends ConsumerState<HomePage>
                             return;
                           }
 
-                          ref
-                              .read(rebirthDataProvider.notifier)
-                              .state = rebirthData.copyWith(
+                          ref.read(rebirthDataProvider.notifier).state =
+                              rebirthData.copyWith(
                             celestialTokens: rebirthData.celestialTokens + 8.0,
                             usedCoupons: [
                               ...rebirthData.usedCoupons,
@@ -1182,9 +1169,8 @@ class _HomePageState extends ConsumerState<HomePage>
                             return;
                           }
 
-                          ref
-                              .read(rebirthDataProvider.notifier)
-                              .state = rebirthData.copyWith(
+                          ref.read(rebirthDataProvider.notifier).state =
+                              rebirthData.copyWith(
                             celestialTokens: rebirthData.celestialTokens + 69,
                             usedCoupons: [
                               ...rebirthData.usedCoupons,
@@ -1219,9 +1205,8 @@ class _HomePageState extends ConsumerState<HomePage>
                             return;
                           }
 
-                          ref
-                              .read(rebirthDataProvider.notifier)
-                              .state = rebirthData.copyWith(
+                          ref.read(rebirthDataProvider.notifier).state =
+                              rebirthData.copyWith(
                             hasUsedOneTimeMultiplier: true,
                             usedCoupons: [
                               ...rebirthData.usedCoupons,
@@ -1235,7 +1220,8 @@ class _HomePageState extends ConsumerState<HomePage>
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('✅ Multiplicador x99999 ativado! 🚀'),
+                              content:
+                                  Text('✅ Multiplicador x99999 ativado! 🚀'),
                               backgroundColor: Colors.green,
                               duration: Duration(seconds: 3),
                             ),
@@ -1288,9 +1274,8 @@ class _HomePageState extends ConsumerState<HomePage>
       'first_rebirth',
     ];
 
-    final randomId =
-        achievementIds[(DateTime.now().millisecondsSinceEpoch %
-            achievementIds.length)];
+    final randomId = achievementIds[
+        (DateTime.now().millisecondsSinceEpoch % achievementIds.length)];
     final achievement = allAchievements.firstWhere((a) => a.id == randomId);
 
     AchievementPopupManager.showAchievementPopup(context, achievement);

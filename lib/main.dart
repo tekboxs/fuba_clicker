@@ -44,7 +44,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
   Future<void> _requestAudioPermission() async {
     if (kIsWeb) return;
-    
+
     final status = await Permission.audio.status;
     if (status.isDenied) {
       await Permission.audio.request();
@@ -65,6 +65,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
         primarySwatch: Colors.deepOrange,
         useMaterial3: false,
       ),
+       
       debugShowCheckedModeBanner: false,
     );
   }
