@@ -818,6 +818,15 @@ void initState() {
                   );
                 },
               ),
+              SizedBox(width: isMobile ? 4 : 8),
+              _buildIconButtonWithLabel(
+                Icons.settings,
+                Colors.orange,
+                'Performance',
+                () {
+                  _showPerformanceModeDialog();
+                },
+              ),
             ],
           ),
         ],
@@ -1199,42 +1208,42 @@ void initState() {
 
                           Navigator.of(context).pop();
                         } else if (code == 'fubaadm') {
-                          final rebirthData = ref.read(rebirthDataProvider);
+                          // final rebirthData = ref.read(rebirthDataProvider);
 
-                          if (rebirthData.usedCoupons.contains('fubaadm')) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('❌ Este cupom já foi usado!'),
-                                backgroundColor: Colors.red,
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                            return;
-                          }
+                          // if (rebirthData.usedCoupons.contains('fubaadm')) {
+                          //   ScaffoldMessenger.of(context).showSnackBar(
+                          //     const SnackBar(
+                          //       content: Text('❌ Este cupom já foi usado!'),
+                          //       backgroundColor: Colors.red,
+                          //       duration: Duration(seconds: 3),
+                          //     ),
+                          //   );
+                          //   return;
+                          // }
 
-                          ref.read(rebirthDataProvider.notifier).state =
-                              rebirthData.copyWith(
-                            hasUsedOneTimeMultiplier: true,
-                            usedCoupons: [
-                              ...rebirthData.usedCoupons,
-                              'fubaadm',
-                            ],
-                          );
+                          // ref.read(rebirthDataProvider.notifier).state =
+                          //     rebirthData.copyWith(
+                          //   hasUsedOneTimeMultiplier: true,
+                          //   usedCoupons: [
+                          //     ...rebirthData.usedCoupons,
+                          //     'fubaadm',
+                          //   ],
+                          // );
 
-                          ref
-                              .read(saveNotifierProvider.notifier)
-                              .saveImmediate();
+                          // ref
+                          //     .read(saveNotifierProvider.notifier)
+                          //     .saveImmediate();
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content:
-                                  Text('✅ Multiplicador x99999 ativado! 🚀'),
-                              backgroundColor: Colors.green,
-                              duration: Duration(seconds: 3),
-                            ),
-                          );
+                          // ScaffoldMessenger.of(context).showSnackBar(
+                          //   const SnackBar(
+                          //     content:
+                          //         Text('✅ Multiplicador x99999 ativado! 🚀'),
+                          //     backgroundColor: Colors.green,
+                          //     duration: Duration(seconds: 3),
+                          //   ),
+                          // );
 
-                          Navigator.of(context).pop();
+                          // Navigator.of(context).pop();
                         }
                         // if (code.isNotEmpty) {
                         //   final saveData = SaveService.restoreFromBackupCode(
@@ -1269,6 +1278,172 @@ void initState() {
     );
   }
 
+  void _showPerformanceModeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black.withAlpha(240),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.orange.withAlpha(150), width: 2),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.settings, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Text(
+              'Modo Performance',
+              style: TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Configurações para otimizar performance em produção:',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            Consumer(
+              builder: (context, ref, child) {
+                final visualSettings = ref.watch(visualSettingsProvider);
+                final isPerformanceMode = visualSettings.isPerformanceMode;
+                
+                return Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text(
+                        'Modo Performance Completo',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      subtitle: const Text(
+                        'Desabilita todas as animações e efeitos',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                      value: isPerformanceMode,
+                      onChanged: (value) {
+                        if (value) {
+                          ref.read(visualSettingsProvider.notifier).enablePerformanceMode();
+                        } else {
+                          ref.read(visualSettingsProvider.notifier).disablePerformanceMode();
+                        }
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    const Divider(color: Colors.white24),
+                    SwitchListTile(
+                      title: const Text(
+                        'Desabilitar Animações',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.disableAnimations,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleAnimation();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Desabilitar Partículas',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.disableParticles,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleParticles();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Desabilitar Paralaxe',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.disableParallax,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleParallax();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Desabilitar Efeitos',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.disableEffects,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleEffects();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Modo Baixa Qualidade',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.lowQualityMode,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleLowQuality();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Ocultar Acessórios',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.hideAccessories,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleAccessories();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withAlpha(30),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info, color: Colors.blue, size: 16),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Estas configurações são salvas automaticamente e ajudam a melhorar a performance em dispositivos mais lentos.',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Fechar',
+              style: TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showTestAchievementPopup() {
     final achievementIds = [
