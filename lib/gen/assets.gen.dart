@@ -17,9 +17,6 @@ class $AssetsImagesGen {
   /// File path: assets/images/cake.png
   AssetGenImage get cake => const AssetGenImage('assets/images/cake.png');
 
-  /// File path: assets/images/gay.png
-  AssetGenImage get gay => const AssetGenImage('assets/images/gay.png');
-
   /// File path: assets/images/icon.png
   AssetGenImage get icon => const AssetGenImage('assets/images/icon.png');
 
@@ -27,7 +24,7 @@ class $AssetsImagesGen {
   AssetGenImage get qrcode => const AssetGenImage('assets/images/qrcode.png');
 
   /// List of all assets
-  List<AssetGenImage> get values => [cake, gay, icon, qrcode];
+  List<AssetGenImage> get values => [cake, icon, qrcode];
 }
 
 class $AssetsSongGen {
