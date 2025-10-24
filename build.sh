@@ -23,6 +23,6 @@ flutter pub get
 # dart run build_runner build --delete-conflicting-outputs
 
 # Build the project
-flutter build web --release --wasm --base-href /
+flutter build web --release --base-href /
 
 echo "Build completed successfully!"
