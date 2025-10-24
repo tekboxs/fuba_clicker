@@ -861,5 +861,14 @@ const List<CakeAccessory> allAccessories = [
     visualEffect: VisualEffect.flames,
     specialAbility: SpecialAbility.criticalClick,
   ),
+  CakeAccessory(
+    id: 'gay_pride',
+    name: 'Pride Flag',
+    emoji: '🏳️‍🌈',
+    rarity: AccessoryRarity.legendary,
+    description: 'Representa diversidade e inclusão',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
   //
 ];

@@ -62,6 +62,8 @@ class CakeDisplay extends StatelessWidget {
   }
 
   Widget _buildCake(CakeVisualTier tier) {
+    final hasGayPride = accessories.any((accessory) => accessory.id == 'gay_pride');
+    
     return AnimatedScale(
       scale: tier.scaleBonus,
       duration: const Duration(milliseconds: 800),
@@ -84,15 +86,25 @@ class CakeDisplay extends StatelessWidget {
                 ? Colors.transparent
                 : tier.primaryColor.withAlpha(80),
           ),
-          child: Assets.images.cake
-              .image(fit: BoxFit.contain)
-              .animate(controller: animationController)
-              .scale(
-                duration: const Duration(milliseconds: 100),
-                curve: Curves.bounceInOut,
-                begin: const Offset(1.0, 1.0),
-                end: const Offset(1.1, 1.1),
-              ),
+          child: hasGayPride
+              ? Assets.images.gay
+                  .image(fit: BoxFit.contain)
+                  .animate(controller: animationController)
+                  .scale(
+                    duration: const Duration(milliseconds: 100),
+                    curve: Curves.bounceInOut,
+                    begin: const Offset(1.0, 1.0),
+                    end: const Offset(1.1, 1.1),
+                  )
+              : Assets.images.cake
+                  .image(fit: BoxFit.contain)
+                  .animate(controller: animationController)
+                  .scale(
+                    duration: const Duration(milliseconds: 100),
+                    curve: Curves.bounceInOut,
+                    begin: const Offset(1.0, 1.0),
+                    end: const Offset(1.1, 1.1),
+                  ),
         ),
       ),
     );

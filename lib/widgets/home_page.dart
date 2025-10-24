@@ -82,8 +82,8 @@ class _HomePageState extends ConsumerState<HomePage>
       duration: GameConstants.parallaxAnimationDuration,
     );
 
-    // _parallaxController.forward();
-    // _parallaxController.addListener(_handleParallaxAnimation);
+    _parallaxController.forward();
+    _parallaxController.addListener(_handleParallaxAnimation);
   }
 
   /// Manipula a animação de paralaxe (ida e volta)
