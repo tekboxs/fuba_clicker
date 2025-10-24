@@ -11,6 +11,7 @@ import '../providers/accessory_provider.dart';
 import '../providers/achievement_provider.dart';
 import '../providers/rebirth_upgrade_provider.dart';
 import '../providers/rebirth_provider.dart';
+import '../providers/visual_settings_provider.dart';
 import '../services/save_service.dart';
 import '../models/achievement.dart';
 import '../models/cake_accessory.dart';
@@ -54,14 +55,16 @@ class _HomePageState extends ConsumerState<HomePage>
   DateTime _lastClickTimeForZen = DateTime.now();
   final DateTime _appStartTime = DateTime.now();
 
+
   @override
-  void initState() {
+void initState() {
     super.initState();
     _initializeControllers();
     _startAutoProduction();
     _initializeAudio();
     _startPlayTimeTracking();
   }
+
 
   /// Inicializa o áudio do jogo
   void _initializeAudio() {
@@ -325,7 +328,11 @@ class _HomePageState extends ConsumerState<HomePage>
 
   /// Manipula o clique no bolo
   void _handleCakeClick() {
-    _animationController.forward().then((_) => _animationController.reverse());
+    final disableAnimations = ref.read(disableAnimationsProvider);
+    
+    if (!disableAnimations) {
+      _animationController.forward().then((_) => _animationController.reverse());
+    }
 
     final isAudioEnabled = ref.read(audioStateProvider);
     if (isAudioEnabled) {
@@ -1261,6 +1268,7 @@ class _HomePageState extends ConsumerState<HomePage>
       ),
     );
   }
+
 
   void _showTestAchievementPopup() {
     final achievementIds = [

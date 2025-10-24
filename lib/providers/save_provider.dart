@@ -9,6 +9,7 @@ import 'accessory_provider.dart';
 import 'rebirth_provider.dart';
 import 'achievement_provider.dart';
 import 'rebirth_upgrade_provider.dart';
+import 'visual_settings_provider.dart';
 
 class SaveNotifier extends StateNotifier<bool> {
   SaveNotifier(this.ref) : super(false) {
@@ -110,6 +111,12 @@ class SaveNotifier extends StateNotifier<bool> {
       final mergedStats = {...defaultStats, ...data.achievementStats};
       ref.read(achievementStatsProvider.notifier).state = Map<String, double>.from(mergedStats);
       ref.read(upgradesLevelProvider.notifier).state = data.upgrades;
+
+      // Carregar configurações visuais
+      final visualSettings = await _saveService.loadVisualSettings();
+      if (visualSettings != null) {
+        ref.read(visualSettingsProvider.notifier).loadSettings(visualSettings);
+      }
     } catch (e) {
       return;
     }

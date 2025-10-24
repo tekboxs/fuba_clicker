@@ -21,6 +21,7 @@ class SaveService {
   static const String _upgradesKey = 'upgrades';
 
   static Box<GameSaveData>? _box;
+  static Box<Map>? _settingsBox;
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -32,6 +33,11 @@ class SaveService {
 
     _box = await Hive.openBox<GameSaveData>(
       _boxName,
+      encryptionCipher: HiveAesCipher(key),
+    );
+
+    _settingsBox = await Hive.openBox<Map>(
+      'fuba_settings',
       encryptionCipher: HiveAesCipher(key),
     );
 
@@ -153,6 +159,20 @@ class SaveService {
     );
 
     await _box!.put(_saveKey, saveData);
+  }
+
+  Future<void> saveVisualSettings(Map<String, dynamic> settings) async {
+    if (_settingsBox == null) return;
+    await _settingsBox!.put('visual_settings', settings);
+  }
+
+  Future<Map<String, dynamic>?> loadVisualSettings() async {
+    if (_settingsBox == null) return null;
+    final settings = _settingsBox!.get('visual_settings');
+    if (settings is Map<String, dynamic>) {
+      return settings;
+    }
+    return null;
   }
 
   Future<GameSaveData> loadGame() async {

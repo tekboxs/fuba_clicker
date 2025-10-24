@@ -6,6 +6,7 @@ import '../models/fuba_generator.dart';
 import '../providers/game_providers.dart';
 import '../providers/achievement_provider.dart';
 import '../providers/save_provider.dart';
+import '../providers/visual_settings_provider.dart';
 import '../utils/constants.dart';
 import 'particle_system.dart';
 
@@ -23,12 +24,45 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
   // Estado dos toggles de compra múltipla
   int _activeMultiBuyQuantity = 0; // 0 = desativado, 10, 100, 1000, -1 = MAX
 
+  // Variáveis para gesto escondido de performance
+  int _hiddenGestureCount = 0;
+  DateTime _lastHiddenGestureTime = DateTime.now();
+  bool _showPerformanceDialog = false;
+
+  /// Detecta gesto escondido para ativar modo performance
+  void _handleHiddenGesture() {
+    final now = DateTime.now();
+    final timeDiff = now.difference(_lastHiddenGestureTime).inSeconds;
+    
+    if (timeDiff > 2) {
+      _hiddenGestureCount = 1;
+    } else {
+      _hiddenGestureCount++;
+    }
+    
+    _lastHiddenGestureTime = now;
+    
+    if (_hiddenGestureCount >= 5) {
+      _hiddenGestureCount = 0;
+      _showPerformanceDialog = true;
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_showPerformanceDialog) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showPerformanceModeDialog();
+      });
+    }
+
     final generators = ref.watch(generatorsProvider);
     final fuba = ref.watch(fubaProvider);
 
-    return Container(
+    return GestureDetector(
+      onTap: _handleHiddenGesture,
+      child: Container(
       padding: EdgeInsets.all(GameConstants.getCardPadding(context)),
       decoration: BoxDecoration(
         color: Colors.black.withAlpha(GameConstants.primaryColorAlpha),
@@ -88,6 +122,176 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
                     ),
                 );
               },
+            ),
+          ),
+        ],
+      ),
+      ),
+    );
+  }
+
+  void _showPerformanceModeDialog() {
+    _showPerformanceDialog = false;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black.withAlpha(240),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.orange.withAlpha(150), width: 2),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.settings, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Text(
+              'Modo Performance',
+              style: TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Configurações para otimizar performance em produção:',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            Consumer(
+              builder: (context, ref, child) {
+                final visualSettings = ref.watch(visualSettingsProvider);
+                final isPerformanceMode = visualSettings.isPerformanceMode;
+                
+                return Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text(
+                        'Modo Performance Completo',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      subtitle: const Text(
+                        'Desabilita todas as animações e efeitos',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                      value: isPerformanceMode,
+                      onChanged: (value) {
+                        if (value) {
+                          ref.read(visualSettingsProvider.notifier).enablePerformanceMode();
+                        } else {
+                          ref.read(visualSettingsProvider.notifier).disablePerformanceMode();
+                        }
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    const Divider(color: Colors.white24),
+                    SwitchListTile(
+                      title: const Text(
+                        'Desabilitar Animações',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.disableAnimations,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleAnimation();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Desabilitar Partículas',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.disableParticles,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleParticles();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Desabilitar Paralaxe',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.disableParallax,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleParallax();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Desabilitar Efeitos',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.disableEffects,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleEffects();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Modo Baixa Qualidade',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.lowQualityMode,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleLowQuality();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                    SwitchListTile(
+                      title: const Text(
+                        'Ocultar Acessórios',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: visualSettings.hideAccessories,
+                      onChanged: (value) {
+                        ref.read(visualSettingsProvider.notifier).toggleAccessories();
+                      },
+                      activeThumbColor: Colors.orange,
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withAlpha(30),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info, color: Colors.blue, size: 16),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Estas configurações são salvas automaticamente e ajudam a melhorar a performance em dispositivos mais lentos.',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Fechar',
+              style: TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

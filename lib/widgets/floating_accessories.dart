@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/cake_accessory.dart';
+import '../providers/visual_settings_provider.dart';
 
 class AccessoryShapePainter extends CustomPainter {
   final AccessoryShape shape;
@@ -59,7 +61,7 @@ class AccessoryShapePainter extends CustomPainter {
     Paint strokePaint,
   ) {
     final path = Path();
-    final angle = -pi / 2;
+    const angle = -pi / 2;
     for (int i = 0; i < 3; i++) {
       final x = center.dx + cos(angle + (i * 2 * pi / 3)) * radius;
       final y = center.dy + sin(angle + (i * 2 * pi / 3)) * radius;
@@ -98,7 +100,7 @@ class AccessoryShapePainter extends CustomPainter {
     Paint strokePaint,
   ) {
     final path = Path();
-    final angle = -pi / 2;
+    const angle = -pi / 2;
     for (int i = 0; i < sides; i++) {
       final x = center.dx + cos(angle + (i * 2 * pi / sides)) * radius;
       final y = center.dy + sin(angle + (i * 2 * pi / sides)) * radius;
@@ -122,7 +124,7 @@ class AccessoryShapePainter extends CustomPainter {
   }
 }
 
-class FloatingAccessories extends StatefulWidget {
+class FloatingAccessories extends ConsumerStatefulWidget {
   const FloatingAccessories({
     super.key,
     required this.accessories,
@@ -133,10 +135,10 @@ class FloatingAccessories extends StatefulWidget {
   final double centerSize;
 
   @override
-  State<FloatingAccessories> createState() => _FloatingAccessoriesState();
+  ConsumerState<FloatingAccessories> createState() => _FloatingAccessoriesState();
 }
 
-class _FloatingAccessoriesState extends State<FloatingAccessories>
+class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
     with TickerProviderStateMixin {
   final List<AnimationController> _controllers = [];
   final List<double> _angles = [];
@@ -210,7 +212,9 @@ class _FloatingAccessoriesState extends State<FloatingAccessories>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.accessories.isEmpty) {
+    final hideAccessories = ref.watch(hideAccessoriesProvider);
+    
+    if (widget.accessories.isEmpty || hideAccessories) {
       return const SizedBox.shrink();
     }
 

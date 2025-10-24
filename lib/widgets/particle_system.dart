@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../utils/constants.dart';
+import '../providers/visual_settings_provider.dart';
 
 class Particle {
   double x;
@@ -23,7 +25,7 @@ class Particle {
   });
 }
 
-class ParticleSystem extends StatefulWidget {
+class ParticleSystem extends ConsumerStatefulWidget {
   final bool shouldAnimate;
   final VoidCallback? onComplete;
   final Color particleColor;
@@ -36,10 +38,10 @@ class ParticleSystem extends StatefulWidget {
   });
 
   @override
-  State<ParticleSystem> createState() => _ParticleSystemState();
+  ConsumerState<ParticleSystem> createState() => _ParticleSystemState();
 }
 
-class _ParticleSystemState extends State<ParticleSystem>
+class _ParticleSystemState extends ConsumerState<ParticleSystem>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   final List<Particle> _particles = [];
@@ -105,7 +107,9 @@ class _ParticleSystemState extends State<ParticleSystem>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.shouldAnimate || _particles.isEmpty) {
+    final disableParticles = ref.watch(disableParticlesProvider);
+    
+    if (!widget.shouldAnimate || _particles.isEmpty || disableParticles) {
       return const SizedBox.shrink();
     }
 

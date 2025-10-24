@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../gen/assets.gen.dart';
 import '../models/cake_visual_tier.dart';
 import '../models/cake_accessory.dart';
+import '../providers/visual_settings_provider.dart';
 
-class CakeDisplay extends StatelessWidget {
+class CakeDisplay extends ConsumerWidget {
   const CakeDisplay({
     super.key,
     required this.accessories,
@@ -17,8 +19,10 @@ class CakeDisplay extends StatelessWidget {
   final AnimationController animationController;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final tier = CakeVisualTierExtension.fromAccessories(accessories);
+    final hideAccessories = ref.watch(hideAccessoriesProvider);
+    final disableEffects = ref.watch(disableEffectsProvider);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 800),
@@ -26,8 +30,8 @@ class CakeDisplay extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          if (tier.glowIntensity > 0) _buildGlow(tier),
-          _buildCake(tier),
+          if (tier.glowIntensity > 0 && !disableEffects) _buildGlow(tier),
+          _buildCake(tier, hideAccessories),
         ],
       ),
     );
@@ -61,7 +65,7 @@ class CakeDisplay extends StatelessWidget {
         .fadeOut(duration: Duration(milliseconds: tier.pulseSpeed));
   }
 
-  Widget _buildCake(CakeVisualTier tier) {
+  Widget _buildCake(CakeVisualTier tier, bool hideAccessories) {
     final hasGayPride = accessories.any((accessory) => accessory.id == 'gay_pride');
     
     return AnimatedScale(

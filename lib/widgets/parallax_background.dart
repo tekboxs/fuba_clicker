@@ -1,10 +1,12 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/wave_offset.dart';
 import '../utils/constants.dart';
+import '../providers/visual_settings_provider.dart';
 
 /// Widget que cria o fundo com efeito de paralaxe
-class ParallaxBackground extends StatelessWidget {
+class ParallaxBackground extends ConsumerWidget {
   final AnimationController parallaxController;
 
   const ParallaxBackground({
@@ -13,7 +15,13 @@ class ParallaxBackground extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final disableParallax = ref.watch(disableParallaxProvider);
+    
+    if (disableParallax) {
+      return const SizedBox.shrink();
+    }
+    
     final layerCount = GameConstants.getParallaxLayerCount(context);
     final layers = <Widget>[];
     
@@ -21,10 +29,6 @@ class ParallaxBackground extends StatelessWidget {
     if (layerCount >= 2) layers.add(_buildContinuousLayer('🌾', 5.5, 50, 0.5));
     if (layerCount >= 3) layers.add(_buildContinuousLayer('🌽', 9.7, 70, 0.4));
     if (layerCount >= 4) layers.add(_buildContinuousLayer('🌽', 3.9, 90, 0.3));
-    // if (layerCount >= 5) layers.add(_buildContinuousLayer('🌾', 1.2, 40, 0.2));
-    // if (layerCount >= 6) layers.add(_buildContinuousLayer('🌽', 6.6, 60, 0.35));
-    // if (layerCount >= 7) layers.add(_buildContinuousLayer('🌾', 4.0, 24, 0.15));
-    // if (layerCount >= 8) layers.add(_buildContinuousLayer('🌽', 7.2, 28, 0.18));
     
     return Positioned.fill(
       child: Stack(children: layers),
