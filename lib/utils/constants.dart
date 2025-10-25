@@ -102,21 +102,21 @@ class GameConstants {
 
   /// Retorna o número de partículas baseado na plataforma e contexto
   static int getParticleCount(BuildContext? context) {
-    if (context != null && isMobileWeb(context)) return 4;
-    return isWeb ? 8 : 15;
+    if (context != null && isMobileWeb(context)) return 3;
+    return isWeb ? 6 : 12;
   }
 
   /// Retorna o número de camadas de paralaxe baseado na plataforma e contexto
   static int getParallaxLayerCount(BuildContext? context) {
     if (context != null && isMobileWeb(context)) return 2;
-    return isWeb ? 4 : 8;
+    return isWeb ? 3 : 6;
   }
 
   /// Retorna o número de partículas baseado na plataforma (deprecated - use getParticleCount)
-  static int get particleCount => isWeb ? 8 : 15;
+  static int get particleCount => isWeb ? 6 : 12;
 
   /// Retorna o número de camadas de paralaxe baseado na plataforma (deprecated - use getParallaxLayerCount)
-  static int get parallaxLayerCount => isWeb ? 4 : 8;
+  static int get parallaxLayerCount => isWeb ? 3 : 6;
 
   /// Retorna o tamanho de fonte responsivo
   static double getTitleFontSize(BuildContext context) {

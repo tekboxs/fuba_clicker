@@ -73,6 +73,24 @@ class FubaGenerator {
       final baseCost200 = baseCost50 * BigDecimal.parse(pow(1.12, 150).toString());
       final baseCost500 = baseCost200 * BigDecimal.parse(pow(1.10, 300).toString());
       final excessOwned = owned - 500;
+      
+      // Proteção contra overflow para números muito grandes
+      if (excessOwned > 1000) {
+        // Para números extremamente grandes, usar uma aproximação mais segura
+        // Limitar o crescimento exponencial para evitar Infinity
+        const maxExponent = 1000;
+        final cappedExcess = excessOwned > maxExponent ? maxExponent : excessOwned;
+        final multiplier = BigDecimal.parse(pow(1.08, cappedExcess).toString());
+        
+        // Para excessOwned > 1000, adicionar um multiplicador linear adicional
+        if (excessOwned > maxExponent) {
+          final additionalMultiplier = BigDecimal.parse((excessOwned - maxExponent).toString());
+          return baseCost500 * multiplier * additionalMultiplier;
+        }
+        
+        return baseCost500 * multiplier;
+      }
+      
       return baseCost500 * BigDecimal.parse(pow(1.08, excessOwned).toString());
     }
   }
@@ -102,9 +120,27 @@ class FubaGenerator {
       return tier2Value * BigDecimal.parse(exponentialFactor.toString());
     }
 
-    // Tier 4 (601+): Crescimento forte mas controlado (expoente 1.7)
+    // Tier 4 (701+): Crescimento forte mas controlado (expoente 1.7)
     final tier3Value = _calculateTier3Max();
     final excessOwned = owned - 700;
+    
+    // Proteção contra overflow para números muito grandes
+    if (excessOwned > 10000) {
+      // Para números extremamente grandes, usar uma aproximação mais segura
+      const maxExponent = 10000;
+      final cappedExcess = excessOwned > maxExponent ? maxExponent : excessOwned;
+      final exponentialFactor = pow(1 + (cappedExcess / 700), 100.7);
+      final baseResult = tier3Value * BigDecimal.parse(exponentialFactor.toString());
+      
+      // Para excessOwned > 10000, adicionar um multiplicador linear adicional
+      if (excessOwned > maxExponent) {
+        final additionalMultiplier = BigDecimal.parse((excessOwned - maxExponent).toString());
+        return baseResult * additionalMultiplier;
+      }
+      
+      return baseResult;
+    }
+    
     final exponentialFactor = pow(1 + (excessOwned / 700), 100.7);
     return tier3Value * BigDecimal.parse(exponentialFactor.toString());
   }

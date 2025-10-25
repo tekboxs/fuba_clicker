@@ -23,7 +23,7 @@ class AccessoryShapePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final strokePaint = Paint()
-      ..color = color.withAlpha(100)
+      ..color = color.withOpacity(0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -218,14 +218,16 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
       return const SizedBox.shrink();
     }
 
-    return SizedBox(
-      width: widget.centerSize + 200,
-      height: widget.centerSize + 200,
-      child: Stack(
-        alignment: Alignment.center,
-        children: List.generate(
-          widget.accessories.length,
-          (index) => _buildFloatingAccessory(index),
+    return RepaintBoundary(
+      child: SizedBox(
+        width: widget.centerSize + 200,
+        height: widget.centerSize + 200,
+        child: Stack(
+          alignment: Alignment.center,
+          children: List.generate(
+            widget.accessories.length,
+            (index) => _buildFloatingAccessory(index),
+          ),
         ),
       ),
     );
@@ -255,9 +257,7 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
                     CustomPaint(
                       painter: AccessoryShapePainter(
                         shape: widget.accessories[index].shape,
-                        color: widget.accessories[index].rarity.color.withAlpha(
-                          90,
-                        ),
+                        color: widget.accessories[index].rarity.color.withOpacity(0.35),
                         size: 53,
                       ),
                     ),
@@ -274,7 +274,7 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
               )
               .shimmer(
                 duration: 2.seconds,
-                color: widget.accessories[index].rarity.color.withAlpha(100),
+                color: widget.accessories[index].rarity.color.withOpacity(0.4),
               ),
     );
   }

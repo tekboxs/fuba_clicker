@@ -2,15 +2,25 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'providers/achievement_provider.dart';
 import 'providers/save_provider.dart';
 import 'services/save_service.dart';
 import 'widgets/home_page.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await SaveService().init();
-  runApp(const ProviderScope(child: FubaClickerApp()));
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = 'https://5969c28b8a0ac66f6465f1dd6485290c@o1402848.ingest.us.sentry.io/4510245636734976';
+      options.tracesSampleRate = 1.0;
+      // options.debug = kDebugMode;
+    },
+    appRunner: () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await SaveService().init();
+      runApp(const ProviderScope(child: FubaClickerApp()));
+    },
+  );
 }
 
 class FubaClickerApp extends ConsumerStatefulWidget {
@@ -30,31 +40,46 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   }
 
   Future<void> _loadGameData() async {
-    await Future.delayed(const Duration(milliseconds: 100));
+    try {
+      await Future.delayed(const Duration(milliseconds: 100));
 
-    await _requestAudioPermission();
+      await _requestAudioPermission();
 
-    final saveNotifier = ref.read(saveNotifierProvider.notifier);
-    await saveNotifier.loadGame();
+      final saveNotifier = ref.read(saveNotifierProvider.notifier);
+      await saveNotifier.loadGame();
 
-    setState(() {
-      _isLoading = false;
-    });
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (error, stackTrace) {
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _requestAudioPermission() async {
-    if (kIsWeb) return;
+    try {
+      if (kIsWeb) return;
 
-    final status = await Permission.audio.status;
-    if (status.isDenied) {
-      await Permission.audio.request();
+      final status = await Permission.audio.status;
+      if (status.isDenied) {
+        await Permission.audio.request();
+      }
+    } catch (error, stackTrace) {
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(appContextProvider.notifier).state = context;
+      try {
+        ref.read(appContextProvider.notifier).state = context;
+      } catch (error, stackTrace) {
+        Sentry.captureException(error, stackTrace: stackTrace);
+      }
     });
 
     return MaterialApp(
@@ -65,7 +90,6 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
         primarySwatch: Colors.deepOrange,
         useMaterial3: false,
       ),
-       
       debugShowCheckedModeBanner: false,
     );
   }

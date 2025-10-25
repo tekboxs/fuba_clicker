@@ -59,6 +59,8 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
           Expanded(
             child: ListView.builder(
               cacheExtent: 1000,
+              itemExtent: 95,
+              addRepaintBoundaries: true,
               itemCount: availableGenerators.length,
               itemBuilder: (context, index) {
                 final generator = availableGenerators[index];
@@ -78,15 +80,17 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
                     onLongPressEnd: canAfford
                         ? (_) => _stopAutoBuyForGenerator(ref, index)
                         : null,
-                    child: _GeneratorCard(
-                    key: ValueKey('generator_$index'),
-                    generator: generator,
-                    owned: owned,
-                    cost: cost,
-                    canAfford: canAfford,
-                    isUnlocked: isUnlocked,
-                  ),
+                    child: RepaintBoundary(
+                      child: _GeneratorCard(
+                        key: ValueKey('generator_$index'),
+                        generator: generator,
+                        owned: owned,
+                        cost: cost,
+                        canAfford: canAfford,
+                        isUnlocked: isUnlocked,
+                      ),
                     ),
+                  ),
                 );
               },
             ),
@@ -185,7 +189,7 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
   /// Inicia a compra automática de um gerador
   void _startAutoBuyForGenerator(WidgetRef ref, int index, BigDecimal cost, BuildContext context) {
     _autoBuyTimers[index]?.cancel();
-    _autoBuyTimers[index] = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _autoBuyTimers[index] = Timer.periodic(const Duration(milliseconds: 150), (timer) {
       final generators = ref.read(generatorsProvider);
       final fuba = ref.read(fubaProvider);
       final generator = availableGenerators[index];
@@ -219,8 +223,8 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
         _buildToggleButton('x100', 100, Colors.purple),
         const SizedBox(width: 4),
         _buildToggleButton('x1000', 1000, Colors.orange),
-        const SizedBox(width: 4),
-        _buildToggleButton('xMAX', -1, Colors.red),
+        // const SizedBox(width: 4),
+        // _buildToggleButton('xMAX', -1, Colors.red),
       ],
     );
   }
@@ -407,9 +411,8 @@ class _GeneratorCardState extends State<_GeneratorCard>
       borderColor = Colors.white.withAlpha(200);
     }
 
-    // double scale = 1.0 + (widget.owned * 0.01).clamp(0.0, 0.2);
     double scale = 1.0;
-    double glowIntensity = (widget.owned * 0.005).clamp(0.0, 0.8);
+    double glowIntensity = (widget.owned * 0.005).clamp(0.0, 0.5);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -449,11 +452,11 @@ class _GeneratorCardState extends State<_GeneratorCard>
                                       (255 * glowIntensity * 0.3).toInt(),
                                     ),
                               blurRadius: widget.generator.tier == GeneratorTier.absolute 
-                                  ? 15.0 
-                                  : (8 + (widget.owned * 0.5)).clamp(8.0, 25.0).toDouble(),
+                                  ? 12.0 
+                                  : (6 + (widget.owned * 0.3)).clamp(6.0, 15.0).toDouble(),
                               spreadRadius: widget.generator.tier == GeneratorTier.absolute 
-                                  ? 3.0 
-                                  : (2 + (widget.owned * 0.1)).clamp(2.0, 8.0).toDouble(),
+                                  ? 2.0 
+                                  : (1 + (widget.owned * 0.05)).clamp(1.0, 4.0).toDouble(),
                             ),
                           ]
                         : null,
@@ -645,10 +648,10 @@ class _GeneratorCardState extends State<_GeneratorCard>
                   boxShadow: [
                     BoxShadow(
                       color: widget.generator.tierColor.withAlpha(
-                        (100 * _glowAnimation.value).toInt(),
+                        (80 * _glowAnimation.value).toInt(),
                       ),
-                      blurRadius: (10 + (widget.owned * 2)).clamp(10.0, 50.0).toDouble(),
-                      spreadRadius: (2 + (widget.owned * 0.5)).clamp(2.0, 15.0).toDouble(),
+                      blurRadius: (8 + (widget.owned * 1.5)).clamp(8.0, 30.0).toDouble(),
+                      spreadRadius: (1.5 + (widget.owned * 0.3)).clamp(1.5, 10.0).toDouble(),
                     ),
                   ],
                 )

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -50,21 +51,19 @@ class _HomePageState extends ConsumerState<HomePage>
   // Variáveis para conquistas secretas
   final List<DateTime> _clickTimes = [];
   Timer? _patienceTimer;
-  Timer? _playTimeTimer;
+  Timer? _consolidatedAchievementTimer;
   double _totalClickFuba = 0;
   DateTime _lastClickTimeForZen = DateTime.now();
   final DateTime _appStartTime = DateTime.now();
 
-
   @override
-void initState() {
+  void initState() {
     super.initState();
     _initializeControllers();
     _startAutoProduction();
     _initializeAudio();
     _startPlayTimeTracking();
   }
-
 
   /// Inicializa o áudio do jogo
   void _initializeAudio() {
@@ -156,7 +155,7 @@ void initState() {
   void dispose() {
     _autoProductionTimer?.cancel();
     _patienceTimer?.cancel();
-    _playTimeTimer?.cancel();
+    _consolidatedAchievementTimer?.cancel();
     _animationController.dispose();
     _parallaxController.dispose();
     super.dispose();
@@ -329,9 +328,11 @@ void initState() {
   /// Manipula o clique no bolo
   void _handleCakeClick() {
     final disableAnimations = ref.read(disableAnimationsProvider);
-    
+
     if (!disableAnimations) {
-      _animationController.forward().then((_) => _animationController.reverse());
+      _animationController
+          .forward()
+          .then((_) => _animationController.reverse());
     }
 
     final isAudioEnabled = ref.read(audioStateProvider);
@@ -436,7 +437,8 @@ void initState() {
 
   /// Inicia o rastreamento de tempo de jogo consecutivo
   void _startPlayTimeTracking() {
-    _playTimeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _consolidatedAchievementTimer =
+        Timer.periodic(const Duration(seconds: 1), (timer) {
       final now = DateTime.now();
       final playTime = now.difference(_appStartTime).inSeconds;
 
@@ -713,6 +715,183 @@ void initState() {
 
   int counter = 0;
 
+  void _handleAudioToggle() async {
+    final audioNotifier = ref.read(audioStateProvider.notifier);
+    final isAudioPlaying = ref.read(audioStateProvider);
+    final rebirthData = ref.read(rebirthDataProvider);
+
+    if (isAudioPlaying) {
+      counter++;
+      if (counter == 0 || counter == 4) {
+        await audioNotifier.toggleAudio();
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 1),
+          content: Text(
+            counter > 1
+                ? counter > 2
+                    ? counter > 3
+                        ? 'Agora fica sem musica tmb infeliz >:('
+                        : 'Aproveita a obra de arte'
+                    : 'Tem certeza que vai perder a obra de arte?'
+                : 'Escute a musica do bolo de fuba ;-;',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      if (audioNotifier.isMuted) {
+        if (rebirthData.celestialTokens >= 5.0) {
+          _showAudioReactivationDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  '💎 Você precisa de 5 Tokens Celestiais para reativar a música!'),
+              backgroundColor: Colors.purple,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        await audioNotifier.toggleAudio();
+      }
+    }
+  }
+
+  void _showAudioReactivationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black.withAlpha(240),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.purple.withAlpha(150), width: 2),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.volume_up, color: Colors.purple, size: 28),
+            SizedBox(width: 8),
+            Text(
+              'Reativar Música',
+              style: TextStyle(
+                color: Colors.purple,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Para reativar a música, você precisa pagar:',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.purple.withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.purple.withAlpha(100),
+                  width: 1,
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.diamond, color: Colors.purple, size: 24),
+                  SizedBox(width: 12),
+                  Text(
+                    '5 Tokens Celestiais',
+                    style: TextStyle(
+                      color: Colors.purple,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Consumer(
+              builder: (context, ref, child) {
+                final rebirthData = ref.watch(rebirthDataProvider);
+                return Text(
+                  'Você possui: ${rebirthData.celestialTokens.toStringAsFixed(1)} Tokens Celestiais',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Consumer(
+            builder: (context, ref, child) {
+              final rebirthData = ref.watch(rebirthDataProvider);
+              final canAfford = rebirthData.celestialTokens >= 5.0;
+
+              return ElevatedButton(
+                onPressed: canAfford
+                    ? () async {
+                        ref.read(rebirthDataProvider.notifier).state =
+                            rebirthData.copyWith(
+                          celestialTokens: rebirthData.celestialTokens - 5.0,
+                        );
+
+                        await ref
+                            .read(audioStateProvider.notifier)
+                            .reactivateAudioWithPayment();
+
+                        ref.read(saveNotifierProvider.notifier).saveImmediate();
+
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  '🎵 Música reativada! Custo: 5 Tokens Celestiais'),
+                              backgroundColor: Colors.purple,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: canAfford ? Colors.purple : Colors.grey,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(
+                    canAfford ? 'Pagar e Reativar' : 'Tokens Insuficientes'),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTopRightButtons() {
     final isAudioPlaying = ref.watch(audioStateProvider);
     final isMobile = GameConstants.isMobile(context);
@@ -720,51 +899,38 @@ void initState() {
     return Positioned(
       top: isMobile ? 4 : 16,
       right: isMobile ? 4 : null,
-      left: isMobile ? null : MediaQuery.of(context).size.width / 2 - 250,
-      child: Row(
+      left: isMobile
+          ? null
+          : MediaQuery.of(context).size.width / 2 -
+              MediaQuery.of(context).size.width / 5,
+      child: Column(
         children: [
-          _buildIconButtonWithLabel(
-            Icons.emoji_events,
-            Colors.amber,
-            'Conquistas',
-            () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const AchievementsPage(),
-                ),
-              );
-            },
+          Row(
+            children: [
+              _buildIconButtonWithLabel(
+                Icons.emoji_events,
+                Colors.amber,
+                'Conquistas',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AchievementsPage(),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(width: isMobile ? 4 : 8),
+              _buildIconButtonWithLabel(
+                isAudioPlaying ? Icons.volume_up : Icons.volume_off,
+                isAudioPlaying ? Colors.orange : Colors.grey,
+                'Som',
+                () {
+                  _handleAudioToggle();
+                },
+              ),
+            ],
           ),
-          SizedBox(width: isMobile ? 4 : 8),
-          _buildIconButtonWithLabel(
-            isAudioPlaying ? Icons.volume_up : Icons.volume_off,
-            isAudioPlaying ? Colors.orange : Colors.grey,
-            'Som',
-            () {
-              counter++;
-              if (counter == 0 || counter == 4) {
-                ref.read(audioStateProvider.notifier).toggleAudio();
-                return;
-              }
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  duration: const Duration(seconds: 1),
-                  content: Text(
-                    counter > 1
-                        ? counter > 2
-                            ? counter > 3
-                                ? 'Agora fica sem musica tmb infeliz >:('
-                                : 'Aproveita a obra de arte'
-                            : 'Tem certeza que vai perder a obra de arte?'
-                        : 'Escute a musica do bolo de fuba ;-;',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            },
-          ),
+          if (isAudioPlaying) _buildVolumeControl(),
         ],
       ),
     );
@@ -846,6 +1012,61 @@ void initState() {
         iconSize: isMobile ? 20 : 24,
         icon: Icon(icon, color: color),
         onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget _buildVolumeControl() {
+    final isMobile = GameConstants.isMobile(context);
+    final currentVolume = ref.watch(audioVolumeProvider);
+    if (isMobile) {
+      return Transform.rotate(
+          angle: -pi / 2,
+          child: Container(
+            margin: const EdgeInsets.only(top: 100),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Slider(
+              value: currentVolume,
+              min: 0.01,
+              max: 1.0,
+              activeColor: Colors.orange,
+              inactiveColor: Colors.grey.withAlpha(100),
+              onChanged: (value) {
+                ref.read(audioVolumeProvider.notifier).setVolume(value);
+                ref.read(audioStateProvider.notifier).setVolume(value);
+              },
+            ),
+          ));
+    }
+    return Container(
+      margin: EdgeInsets.only(top: isMobile ? 4 : 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 8 : 5,
+        vertical: isMobile ? 4 : 6,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(150),
+        borderRadius: BorderRadius.circular(isMobile ? 15 : 20),
+        border: Border.all(color: Colors.orange.withAlpha(100)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: isMobile ? 60 : 100,
+            child: Slider(
+              value: currentVolume,
+              min: 0.01,
+              max: 1.0,
+              activeColor: Colors.orange,
+              inactiveColor: Colors.grey.withAlpha(100),
+              onChanged: (value) {
+                ref.read(audioVolumeProvider.notifier).setVolume(value);
+                ref.read(audioStateProvider.notifier).setVolume(value);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1314,7 +1535,7 @@ void initState() {
               builder: (context, ref, child) {
                 final visualSettings = ref.watch(visualSettingsProvider);
                 final isPerformanceMode = visualSettings.isPerformanceMode;
-                
+
                 return Column(
                   children: [
                     SwitchListTile(
@@ -1329,9 +1550,13 @@ void initState() {
                       value: isPerformanceMode,
                       onChanged: (value) {
                         if (value) {
-                          ref.read(visualSettingsProvider.notifier).enablePerformanceMode();
+                          ref
+                              .read(visualSettingsProvider.notifier)
+                              .enablePerformanceMode();
                         } else {
-                          ref.read(visualSettingsProvider.notifier).disablePerformanceMode();
+                          ref
+                              .read(visualSettingsProvider.notifier)
+                              .disablePerformanceMode();
                         }
                       },
                       activeThumbColor: Colors.orange,
@@ -1344,7 +1569,9 @@ void initState() {
                       ),
                       value: visualSettings.disableAnimations,
                       onChanged: (value) {
-                        ref.read(visualSettingsProvider.notifier).toggleAnimation();
+                        ref
+                            .read(visualSettingsProvider.notifier)
+                            .toggleAnimation();
                       },
                       activeThumbColor: Colors.orange,
                     ),
@@ -1355,7 +1582,9 @@ void initState() {
                       ),
                       value: visualSettings.disableParticles,
                       onChanged: (value) {
-                        ref.read(visualSettingsProvider.notifier).toggleParticles();
+                        ref
+                            .read(visualSettingsProvider.notifier)
+                            .toggleParticles();
                       },
                       activeThumbColor: Colors.orange,
                     ),
@@ -1366,7 +1595,9 @@ void initState() {
                       ),
                       value: visualSettings.disableParallax,
                       onChanged: (value) {
-                        ref.read(visualSettingsProvider.notifier).toggleParallax();
+                        ref
+                            .read(visualSettingsProvider.notifier)
+                            .toggleParallax();
                       },
                       activeThumbColor: Colors.orange,
                     ),
@@ -1377,7 +1608,9 @@ void initState() {
                       ),
                       value: visualSettings.disableEffects,
                       onChanged: (value) {
-                        ref.read(visualSettingsProvider.notifier).toggleEffects();
+                        ref
+                            .read(visualSettingsProvider.notifier)
+                            .toggleEffects();
                       },
                       activeThumbColor: Colors.orange,
                     ),
@@ -1388,7 +1621,9 @@ void initState() {
                       ),
                       value: visualSettings.lowQualityMode,
                       onChanged: (value) {
-                        ref.read(visualSettingsProvider.notifier).toggleLowQuality();
+                        ref
+                            .read(visualSettingsProvider.notifier)
+                            .toggleLowQuality();
                       },
                       activeThumbColor: Colors.orange,
                     ),
@@ -1399,7 +1634,9 @@ void initState() {
                       ),
                       value: visualSettings.hideAccessories,
                       onChanged: (value) {
-                        ref.read(visualSettingsProvider.notifier).toggleAccessories();
+                        ref
+                            .read(visualSettingsProvider.notifier)
+                            .toggleAccessories();
                       },
                       activeThumbColor: Colors.orange,
                     ),

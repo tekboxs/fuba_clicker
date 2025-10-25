@@ -26,9 +26,24 @@ final audioStateProvider = StateNotifierProvider<AudioStateNotifier, bool>((
   return AudioStateNotifier(player);
 });
 
+final audioVolumeProvider = StateNotifierProvider<AudioVolumeNotifier, double>((
+  ref,
+) {
+  return AudioVolumeNotifier();
+});
+
+class AudioVolumeNotifier extends StateNotifier<double> {
+  AudioVolumeNotifier() : super(0.1);
+
+  void setVolume(double volume) {
+    state = volume.clamp(0.01, 1.0);
+  }
+}
+
 class AudioStateNotifier extends StateNotifier<bool> {
   final AudioPlayer _player;
   bool _isInitialized = false;
+  bool _isMuted = false;
 
   AudioStateNotifier(this._player) : super(true) {
     _initializeAudio();
@@ -87,18 +102,39 @@ class AudioStateNotifier extends StateNotifier<bool> {
       if (_player.state == PlayerState.playing) {
         await _player.pause();
         state = false;
+        _isMuted = true;
       } else {
         await _player.resume();
         state = true;
+        _isMuted = false;
       }
     } catch (e) {
       debugPrint('Erro ao alternar áudio: $e');
     }
   }
 
+  bool get isMuted => _isMuted;
+
+  Future<bool> canReactivateAudio(double celestialTokens) async {
+    return celestialTokens >= 5.0;
+  }
+
+  Future<void> reactivateAudioWithPayment() async {
+    if (!_isMuted) return;
+    
+    try {
+      await _player.resume();
+      state = true;
+      _isMuted = false;
+    } catch (e) {
+      debugPrint('Erro ao reativar áudio: $e');
+    }
+  }
+
   Future<void> setVolume(double volume) async {
     try {
-      await _player.setVolume(volume.clamp(0.0, 1.0));
+      final clampedVolume = volume.clamp(0.01, 1.0);
+      await _player.setVolume(clampedVolume);
     } catch (e) {
       debugPrint('Erro ao ajustar volume: $e');
     }

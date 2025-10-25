@@ -24,15 +24,17 @@ class CakeDisplay extends ConsumerWidget {
     final hideAccessories = ref.watch(hideAccessoriesProvider);
     final disableEffects = ref.watch(disableEffectsProvider);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 800),
-      curve: Curves.easeInOut,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          if (tier.glowIntensity > 0 && !disableEffects) _buildGlow(tier),
-          _buildCake(tier, hideAccessories),
-        ],
+    return RepaintBoundary(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOut,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (tier.glowIntensity > 0 && !disableEffects) _buildGlow(tier),
+            _buildCake(tier, hideAccessories),
+          ],
+        ),
       ),
     );
   }
@@ -48,11 +50,6 @@ class CakeDisplay extends ConsumerWidget {
                 color: tier.primaryColor.withAlpha(100),
                 blurRadius: tier.glowIntensity,
                 spreadRadius: tier.glowIntensity / 2,
-              ),
-              BoxShadow(
-                color: tier.secondaryColor.withAlpha(80),
-                blurRadius: tier.glowIntensity * 1.5,
-                spreadRadius: tier.glowIntensity / 3,
               ),
             ],
           ),
