@@ -5,10 +5,12 @@ import 'package:crypto/crypto.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/rebirth_data.dart';
 import '../models/game_save_data.dart';
- 
+
 class SaveService {
   static const String _boxName = 'fuba_save';
   static const String _saveKey = 'game_data';
+  static const String _compressedSaveKey = 'compressed_game_data';
+  static const String _metadataKey = 'save_metadata';
 
   // Chaves antigas para migração
   static const String _fubaKey = 'fuba_count';
@@ -22,6 +24,7 @@ class SaveService {
 
   static Box<GameSaveData>? _box;
   static Box<Map>? _settingsBox;
+  static Box<String>? _compressedBox;
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -41,7 +44,13 @@ class SaveService {
       encryptionCipher: HiveAesCipher(key),
     );
 
+    _compressedBox = await Hive.openBox<String>(
+      'fuba_compressed',
+      encryptionCipher: HiveAesCipher(key),
+    );
+
     await _migrateFromSharedPreferences();
+    await _checkAndCleanupOldData();
   }
 
   List<int> _deriveEncryptionKey(String password) {
@@ -158,7 +167,11 @@ class SaveService {
       upgrades: upgrades,
     );
 
-    await _box!.put(_saveKey, saveData);
+    try {
+      await _box!.put(_saveKey, saveData);
+    } catch (e) {
+      await _saveCompressedData(saveData);
+    }
   }
 
   Future<void> saveVisualSettings(Map<String, dynamic> settings) async {
@@ -178,10 +191,14 @@ class SaveService {
   Future<GameSaveData> loadGame() async {
     if (_box == null) return _getDefaultSaveData();
 
-    final saveData = _box!.get(_saveKey);
-    if (saveData == null) return _getDefaultSaveData();
+    try {
+      final saveData = _box!.get(_saveKey);
+      if (saveData != null) return saveData;
+    } catch (e) {
+      return await _loadCompressedData();
+    }
 
-    return saveData;
+    return await _loadCompressedData();
   }
 
   Future<bool> hasSaveData() async {
@@ -223,10 +240,45 @@ class SaveService {
     );
   }
 
-  String _decompress(String compressedData) {
+  Future<void> _saveCompressedData(GameSaveData saveData) async {
+    if (_compressedBox == null) return;
+    
+    final jsonData = jsonEncode(saveData.toJson());
+    final compressed = _compressData(jsonData);
+    final metadata = {
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'version': '1.0',
+      'compressed': true,
+    };
+    
+    await _compressedBox!.put(_compressedSaveKey, compressed);
+    await _compressedBox!.put(_metadataKey, jsonEncode(metadata));
+  }
+
+  Future<GameSaveData> _loadCompressedData() async {
+    if (_compressedBox == null) return _getDefaultSaveData();
+    
     try {
-      final deobfuscated = _deobfuscate(compressedData);
-      final bytes = base64Decode(deobfuscated);
+      final compressed = _compressedBox!.get(_compressedSaveKey);
+      if (compressed == null) return _getDefaultSaveData();
+      
+      final decompressed = _decompressData(compressed);
+      final data = jsonDecode(decompressed);
+      return GameSaveData.fromJson(data);
+    } catch (e) {
+      return _getDefaultSaveData();
+    }
+  }
+
+  String _compressData(String data) {
+    final bytes = utf8.encode(data);
+    final compressed = gzip.encode(bytes);
+    return base64Encode(compressed);
+  }
+
+  String _decompressData(String compressedData) {
+    try {
+      final bytes = base64Decode(compressedData);
       final decompressed = gzip.decode(bytes);
       return utf8.decode(decompressed);
     } catch (e) {
@@ -234,16 +286,96 @@ class SaveService {
     }
   }
 
-  String _deobfuscate(String obfuscatedData) {
-    const key = 'fuba_secret_key_2024';
-    final keyBytes = utf8.encode(key);
-    final dataBytes = base64Decode(obfuscatedData);
-    final result = <int>[];
-
-    for (int i = 0; i < dataBytes.length; i++) {
-      result.add(dataBytes[i] ^ keyBytes[i % keyBytes.length]);
+  Future<void> _checkAndCleanupOldData() async {
+    if (_box == null) return;
+    
+    try {
+      final boxSize = _box!.length;
+      if (boxSize > 100) {
+        await _cleanupOldEntries();
+      }
+    } catch (e) {
+      await _clearCorruptedData();
     }
+  }
 
-    return utf8.decode(result);
+  Future<void> _cleanupOldEntries() async {
+    if (_box == null) return;
+    
+    final keys = _box!.keys.toList();
+    if (keys.length > 50) {
+      final keysToRemove = keys.take(keys.length - 50);
+      for (final key in keysToRemove) {
+        await _box!.delete(key);
+      }
+    }
+  }
+
+  Future<void> _clearCorruptedData() async {
+    if (_box == null) return;
+    
+    try {
+      await _box!.clear();
+    } catch (e) {
+      await _box!.close();
+      final key = _deriveEncryptionKey('fuba_secret_key_2024');
+      _box = await Hive.openBox<GameSaveData>(
+        _boxName,
+        encryptionCipher: HiveAesCipher(key),
+      );
+    }
+  }
+
+  Future<int> getBoxSize() async {
+    if (_box == null) return 0;
+    return _box!.length;
+  }
+
+  Future<void> optimizeStorage() async {
+    if (_box == null) return;
+    
+    try {
+      await _box!.compact();
+    } catch (e) {
+      await _clearCorruptedData();
+    }
+  }
+
+  String _decompress(String compressedData) {
+    try {
+      final deobfuscated = deobfuscate(compressedData);
+      final bytes = base64Decode(deobfuscated);
+      final decompressed = gzip.decode(bytes);
+      return utf8.decode(decompressed);
+    } catch (e) {
+      return compressedData;
+    }
   }
 }
+
+String deobfuscate(String obfuscatedData) {
+  const key = 'fuba_secret_key_2024';
+  final keyBytes = utf8.encode(key);
+  final dataBytes = base64Decode(obfuscatedData);
+  final result = <int>[];
+
+  for (int i = 0; i < dataBytes.length; i++) {
+    result.add(dataBytes[i] ^ keyBytes[i % keyBytes.length]);
+  }
+
+  return utf8.decode(result);
+}
+
+String obfuscate(String data) {
+  const key = 'fuba_secret_key_2024';
+  final keyBytes = utf8.encode(key);
+  final dataBytes = utf8.encode(data);
+  final result = <int>[];
+
+  for (int i = 0; i < dataBytes.length; i++) {
+    result.add(dataBytes[i] ^ keyBytes[i % keyBytes.length]);
+  }
+
+  return base64Encode(result);
+}
+

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:big_decimal/big_decimal.dart';
 import '../services/save_service.dart';
+import '../services/sync_service.dart';
 import '../models/fuba_generator.dart';
 import 'game_providers.dart';
 import 'accessory_provider.dart';
@@ -10,6 +11,7 @@ import 'rebirth_provider.dart';
 import 'achievement_provider.dart';
 import 'rebirth_upgrade_provider.dart';
 import 'visual_settings_provider.dart';
+import 'auth_provider.dart';
 
 class SaveNotifier extends StateNotifier<bool> {
   SaveNotifier(this.ref) : super(false) {
@@ -18,6 +20,7 @@ class SaveNotifier extends StateNotifier<bool> {
 
   final Ref ref;
   final SaveService _saveService = SaveService();
+  final SyncService _syncService = SyncService();
   Timer? _periodicTimer;
 
   void _startPeriodicSave() {
@@ -49,6 +52,17 @@ class SaveNotifier extends StateNotifier<bool> {
         achievementStats: achievementStats,
         upgrades: upgrades,
       );
+
+      final isAuthenticated = ref.read(isAuthenticatedProvider);
+      if (isAuthenticated) {
+        try {
+          await _syncService.syncToCloud();
+        } catch (e) {
+          print('Erro ao sincronizar para nuvem: $e');
+        }
+      }
+
+      await _optimizeStorageIfNeeded();
       state = false;
     } catch (e) {
       state = false;
@@ -120,6 +134,25 @@ class SaveNotifier extends StateNotifier<bool> {
     } catch (e) {
       return;
     }
+  }
+
+  Future<void> _optimizeStorageIfNeeded() async {
+    try {
+      final boxSize = await _saveService.getBoxSize();
+      if (boxSize > 50) {
+        await _saveService.optimizeStorage();
+      }
+    } catch (e) {
+      print('Erro ao otimizar storage: $e');
+    }
+  }
+
+  Future<void> forceOptimizeStorage() async {
+    await _saveService.optimizeStorage();
+  }
+
+  Future<int> getStorageSize() async {
+    return await _saveService.getBoxSize();
   }
 
   @override

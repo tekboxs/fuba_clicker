@@ -5,8 +5,11 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'providers/achievement_provider.dart';
 import 'providers/save_provider.dart';
+import 'providers/auth_provider.dart';
 import 'services/save_service.dart';
+import 'services/sync_service.dart';
 import 'widgets/home_page.dart';
+import 'widgets/welcome_popup.dart';
 
 void main() async {
   await SentryFlutter.init(
@@ -18,6 +21,7 @@ void main() async {
     appRunner: () async {
       WidgetsFlutterBinding.ensureInitialized();
       await SaveService().init();
+      await SyncService().init();
       runApp(const ProviderScope(child: FubaClickerApp()));
     },
   );
@@ -32,6 +36,7 @@ class FubaClickerApp extends ConsumerStatefulWidget {
 
 class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   bool _isLoading = true;
+  bool _showWelcomePopup = false;
 
   @override
   void initState() {
@@ -47,6 +52,13 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
       final saveNotifier = ref.read(saveNotifierProvider.notifier);
       await saveNotifier.loadGame();
+
+      final authState = ref.read(authStateProvider);
+      if (!authState.isAuthenticated) {
+        setState(() {
+          _showWelcomePopup = true;
+        });
+      }
 
       setState(() {
         _isLoading = false;
@@ -82,9 +94,19 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
       }
     });
 
+    final authState = ref.watch(authStateProvider);
+    
+    if (authState.isAuthenticated && _showWelcomePopup) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _showWelcomePopup = false;
+        });
+      });
+    }
+
     return MaterialApp(
       title: 'Fuba Clicker',
-      home: _isLoading ? _buildLoadingScreen() : const HomePage(),
+      home: _isLoading ? _buildLoadingScreen() : _buildHomeWithWelcome(),
       theme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.deepOrange,
@@ -112,6 +134,21 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHomeWithWelcome() {
+    return Stack(
+      children: [
+        const HomePage(),
+        if (_showWelcomePopup)
+          Container(
+            color: Colors.black54,
+            child: const Center(
+              child: WelcomePopup(),
+            ),
+          ),
+      ],
     );
   }
 }

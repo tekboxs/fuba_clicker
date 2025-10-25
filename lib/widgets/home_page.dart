@@ -28,6 +28,8 @@ import 'rebirth_page.dart';
 import 'achievements_page.dart';
 import 'rebirth_upgrades_page.dart';
 import 'achievement_popup.dart';
+import 'account_settings.dart';
+import 'ranking_page.dart';
 
 /// Página principal do jogo
 class HomePage extends ConsumerStatefulWidget {
@@ -993,6 +995,28 @@ class _HomePageState extends ConsumerState<HomePage>
                   _showPerformanceModeDialog();
                 },
               ),
+              SizedBox(width: isMobile ? 4 : 8),
+              _buildIconButtonWithLabel(
+                Icons.account_circle,
+                Colors.blue,
+                'Conta',
+                () {
+                  _showAccountSettings();
+                },
+              ),
+              SizedBox(width: isMobile ? 4 : 8),
+              _buildIconButtonWithLabel(
+                Icons.leaderboard,
+                Colors.purple,
+                'Ranking',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const RankingPage(),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ],
@@ -1699,5 +1723,17 @@ class _HomePageState extends ConsumerState<HomePage>
     final achievement = allAchievements.firstWhere((a) => a.id == randomId);
 
     AchievementPopupManager.showAchievementPopup(context, achievement);
+  }
+
+  void _showAccountSettings() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: const AccountSettings(),
+        ),
+      ),
+    );
   }
 }

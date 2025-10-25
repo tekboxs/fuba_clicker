@@ -57,6 +57,7 @@ app.*.map.json
 # Linux related
 /linux/
 
+example.md
 # Coverage
 coverage/
 
