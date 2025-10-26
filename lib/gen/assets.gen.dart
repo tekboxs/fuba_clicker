@@ -13,9 +13,11 @@ import 'package:flutter/widgets.dart';
 
 class $AssetsImagesGen {
   const $AssetsImagesGen();
-
+ 
   /// File path: assets/images/cake.png
   AssetGenImage get cake => const AssetGenImage('assets/images/cake.png');
+ 
+  AssetGenImage get crown => const AssetGenImage('assets/images/crown.png');
 
   /// File path: assets/images/icon.png
   AssetGenImage get icon => const AssetGenImage('assets/images/icon.png');

@@ -41,9 +41,9 @@ class RankingCardCompact extends StatelessWidget {
               child: Text(
                 rank.toString().padLeft(2, '0'),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ),
           ),
@@ -87,7 +87,7 @@ class RankingCardCompact extends StatelessWidget {
                 Row(
                   children: [
                     const Icon(
-                      Icons.account_balance_wallet,
+                      Icons.cake_outlined,
                       color: Colors.white70,
                       size: 14,
                     ),
@@ -95,27 +95,28 @@ class RankingCardCompact extends StatelessWidget {
                     Text(
                       RankingUtils.formatWalletId(entry.username),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white70,
-                      ),
+                            color: Colors.white70,
+                          ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                 Row(
-                   children: [
-                     Text(
-                       RankingUtils.formatFuba(RankingUtils.calculateMockFuba(entry)),
-                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                         color: Colors.white,
-                         fontWeight: FontWeight.bold,
-                       ),
-                     ),
+                Row(
+                  children: [
+                    Text(
+                      RankingUtils.formatFuba(
+                          RankingUtils.calculateMockFuba(entry)),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      '\$ECI',
+                      'Fubá',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white70,
-                      ),
+                            color: Colors.white70,
+                          ),
                     ),
                   ],
                 ),
@@ -129,15 +130,15 @@ class RankingCardCompact extends StatelessWidget {
                 Text(
                   '${entry.rebirthCount} rebirths',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.green,
-                  ),
+                        color: Colors.green,
+                      ),
                 ),
               if (entry.achievementCount > 0)
                 Text(
                   '${entry.achievementCount} achievements',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.blue,
-                  ),
+                        color: Colors.white,
+                      ),
                 ),
             ],
           ),

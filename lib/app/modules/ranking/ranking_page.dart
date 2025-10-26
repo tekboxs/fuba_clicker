@@ -47,142 +47,6 @@ class _RankingPageState extends ConsumerState<RankingPage> {
     }
   }
 
-  List<RankingEntry> _getMockRanking() {
-    return [
-      RankingEntry(
-        username: 'FubaMaster2024',
-        rebirthData: const RebirthData(
-          rebirthCount: 5,
-          ascensionCount: 2,
-          transcendenceCount: 1,
-          celestialTokens: 15.5,
-        ),
-        achievements: [
-          'first_click',
-          'speed_demon',
-          'generator_master',
-          'rebirth_king',
-          'ascension_lord',
-          'transcendence_god',
-          'achievement_hunter',
-          'fuba_collector',
-          'click_master',
-          'time_traveler',
-          'cosmic_clicker',
-          'ultimate_player'
-        ],
-      ),
-      RankingEntry(
-        username: 'CornKing',
-        rebirthData: const RebirthData(
-          rebirthCount: 4,
-          ascensionCount: 1,
-          transcendenceCount: 0,
-          celestialTokens: 8.0,
-        ),
-        achievements: [
-          'first_click',
-          'speed_demon',
-          'generator_master',
-          'rebirth_king',
-          'ascension_lord',
-          'achievement_hunter',
-          'fuba_collector',
-          'click_master',
-          'time_traveler',
-          'cosmic_clicker'
-        ],
-      ),
-      RankingEntry(
-        username: 'MaizeLegend',
-        rebirthData: const RebirthData(
-          rebirthCount: 3,
-          ascensionCount: 1,
-          transcendenceCount: 0,
-          celestialTokens: 5.5,
-        ),
-        achievements: [
-          'first_click',
-          'speed_demon',
-          'generator_master',
-          'rebirth_king',
-          'ascension_lord',
-          'achievement_hunter',
-          'fuba_collector',
-          'click_master'
-        ],
-      ),
-      RankingEntry(
-        username: 'GoldenGrain',
-        rebirthData: const RebirthData(
-          rebirthCount: 2,
-          ascensionCount: 0,
-          transcendenceCount: 0,
-          celestialTokens: 3.0,
-        ),
-        achievements: [
-          'first_click',
-          'speed_demon',
-          'generator_master',
-          'rebirth_king',
-          'achievement_hunter',
-          'fuba_collector'
-        ],
-      ),
-      RankingEntry(
-        username: 'FubaFarmer',
-        rebirthData: const RebirthData(
-          rebirthCount: 2,
-          ascensionCount: 0,
-          transcendenceCount: 0,
-          celestialTokens: 2.5,
-        ),
-        achievements: [
-          'first_click',
-          'speed_demon',
-          'generator_master',
-          'rebirth_king',
-          'achievement_hunter'
-        ],
-      ),
-      RankingEntry(
-        username: 'CornClicker',
-        rebirthData: const RebirthData(
-          rebirthCount: 1,
-          ascensionCount: 0,
-          transcendenceCount: 0,
-          celestialTokens: 1.5,
-        ),
-        achievements: [
-          'first_click',
-          'speed_demon',
-          'generator_master',
-          'rebirth_king'
-        ],
-      ),
-      RankingEntry(
-        username: 'MaizeMiner',
-        rebirthData: const RebirthData(
-          rebirthCount: 1,
-          ascensionCount: 0,
-          transcendenceCount: 0,
-          celestialTokens: 1.0,
-        ),
-        achievements: ['first_click', 'speed_demon', 'generator_master'],
-      ),
-      RankingEntry(
-        username: 'GrainGuru',
-        rebirthData: const RebirthData(
-          rebirthCount: 0,
-          ascensionCount: 0,
-          transcendenceCount: 0,
-          celestialTokens: 0.5,
-        ),
-        achievements: ['first_click', 'speed_demon'],
-      ),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -254,8 +118,8 @@ class _RankingPageState extends ConsumerState<RankingPage> {
       );
     }
 
-    List<RankingEntry> ranking = _ranking.isEmpty ? _getMockRanking() : _ranking;
-    
+    List<RankingEntry> ranking = _ranking;
+
     ranking.sort((a, b) {
       final scoreA = RankingUtils.calculateMockFuba(a);
       final scoreB = RankingUtils.calculateMockFuba(b);

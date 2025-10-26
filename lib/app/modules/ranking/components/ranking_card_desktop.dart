@@ -1,6 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/models/ranking_entry.dart';
 import 'package:fuba_clicker/app/modules/ranking/utils/ranking_utils.dart';
+import 'package:fuba_clicker/gen/assets.gen.dart';
 
 class RankingCardDesktop extends StatelessWidget {
   final RankingEntry entry;
@@ -15,9 +20,9 @@ class RankingCardDesktop extends StatelessWidget {
   Color _getRankColor() {
     switch (rank) {
       case 1:
-        return const Color(0xFF555555);
-      case 2:
         return const Color(0xFFD4AF37);
+      case 2:
+        return const Color(0xFF555555);
       case 3:
         return const Color(0xFF8B4513);
       default:
@@ -28,9 +33,9 @@ class RankingCardDesktop extends StatelessWidget {
   Color _getRankCrownColor() {
     switch (rank) {
       case 1:
-        return const Color(0xFFC0C0C0);
-      case 2:
         return const Color(0xFFFFD700);
+      case 2:
+        return const Color(0xFFC0C0C0);
       case 3:
         return const Color(0xFFCD7F32);
       default:
@@ -43,43 +48,49 @@ class RankingCardDesktop extends StatelessWidget {
     required String label,
     required String value,
     required Color color,
+    int flex = 1,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    return Expanded(
+      flex: flex,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          // color: color,
+          gradient: LinearGradient(
+            colors: [
+              color,
+              color.withValues(alpha: 0.7),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 18, color: Colors.white),
-          const SizedBox(width: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: Colors.white),
+            const SizedBox(width: 6),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+            // const SizedBox(width: 4),
+            // Text(
+            //   label,
+            //   style: const TextStyle(
+            //     color: Colors.white,
+            //     fontSize: 13,
+            //     fontWeight: FontWeight.w500,
+            //   ),
+            // ),
+          ],
+        ),
       ),
     );
   }
@@ -88,205 +99,200 @@ class RankingCardDesktop extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _getRankColor(),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+          gradient: LinearGradient(
+            colors: [
+              _getRankColor(),
+              _getRankColor().withValues(alpha: 0.5),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          BoxShadow(
-            color: _getRankColor().withOpacity(0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
+          borderRadius: BorderRadius.circular(20)),
+      child: SingleChildScrollView(
+        child: Column(
           children: [
-            Stack(
-              clipBehavior: Clip.none,
+            const SizedBox(height: 20),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    borderRadius: BorderRadius.circular(40),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      entry.username.substring(0, 1).toUpperCase(),
-                      style:
-                          Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[800],
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: -6,
-                  left: -6,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _getRankCrownColor(),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              entry.username.substring(0, 1).toUpperCase(),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineLarge
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          // 'asdasdsadasdsadasd33333333333333333333333',
+                          entry.username,
+                          maxLines: 3,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(
+                                color: Colors.white,
+                              ),
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.emoji_events,
-                      color: Colors.white,
-                      size: 20,
+                    Positioned(
+                      top: -16,
+                      left: -6,
+                      child: Transform.rotate(
+                        angle: -35 * pi / 180,
+                        child: Assets.images.crown.image(
+                          width: 30,
+                          height: 30,
+                          color: _getRankCrownColor(),
+                        ),
+                      ).animate(
+                        onPlay: (controller) {
+                          controller.repeat(reverse: true);
+                        },
+                      ).moveY(
+                        begin: -10,
+                        duration: 1.seconds,
+                        end: 0,
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(width: 24),
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        entry.transcendenceCount.toString(),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium
+                                            ?.copyWith(
+                                          color: Colors.white,
+                                          fontSize: 80,
+                                          fontWeight: FontWeight.bold,
+                                          shadows: [
+                                            Shadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.3,
+                                              ),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                      Padding(
+                                      padding: const EdgeInsets.only(bottom: 12),
+                                      child: Column(
+                                        children: [
+                                          const Icon(
+                                            Icons.auto_awesome,
+                                            size: 32,
+                                            color: Colors.white,
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Text(
+                                            'Transcendência',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 24),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 30),
+            IntrinsicHeight(
+              child: Row(
+                spacing: 6,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  RankingUtils.formatFuba(
-                                      RankingUtils.calculateMockFuba(entry)),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium
-                                      ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withOpacity(0.3),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '\$ECI',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
-                                      ?.copyWith(
-                                    color: Colors.white.withOpacity(0.9),
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black.withOpacity(0.3),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Column(
-                              spacing: 6,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _buildStatBadge(
-                                  icon: Icons.repeat,
-                                  label: 'Rebirth',
-                                  value: entry.rebirthCount.toString(),
-                                  color: const Color(0xFF4CAF50),
-                                ),
-                                _buildStatBadge(
-                                  icon: Icons.star,
-                                  label: 'Ascensão',
-                                  value: entry.ascensionCount.toString(),
-                                  color: const Color(0xFF2196F3),
-                                ),
-                                _buildStatBadge(
-                                  icon: Icons.auto_awesome,
-                                  label: 'Transcendência',
-                                  value: entry.transcendenceCount.toString(),
-                                  color: const Color(0xFF9C27B0),
-                                ),
-                                _buildStatBadge(
-                                  icon: Icons.monetization_on,
-                                  label: 'Tokens',
-                                  value:
-                                      entry.celestialTokens.toStringAsFixed(1),
-                                  color: const Color(0xFFFFC107),
-                                ),
-                                _buildStatBadge(
-                                  icon: Icons.emoji_events,
-                                  label: 'Conquistas',
-                                  value: entry.achievementCount.toString(),
-                                  color: const Color(0xFFFF9800),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.account_balance_wallet,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              RankingUtils.formatWalletId(entry.username),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  _buildStatBadge(
+                    icon: Icons.star,
+                    label: 'Ascensão',
+                    value: entry.ascensionCount.toString(),
+                    color: const Color(0xFF2196F3),
+                  ),
+                  _buildStatBadge(
+                    icon: Icons.repeat,
+                    label: 'Rebirth',
+                    value: entry.rebirthCount.toString(),
+                    color: const Color(0xFF4CAF50),
+                  ),
+                  _buildStatBadge(
+                    icon: Icons.monetization_on,
+                    label: 'Tokens',
+                    value: entry.celestialTokens.toStringAsFixed(1),
+                    color: const Color(0xFFFFC107),
+                  ),
+                  _buildStatBadge(
+                    icon: Icons.emoji_events,
+                    label: 'Conquistas',
+                    value: entry.achievementCount.toString(),
+                    color: const Color(0xFFFF9800),
+                  ),
+                  _buildStatBadge(
+                    icon: Icons.cake,
+                    label: 'Fubá',
+                    value: GameConstants.formatNumber(entry.fuba),
+                    color: const Color(0xFF9C27B0),
                   ),
                 ],
               ),

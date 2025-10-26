@@ -390,8 +390,8 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.25,
           AccessoryRarity.cosmic: 0.30,
           AccessoryRarity.infinite: 0.25,
-          AccessoryRarity.omniversal: 0.0,
-          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.omniversal: 0.0001,
+          AccessoryRarity.reality: 0.0001,
           AccessoryRarity.tek: 0.0,
           AccessoryRarity.absolute: 0.0,
         };
@@ -408,8 +408,8 @@ enum LootBoxTier {
           AccessoryRarity.primordial: 0.20,
           AccessoryRarity.cosmic: 0.25,
           AccessoryRarity.infinite: 0.30,
-          AccessoryRarity.omniversal: 0.15,
-          AccessoryRarity.reality: 0.0,
+          AccessoryRarity.omniversal: 0.015,
+          AccessoryRarity.reality: 0.0001,
           AccessoryRarity.tek: 0.0,
           AccessoryRarity.absolute: 0.0,
         };
@@ -429,7 +429,7 @@ enum LootBoxTier {
           AccessoryRarity.omniversal: 0.020,
           AccessoryRarity.reality: 0.015,
           AccessoryRarity.tek: 0.001,
-          AccessoryRarity.absolute: 0.0,
+          AccessoryRarity.absolute: 0.000001,
         };
       case LootBoxTier.absolute:
         return {
@@ -447,7 +447,7 @@ enum LootBoxTier {
           AccessoryRarity.omniversal: 0.25,
           AccessoryRarity.reality: 0.20,
           AccessoryRarity.tek: 0.01,
-          AccessoryRarity.absolute: 0.001,
+          AccessoryRarity.absolute: 0.00001,
         };
     }
   }

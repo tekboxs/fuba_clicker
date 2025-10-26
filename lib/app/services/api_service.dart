@@ -40,14 +40,22 @@ class ApiService {
           options.headers['Authorization'] = 'Bearer $_jwt';
         }
 
-        // if (_rt != null) {
-        //   options.headers['refresh_token'] = '$_rt';
-        // }
-
-        // Debug: verificar headers sendo enviados
         debugPrint('[]>> Headers sendo enviados: ${options.headers}');
 
         handler.next(options);
+      },
+      onResponse: (response, handler) async {
+        final newToken = response.headers.value('authorization') ?? 
+                        response.headers.value('x-new-token');
+        
+        if (newToken != null && newToken.isNotEmpty) {
+          final token = newToken.replaceFirst('Bearer ', '').trim();
+          await TokenService().writeMethod('jwt', token);
+          _jwt = token;
+          debugPrint('[]>> Novo JWT salvo automaticamente');
+        }
+        
+        handler.next(response);
       },
       onError: (error, handler) {
         if (error.response?.statusCode == 401) {
