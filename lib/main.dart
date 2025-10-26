@@ -1,30 +1,104 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive/hive.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'providers/achievement_provider.dart';
-import 'providers/save_provider.dart';
-import 'providers/auth_provider.dart';
-import 'services/save_service.dart';
-import 'services/sync_service.dart';
-import 'widgets/home_page.dart';
-import 'widgets/welcome_popup.dart';
+import 'app/providers/achievement_provider.dart';
+import 'app/providers/save_provider.dart';
+import 'app/providers/auth_provider.dart';
+import 'app/services/save_service.dart';
+import 'app/services/sync_service.dart';
+import 'app/modules/home/home_page.dart';
+import 'app/modules/account/components/welcome_popup.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await SentryFlutter.init(
     (options) {
-      options.dsn = 'https://5969c28b8a0ac66f6465f1dd6485290c@o1402848.ingest.us.sentry.io/4510245636734976';
+      options.dsn =
+          'https://5969c28b8a0ac66f6465f1dd6485290c@o1402848.ingest.us.sentry.io/4510245636734976';
       options.tracesSampleRate = 1.0;
-      // options.debug = kDebugMode;
+      options.debug = kDebugMode;
     },
     appRunner: () async {
       WidgetsFlutterBinding.ensureInitialized();
       await SaveService().init();
-      await SyncService().init();
-      runApp(const ProviderScope(child: FubaClickerApp()));
+
+      final container = ProviderContainer();
+
+      runApp(ProviderScope(
+        parent: container,
+        child: const FubaClickerApp(),
+      ));
     },
   );
+}
+
+///Save simple data like primitives types
+class TokenService {
+  final String boxName;
+  Box? box;
+
+  TokenService({this.boxName = 'tokenDb'});
+
+  ///open box to make possible read and update
+  _init() async {
+    if (box == null || !box!.isOpen) {
+      box = await Hive.openBox(boxName);
+    }
+  }
+
+  ///return if a key already in memory
+  ///can be used to handle update or add
+  Future<bool> existKey(dynamic key) async {
+    await _init();
+    return box!.containsKey(key.toString());
+  }
+
+  ///remove all current data
+  Future<void> clear() async {
+    await _init();
+    await box!.clear();
+  }
+
+  ///remove only a key
+  ///have no effect if this doesnt exists
+  Future deleteMethod(key) async {
+    await _init();
+    return await box!.delete(key.toString());
+  }
+
+  ///return stored value this service only handle
+  ///[PRIMITIVES] types, if not exists return null
+  Future<dynamic> readMethod(dynamic key) async {
+    await _init();
+    if (key is int) {
+      return await box!.getAt(key);
+    } else {
+      return await box!.get(key.toString());
+    }
+  }
+
+  ///override a current key
+  ///if not already exists may cause exception
+  Future<void> writeMethod(dynamic key, dynamic value) async {
+    await _init();
+    if (key is int) {
+      await box!.putAt(key, value);
+    }
+    await box!.put(key.toString(), value);
+  }
+
+  Future<int> get memoryLength async {
+    await _init();
+    return box!.length;
+  }
+
+  Future<List<dynamic>> get getAllItens async {
+    await _init();
+    return [for (var key in box!.keys) await readMethod(key)];
+  }
 }
 
 class FubaClickerApp extends ConsumerStatefulWidget {
@@ -42,6 +116,27 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   void initState() {
     super.initState();
     _loadGameData();
+    _initSyncService();
+    showWelcomePopup();
+  }
+
+  showWelcomePopup() {
+    if (_showWelcomePopup) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        showDialog(
+          context: context,
+          builder: (context) => const WelcomePopup(),
+        );
+      });
+    }
+  }
+
+  Future<void> _initSyncService() async {
+    try {
+      await ref.read(syncServiceProvider.notifier).init();
+    } catch (e) {
+      print('Erro ao inicializar SyncService: $e');
+    }
   }
 
   Future<void> _loadGameData() async {
@@ -73,8 +168,6 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
   Future<void> _requestAudioPermission() async {
     try {
-      if (kIsWeb) return;
-
       final status = await Permission.audio.status;
       if (status.isDenied) {
         await Permission.audio.request();
@@ -95,7 +188,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
     });
 
     final authState = ref.watch(authStateProvider);
-    
+
     if (authState.isAuthenticated && _showWelcomePopup) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
@@ -106,7 +199,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
     return MaterialApp(
       title: 'Fuba Clicker',
-      home: _isLoading ? _buildLoadingScreen() : _buildHomeWithWelcome(),
+      home: _isLoading ? _buildLoadingScreen() : const HomePage(),
       theme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.deepOrange,
@@ -134,21 +227,6 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildHomeWithWelcome() {
-    return Stack(
-      children: [
-        const HomePage(),
-        if (_showWelcomePopup)
-          Container(
-            color: Colors.black54,
-            child: const Center(
-              child: WelcomePopup(),
-            ),
-          ),
-      ],
     );
   }
 }
