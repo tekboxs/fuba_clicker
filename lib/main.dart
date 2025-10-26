@@ -14,11 +14,17 @@ import 'app/modules/account/components/welcome_popup.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    Sentry.captureException(details.exception, stackTrace: details.stack);
+  };
+  
   await SentryFlutter.init(
     (options) {
       options.dsn =
           'https://5969c28b8a0ac66f6465f1dd6485290c@o1402848.ingest.us.sentry.io/4510245636734976';
-      options.tracesSampleRate = 1.0;
+      options.tracesSampleRate = kIsWeb ? 0.0 : 1.0;
       options.debug = kDebugMode;
     },
     appRunner: () async {
@@ -167,6 +173,8 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   }
 
   Future<void> _requestAudioPermission() async {
+    if (kIsWeb) return;
+    
     try {
       final status = await Permission.audio.status;
       if (status.isDenied) {

@@ -16,6 +16,10 @@ class RankingUtils {
   static String formatFuba(BigDecimal fuba) {
     final value = fuba.toDouble();
     
+    if (!value.isFinite || value <= 0) {
+      return '0';
+    }
+    
     if (value >= 1e12) {
       return '${(value / 1e12).toStringAsFixed(1)}T';
     } else if (value >= 1e9) {

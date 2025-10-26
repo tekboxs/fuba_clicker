@@ -6,6 +6,7 @@ import 'package:fuba_clicker/app/models/rebirth_data.dart';
 import 'package:fuba_clicker/app/modules/ranking/components/ranking_card_desktop.dart';
 import 'package:fuba_clicker/app/modules/ranking/components/ranking_card_compact.dart';
 import 'package:fuba_clicker/app/modules/ranking/components/ranking_list_mobile.dart';
+import 'package:fuba_clicker/app/modules/ranking/utils/ranking_utils.dart';
 
 class RankingPage extends ConsumerStatefulWidget {
   const RankingPage({super.key});
@@ -253,7 +254,13 @@ class _RankingPageState extends ConsumerState<RankingPage> {
       );
     }
 
-    final ranking = _ranking.isEmpty ? _getMockRanking() : _ranking;
+    List<RankingEntry> ranking = _ranking.isEmpty ? _getMockRanking() : _ranking;
+    
+    ranking.sort((a, b) {
+      final scoreA = RankingUtils.calculateMockFuba(a);
+      final scoreB = RankingUtils.calculateMockFuba(b);
+      return scoreB.compareTo(scoreA);
+    });
     //  _ranking;
 
     return LayoutBuilder(
@@ -276,11 +283,25 @@ class _RankingPageState extends ConsumerState<RankingPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                for (int i = 0; i < 3 && i < ranking.length; i++)
+                if (ranking.isNotEmpty && ranking.isNotEmpty)
                   Expanded(
                     child: RankingCardDesktop(
-                      entry: ranking[i],
-                      rank: i + 1,
+                      entry: ranking[0],
+                      rank: 1,
+                    ),
+                  ),
+                if (ranking.length >= 2)
+                  Expanded(
+                    child: RankingCardDesktop(
+                      entry: ranking[1],
+                      rank: 2,
+                    ),
+                  ),
+                if (ranking.length >= 3)
+                  Expanded(
+                    child: RankingCardDesktop(
+                      entry: ranking[2],
+                      rank: 3,
                     ),
                   ),
               ],
@@ -291,18 +312,16 @@ class _RankingPageState extends ConsumerState<RankingPage> {
           flex: 1,
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Expanded(
-              child: ListView.builder(
-                itemCount: ranking.length - 3,
-                itemBuilder: (context, index) {
-                  final entry = ranking[index + 3];
-                  final rank = index + 4;
-                  return RankingCardCompact(
-                    entry: entry,
-                    rank: rank,
-                  );
-                },
-              ),
+            child: ListView.builder(
+              itemCount: ranking.length - 3,
+              itemBuilder: (context, index) {
+                final entry = ranking[index + 3];
+                final rank = index + 4;
+                return RankingCardCompact(
+                  entry: entry,
+                  rank: rank,
+                );
+              },
             ),
           ),
         ),
