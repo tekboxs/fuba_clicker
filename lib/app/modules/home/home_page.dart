@@ -61,10 +61,10 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void initState() {
     super.initState();
-    _initializeControllers();
-    _startAutoProduction();
-    _initializeAudio();
-    _startPlayTimeTracking();
+    // _initializeControllers();
+    // _startAutoProduction();
+    // _initializeAudio();
+    // _startPlayTimeTracking();
   }
 
   /// Inicializa o áudio do jogo
