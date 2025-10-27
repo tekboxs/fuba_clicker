@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:big_decimal/big_decimal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fuba_clicker/app/services/save_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -137,8 +138,9 @@ class SyncService extends StateNotifier<bool> {
   Future<void> _applyCloudDataToLocal(UserData userData) async {
     if (userData.fuba.isNotEmpty) {
       try {
+        final fuba = BigDecimal.parse(userData.fuba);
         await SaveService().saveGame(
-          fuba: double.tryParse(userData.fuba) ?? 0.0,
+          fuba: fuba,
           generators: userData.generators ?? [],
           inventory: userData.inventory ?? {},
           equipped: userData.equipped ?? [],
@@ -163,7 +165,7 @@ class SyncService extends StateNotifier<bool> {
       final userData = await _authService.getCurrentUser();
       if (userData?.fuba.isNotEmpty == true) {
         return {
-          'fuba': double.tryParse(userData!.fuba) ?? 0.0,
+          'fuba': userData!.fuba,
           'generators': userData.generators ?? [],
           'inventory': userData.inventory ?? {},
           'equipped': userData.equipped ?? [],
@@ -219,10 +221,17 @@ class SyncService extends StateNotifier<bool> {
     }
   }
 
-  Future<void> forceDownloadCloudSave() async {
-    if (_conflictingCloudSave == null) return;
+  Future<void> forceDownloadCloudSave({bool ignoreValidation = false}) async {
+    if (_conflictingCloudSave == null && !ignoreValidation) return;
 
-    await _applyCloudDataToLocal(_conflictingCloudSave!);
+    final toApply = _conflictingCloudSave ??
+        UserData.fromJson(
+          await getCloudSaveDataJson() ?? {},
+        );
+
+    if (!toApply.isEmpty) {
+      await _applyCloudDataToLocal(toApply);
+    }
     _hasConflict = false;
     _conflictingLocalSave = null;
     _conflictingCloudSave = null;

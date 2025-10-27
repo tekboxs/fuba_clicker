@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuba_clicker/app/global_widgets/storage_monitor.dart';
 import 'package:fuba_clicker/app/providers/auth_provider.dart';
 import 'package:fuba_clicker/app/modules/account/components/auth_dialog.dart';
+import 'package:fuba_clicker/app/providers/sync_notifier.dart';
+import 'package:fuba_clicker/app/services/sync_service.dart';
 
 class AccountSettings extends ConsumerWidget {
   const AccountSettings({super.key});
@@ -162,21 +164,31 @@ class AccountSettings extends ConsumerWidget {
 
     if (confirmed == true) {
       try {
-        final success =
-            await ref.read(authNotifierProvider.notifier).loadFromCloud();
+        final syncService = ref.read(syncServiceProvider.notifier);
 
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                success
-                    ? 'Progresso carregado da nuvem com sucesso!'
-                    : 'Erro ao carregar da nuvem',
-              ),
-              backgroundColor: success ? Colors.green : Colors.red,
-            ),
-          );
-        }
+        await syncService.forceDownloadCloudSave(ignoreValidation: true);
+        ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Progresso carregado da nuvem com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // final success =
+        //     await ref.read(authNotifierProvider.notifier).loadFromCloud();
+
+        // if (context.mounted) {
+        //   ScaffoldMessenger.of(context).showSnackBar(
+        //     SnackBar(
+        //       content: Text(
+        //         success
+        //             ? 'Progresso carregado da nuvem com sucesso!'
+        //             : 'Erro ao carregar da nuvem',
+        //       ),
+        //       backgroundColor: success ? Colors.green : Colors.red,
+        //     ),
+        //   );
+        // }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

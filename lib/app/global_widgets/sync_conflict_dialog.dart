@@ -20,9 +20,10 @@ class SyncConflictDialog extends ConsumerWidget {
         localSave.rebirthData.ascensionCount +
         localSave.rebirthData.transcendenceCount;
 
-    final cloudRebirths = (cloudSave.rebirthData?['rebirthCount'] as int? ?? 0) +
-        (cloudSave.rebirthData?['ascensionCount'] as int? ?? 0) +
-        (cloudSave.rebirthData?['transcendenceCount'] as int? ?? 0);
+    final cloudRebirths =
+        (cloudSave.rebirthData?['rebirthCount'] as int? ?? 0) +
+            (cloudSave.rebirthData?['ascensionCount'] as int? ?? 0) +
+            (cloudSave.rebirthData?['transcendenceCount'] as int? ?? 0);
 
     return AlertDialog(
       title: const Text('Conflito de Sincronização'),
@@ -108,6 +109,15 @@ class SyncConflictDialog extends ConsumerWidget {
         ),
         TextButton(
           onPressed: () async {
+            await syncService.forceUploadLocalSave();
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+          child: const Text('Usar Local'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
             await syncService.forceDownloadCloudSave();
             ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
             if (context.mounted) {
@@ -116,17 +126,7 @@ class SyncConflictDialog extends ConsumerWidget {
           },
           child: const Text('Usar Nuvem'),
         ),
-        ElevatedButton(
-          onPressed: () async {
-            await syncService.forceUploadLocalSave();
-            if (context.mounted) {
-              Navigator.of(context).pop();
-            }
-          },
-          child: const Text('Usar Local'),
-        ),
       ],
     );
   }
 }
-

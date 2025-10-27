@@ -56,7 +56,7 @@ class SaveNotifier extends StateNotifier<bool> {
       final upgrades = ref.read(upgradesLevelProvider);
 
       await _saveService.saveGame(
-        fuba: fuba.toDouble(),
+        fuba: fuba,
         generators: generators,
         inventory: inventory,
         equipped: equipped,

@@ -31,28 +31,37 @@ class UserData {
       email: json['email'] ?? '',
       username: json['username'] ?? '',
       fuba: json['fuba'] ?? '0',
-      generators: json['generators'] != null 
-          ? List<int>.from(json['generators']) 
+      generators: json['generators'] != null
+          ? List<int>.from(json['generators'])
           : null,
-      inventory: json['inventory'] != null 
-          ? Map<String, int>.from(json['inventory']) 
+      inventory: json['inventory'] != null
+          ? Map<String, int>.from(json['inventory'])
           : null,
-      equipped: json['equipped'] != null 
-          ? List<String>.from(json['equipped']) 
+      equipped:
+          json['equipped'] != null ? List<String>.from(json['equipped']) : null,
+      rebirthData: json['rebirthData'] != null
+          ? Map<String, dynamic>.from(json['rebirthData'])
           : null,
-      rebirthData: json['rebirthData'] != null 
-          ? Map<String, dynamic>.from(json['rebirthData']) 
+      achievements: json['achievements'] != null
+          ? List<String>.from(json['achievements'])
           : null,
-      achievements: json['achievements'] != null 
-          ? List<String>.from(json['achievements']) 
+      achievementStats: json['achievementStats'] != null
+          ? Map<String, double>.from(json['achievementStats'])
           : null,
-      achievementStats: json['achievementStats'] != null 
-          ? Map<String, double>.from(json['achievementStats']) 
-          : null,
-      upgrades: json['upgrades'] != null 
-          ? Map<String, int>.from(json['upgrades']) 
+      upgrades: json['upgrades'] != null
+          ? Map<String, int>.from(json['upgrades'])
           : null,
     );
+  }
+  bool get isEmpty {
+    return fuba.isEmpty &&
+        generators == null &&
+        inventory == null &&
+        equipped == null &&
+        rebirthData == null &&
+        achievements == null &&
+        achievementStats == null &&
+        upgrades == null;
   }
 
   Map<String, dynamic> toJson() {
@@ -71,5 +80,3 @@ class UserData {
     };
   }
 }
-
-

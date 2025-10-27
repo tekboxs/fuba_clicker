@@ -211,7 +211,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
     if (syncConflict == SyncConflictType.needsConfirmation) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(
-          context: context,
+          context: kGlobalNavigationKey.currentContext!,
           barrierDismissible: false,
           builder: (context) => const SyncConflictDialog(),
         );

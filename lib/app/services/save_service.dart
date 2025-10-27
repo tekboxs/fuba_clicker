@@ -14,7 +14,6 @@ class SaveService {
   static const String _compressedSaveKey = 'compressed_game_data';
   static const String _metadataKey = 'save_metadata';
 
-
   static Box<GameSaveData>? _box;
   static Box<Map>? _settingsBox;
   static Box<String>? _compressedBox;
@@ -52,9 +51,8 @@ class SaveService {
     return digest.bytes;
   }
 
-
   Future<void> saveGame({
-    required double fuba,
+    required BigDecimal fuba,
     required List<int> generators,
     required Map<String, int> inventory,
     required List<String> equipped,
@@ -66,7 +64,7 @@ class SaveService {
     if (_box == null) return;
 
     final saveData = GameSaveData(
-      fuba: BigDecimal.parse(fuba.toString()),
+      fuba: fuba,
       generators: generators,
       inventory: inventory,
       equipped: equipped,
@@ -252,7 +250,6 @@ class SaveService {
       await _clearCorruptedData();
     }
   }
-
 }
 
 String deobfuscate(String obfuscatedData) {
