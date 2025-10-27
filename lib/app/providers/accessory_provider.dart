@@ -189,6 +189,10 @@ final accessoryCapacityProvider = Provider<int>((ref) {
   final upgradeLevels = ref.watch(upgradesLevelProvider);
   final upgrade = allUpgrades.firstWhere((u) => u.type == UpgradeType.accessoryCapacity);
   final level = upgradeLevels[upgrade.id] ?? 0;
-  return upgrade.getEffectValue(level).toInt();
+  final effect = upgrade.getEffectValue(level);
+  if (effect.isInfinite || effect.isNaN) {
+    return 0;
+  }
+  return effect.clamp(0, 1e6).toInt();
 });
 

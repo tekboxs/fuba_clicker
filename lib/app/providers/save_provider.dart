@@ -97,9 +97,7 @@ class SaveNotifier extends StateNotifier<bool> {
     try {
       final data = await _saveService.loadGame();
 
-      ref.read(fubaProvider.notifier).state = BigDecimal.parse(
-        data.fuba.toString(),
-      );
+      ref.read(fubaProvider.notifier).state = data.fuba;
 
       if (data.generators.isNotEmpty) {
         final loadedGenerators = List<int>.from(data.generators);

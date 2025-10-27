@@ -112,7 +112,9 @@ class _HomePageState extends ConsumerState<HomePage>
 
           BigDecimal totalProduction = autoProduction;
 
-          if (autoClickerRate > 0) {
+          if (autoClickerRate > 0 && 
+              autoClickerRate.isFinite && 
+              !autoClickerRate.isNaN) {
             final clickMultiplier =
                 ref.read(upgradeNotifierProvider).getClickMultiplier();
             final achievementMultiplier = ref.watch(
@@ -128,13 +130,17 @@ class _HomePageState extends ConsumerState<HomePage>
                 rebirthMultiplier *
                 oneTimeMultiplier;
 
-            final autoClickValue =
-                BigDecimal.parse(autoClickerRate.toString()) *
-                    totalClickMultiplier;
-            totalProduction += autoClickValue;
+            if (totalClickMultiplier.toDouble().isFinite) {
+              final autoClickValue =
+                  BigDecimal.parse(autoClickerRate.toString()) *
+                      totalClickMultiplier;
+              totalProduction += autoClickValue;
 
-            // Contar cliques automáticos para conquistas
-            _processAutoClicks(autoClickerRate, autoClickValue.toDouble());
+              final autoClickValueDouble = autoClickValue.toDouble();
+              if (autoClickValueDouble.isFinite && !autoClickValueDouble.isNaN) {
+                _processAutoClicks(autoClickerRate, autoClickValueDouble);
+              }
+            }
           }
 
           if (totalProduction.compareTo(BigDecimal.zero) > 0) {
@@ -546,30 +552,54 @@ class _HomePageState extends ConsumerState<HomePage>
 
   /// Processa cliques automáticos para conquistas
   void _processAutoClicks(double clickRate, double totalValue) {
-    // Incrementar contador total de cliques
-    ref
-        .read(achievementNotifierProvider)
-        .incrementStat('total_clicks', clickRate, context);
+    if (!clickRate.isFinite || clickRate.isNaN || clickRate < 0) {
+      return;
+    }
 
-    // Calcular velocidade de cliques automáticos (cliques por segundo)
-    final clicksPerSecond = clickRate /
-        (GameConstants.autoProductionInterval.inMilliseconds / 1000);
-    ref
-        .read(achievementNotifierProvider)
-        .updateClickSpeed(clicksPerSecond, context);
+    if (!totalValue.isFinite || totalValue.isNaN) {
+      return;
+    }
 
-    // Atualizar sequência de cliques (auto clicks mantêm a sequência)
-    _currentStreak += clickRate.toInt();
-    _lastStreakTime = DateTime.now(); // Atualizar tempo da sequência
-    ref
-        .read(achievementNotifierProvider)
-        .updateClickStreak(_currentStreak.toDouble(), context);
+    final safeClickRate = clickRate.isInfinite || clickRate.isNaN 
+        ? 0.0 
+        : clickRate;
 
-    // Atualizar eficiência (fubá por clique)
-    final fubaPerClick = totalValue / clickRate;
+    final safeTotalValue = totalValue.isInfinite || totalValue.isNaN 
+        ? 0.0 
+        : totalValue;
+
     ref
         .read(achievementNotifierProvider)
-        .updateFubaPerClick(fubaPerClick, context);
+        .incrementStat('total_clicks', safeClickRate, context);
+
+    if (GameConstants.autoProductionInterval.inMilliseconds > 0) {
+      final clicksPerSecond = safeClickRate /
+          (GameConstants.autoProductionInterval.inMilliseconds / 1000);
+      if (clicksPerSecond.isFinite && !clicksPerSecond.isNaN) {
+        ref
+            .read(achievementNotifierProvider)
+            .updateClickSpeed(clicksPerSecond, context);
+      }
+    }
+
+    final safeIntClickRate = safeClickRate > 0 ? safeClickRate.clamp(0, 1e6).toInt() : 0;
+    _currentStreak += safeIntClickRate;
+    _lastStreakTime = DateTime.now();
+    
+    if (_currentStreak.isFinite && !_currentStreak.isNaN) {
+      ref
+          .read(achievementNotifierProvider)
+          .updateClickStreak(_currentStreak.toDouble(), context);
+    }
+
+    if (safeClickRate > 0 && safeClickRate.isFinite) {
+      final fubaPerClick = safeTotalValue / safeClickRate;
+      if (fubaPerClick.isFinite && !fubaPerClick.isNaN) {
+        ref
+            .read(achievementNotifierProvider)
+            .updateFubaPerClick(fubaPerClick, context);
+      }
+    }
   }
 
   Widget _buildDetailedMultipliers(WidgetRef ref) {

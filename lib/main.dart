@@ -175,81 +175,78 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
         _isLoading = false;
       });
 
-      if (kDebugMode || !kIsWeb) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          showDialog(
-            context: kGlobalNavigationKey.currentContext!,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              backgroundColor: Colors.black.withAlpha(240),
-              title: const Text(
-                '❌ Erro ao Carregar o Jogo',
-                style:
-                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Houve um erro ao carregar os dados do jogo.',
-                      style: TextStyle(color: Colors.white70),
+      Future.delayed(const Duration(milliseconds: 500), () {
+        showDialog(
+          context: kGlobalNavigationKey.currentContext!,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.black.withAlpha(240),
+            title: const Text(
+              '❌ Erro ao Carregar o Jogo',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Houve um erro ao carregar os dados do jogo.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    error.toString(),
+                    style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 12,
+                      fontFamily: 'monospace',
                     ),
+                  ),
+                  if (kDebugMode) ...[
                     const SizedBox(height: 16),
-                    Text(
-                      error.toString(),
+                    const Text(
+                      'Stack Trace:',
+                      style: TextStyle(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SelectableText(
+                      stackTrace.toString(),
                       style: const TextStyle(
                         color: Colors.white54,
-                        fontSize: 12,
+                        fontSize: 10,
                         fontFamily: 'monospace',
                       ),
                     ),
-                    if (kDebugMode) ...[
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Stack Trace:',
-                        style: TextStyle(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SelectableText(
-                        stackTrace.toString(),
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 10,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isLoading = true;
-                    });
-                    _loadGameData();
-                  },
-                  child: const Text('Tentar Novamente'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Continuar Mesmo Assim'),
-                ),
-              ],
             ),
-          );
-        });
-      }
+            actions: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  _loadGameData();
+                },
+                child: const Text('Tentar Novamente'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Continuar Mesmo Assim'),
+              ),
+            ],
+          ),
+        );
+      });
     }
   }
 

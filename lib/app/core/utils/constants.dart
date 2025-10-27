@@ -180,13 +180,13 @@ class GameConstants {
 
   /// Formata números grandes para melhor legibilidade
   static String formatNumber(BigDecimal number) {
-    // Handle special cases: zero, negative, or extremely small numbers
-    if (number.compareTo(BigDecimal.zero) == 0) {
-      return '0.0';
-    }
+    try {
+      if (number.compareTo(BigDecimal.zero) == 0) {
+        return '0.0';
+      }
 
-    bool isNegative = number.compareTo(BigDecimal.zero) < 0;
-    BigDecimal absNumber = isNegative ? (-number) : number;
+      bool isNegative = number.compareTo(BigDecimal.zero) < 0;
+      BigDecimal absNumber = isNegative ? (-number) : number;
 
     // Define suffixes for thousands, millions, billions, etc.
     const List<String> baseSuffixes = [
@@ -351,7 +351,11 @@ class GameConstants {
     }
 
     if (exponent < 3) {
-      return '${isNegative ? '-' : ''}${absNumber.toDouble().toStringAsFixed(1)}';
+      final doubleValue = absNumber.toDouble();
+      if (doubleValue.isInfinite || doubleValue.isNaN) {
+        return 'Fubinity';
+      }
+      return '${isNegative ? '-' : ''}${doubleValue.toStringAsFixed(1)}';
     }
 
     int magnitude = (exponent / 3).floor();
@@ -363,9 +367,17 @@ class GameConstants {
     BigDecimal result = absNumber.divide(divisor,
         scale: 10, roundingMode: RoundingMode.HALF_UP);
 
-    String formattedResult = result.toDouble().toStringAsFixed(1);
+    final doubleValue = result.toDouble();
+    if (doubleValue.isInfinite || doubleValue.isNaN) {
+      return 'Fubinity';
+    }
+
+    String formattedResult = doubleValue.toStringAsFixed(1);
 
     return '${isNegative ? '-' : ''}$formattedResult${baseSuffixes[magnitude]}';
+    } catch (e) {
+      return 'Fubinity';
+    }
   }
 }
 

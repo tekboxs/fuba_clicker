@@ -287,11 +287,18 @@ class _AchievementPopupState extends State<AchievementPopup>
 
     switch (reward.type) {
       case AchievementRewardType.multiplier:
-        text = 'Multiplicador x${reward.value.toStringAsFixed(2)}';
+        if (reward.value.isFinite && !reward.value.isNaN) {
+          text = 'Multiplicador x${reward.value.toStringAsFixed(2)}';
+        } else {
+          text = 'Multiplicador x0.00';
+        }
         color = Colors.orange;
         break;
       case AchievementRewardType.tokens:
-        text = '${reward.value.toInt()} Tokens Celestiais 💎';
+        final value = reward.value.isFinite && !reward.value.isNaN 
+            ? reward.value.clamp(0, 1e6).toInt() 
+            : 0;
+        text = '$value Tokens Celestiais 💎';
         color = Colors.cyan;
         break;
       case AchievementRewardType.unlockSecret:

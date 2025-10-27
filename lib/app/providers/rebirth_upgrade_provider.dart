@@ -99,7 +99,11 @@ class UpgradeNotifier {
   }
 
   int getAccessoryCapacity() {
-    return getUpgradeEffect(UpgradeType.accessoryCapacity).toInt();
+    final effect = getUpgradeEffect(UpgradeType.accessoryCapacity);
+    if (effect.isInfinite || effect.isNaN) {
+      return 0;
+    }
+    return effect.clamp(0, 1e6).toInt();
   }
 
   bool shouldKeepItems() {

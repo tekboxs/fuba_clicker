@@ -229,11 +229,18 @@ class AchievementsPage extends ConsumerWidget {
 
     switch (reward.type) {
       case AchievementRewardType.multiplier:
-        text = 'x${reward.value.toStringAsFixed(2)}';
+        if (reward.value.isFinite && !reward.value.isNaN) {
+          text = 'x${reward.value.toStringAsFixed(2)}';
+        } else {
+          text = 'x0.00';
+        }
         color = Colors.orange;
         break;
       case AchievementRewardType.tokens:
-        text = '+${reward.value.toInt()} 💎';
+        final value = reward.value.isFinite && !reward.value.isNaN 
+            ? reward.value.clamp(0, 1e6).toInt() 
+            : 0;
+        text = '+$value 💎';
         color = Colors.cyan;
         break;
       case AchievementRewardType.unlockSecret:

@@ -544,8 +544,14 @@ class RebirthPage extends ConsumerWidget {
     int totalTokenReward = 0;
     double totalMultiplierGain = 0;
     for (int i = 0; i < count; i++) {
-      totalTokenReward += tier.getTokenReward(currentCount + i).toInt();
-      totalMultiplierGain += tier.getMultiplierGain(currentCount + i);
+      final reward = tier.getTokenReward(currentCount + i);
+      if (reward.isFinite && !reward.isNaN && reward >= 0) {
+        totalTokenReward += reward.clamp(0, 1e6).toInt();
+      }
+      final multiplier = tier.getMultiplierGain(currentCount + i);
+      if (multiplier.isFinite && !multiplier.isNaN) {
+        totalMultiplierGain += multiplier;
+      }
     }
 
     showDialog(
