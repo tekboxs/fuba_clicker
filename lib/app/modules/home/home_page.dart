@@ -61,10 +61,10 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void initState() {
     super.initState();
-    // _initializeControllers();
-    // _startAutoProduction();
-    // _initializeAudio();
-    // _startPlayTimeTracking();
+    _initializeControllers();
+    _startAutoProduction();
+    _initializeAudio();
+    _startPlayTimeTracking();
   }
 
   /// Inicializa o áudio do jogo
@@ -165,18 +165,106 @@ class _HomePageState extends ConsumerState<HomePage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            ParallaxBackground(parallaxController: _parallaxController),
-            _buildMainContent(),
-            _buildTopRightButtons(),
-            _buildTopLeftButtons(),
-          ],
-        ),
-      ),
-      floatingActionButton: _buildSupporterButton(),
+    return Builder(
+      builder: (context) {
+        try {
+          return Scaffold(
+            body: SafeArea(
+              child: Stack(
+                children: [
+                  ParallaxBackground(parallaxController: _parallaxController),
+                  _buildMainContent(),
+                  _buildTopRightButtons(),
+                  _buildTopLeftButtons(),
+                ],
+              ),
+            ),
+            floatingActionButton: _buildSupporterButton(),
+          );
+        } catch (error, stackTrace) {
+          if (kDebugMode) {
+            print('Erro na HomePage: $error\n$stackTrace');
+          }
+          
+          return Scaffold(
+            backgroundColor: Colors.black,
+            body: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        '❌',
+                        style: TextStyle(fontSize: 80),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Erro no Jogo',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        error.toString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      if (kDebugMode) ...[
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Stack Trace:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SelectableText(
+                          stackTrace.toString(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white54,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 32),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (context) => const HomePage(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Recarregar Jogo'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 

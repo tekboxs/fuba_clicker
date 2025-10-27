@@ -168,9 +168,88 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
       });
     } catch (error, stackTrace) {
       await Sentry.captureException(error, stackTrace: stackTrace);
+
+      print('Erro ao carregar dados: $error\n$stackTrace');
+
       setState(() {
         _isLoading = false;
       });
+
+      if (kDebugMode || !kIsWeb) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          showDialog(
+            context: kGlobalNavigationKey.currentContext!,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              backgroundColor: Colors.black.withAlpha(240),
+              title: const Text(
+                '❌ Erro ao Carregar o Jogo',
+                style:
+                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Houve um erro ao carregar os dados do jogo.',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      error.toString(),
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Stack Trace:',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SelectableText(
+                        stackTrace.toString(),
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isLoading = true;
+                    });
+                    _loadGameData();
+                  },
+                  child: const Text('Tentar Novamente'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Continuar Mesmo Assim'),
+                ),
+              ],
+            ),
+          );
+        });
+      }
     }
   }
 
@@ -217,6 +296,88 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
         );
       });
     }
+
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      final navigatorKey = kGlobalNavigationKey;
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    '❌',
+                    style: TextStyle(fontSize: 80),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Ops! Algo deu errado',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    details.exception.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  if (kDebugMode) ...[
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Stack Trace:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SelectableText(
+                      details.stack.toString(),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white54,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      if (navigatorKey.currentState != null) {
+                        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+                          '/',
+                          (route) => false,
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Tentar Novamente'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    };
 
     return MaterialApp(
       navigatorKey: kGlobalNavigationKey,
