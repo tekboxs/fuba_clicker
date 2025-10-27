@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/models/ranking_entry.dart';
 import 'package:fuba_clicker/app/modules/ranking/utils/ranking_utils.dart';
 
@@ -104,8 +105,7 @@ class RankingCardCompact extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      RankingUtils.formatFuba(
-                          RankingUtils.calculateMockFuba(entry)),
+                      GameConstants.formatNumber(entry.fuba),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

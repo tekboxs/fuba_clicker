@@ -133,6 +133,30 @@ class RebirthNotifier {
     }
   }
 
+  void addDebugRebirth(RebirthTier tier, int amount) {
+    final currentData = ref.read(rebirthDataProvider);
+
+    switch (tier) {
+      case RebirthTier.rebirth:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+          rebirthCount: currentData.rebirthCount + amount,
+        );
+        break;
+      case RebirthTier.ascension:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+          ascensionCount: currentData.ascensionCount + amount,
+        );
+        break;
+      case RebirthTier.transcendence:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+          transcendenceCount: currentData.transcendenceCount + amount,
+        );
+        break;
+    }
+
+    ref.read(saveNotifierProvider.notifier).saveImmediate();
+  }
+
 
   void performMultipleRebirth(RebirthTier tier, int count) {
     if (count <= 0) return;

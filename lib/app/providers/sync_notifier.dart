@@ -1,17 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SyncNotifier extends StateNotifier<bool> {
-  SyncNotifier() : super(false);
+enum SyncConflictType {
+  none,
+  needsConfirmation,
+}
+
+class SyncNotifier extends StateNotifier<SyncConflictType> {
+  SyncNotifier() : super(SyncConflictType.none);
 
   void notifyDataLoaded() {
-    state = true;
+    state = SyncConflictType.none;
+  }
+
+  void notifyConflict() {
+    state = SyncConflictType.needsConfirmation;
   }
 
   void reset() {
-    state = false;
+    state = SyncConflictType.none;
   }
 }
 
-final syncNotifierProvider = StateNotifierProvider<SyncNotifier, bool>((ref) {
+final syncNotifierProvider = StateNotifierProvider<SyncNotifier, SyncConflictType>((ref) {
   return SyncNotifier();
 });

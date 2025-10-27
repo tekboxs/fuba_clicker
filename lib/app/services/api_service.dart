@@ -29,7 +29,6 @@ class ApiService {
       },
     ));
 
-
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final jwt = await TokenService().readMethod('jwt');
@@ -45,16 +44,20 @@ class ApiService {
         handler.next(options);
       },
       onResponse: (response, handler) async {
-        final newToken = response.headers.value('authorization') ?? 
-                        response.headers.value('x-new-token');
-        
+        final headersLower = <String, String>{
+          for (final entry in response.headers.map.entries)
+            entry.key.toLowerCase(): entry.value.first,
+        };
+        final newToken = headersLower['authorization'] ??
+            response.headers.value('x-new-token');
+
         if (newToken != null && newToken.isNotEmpty) {
           final token = newToken.replaceFirst('Bearer ', '').trim();
           await TokenService().writeMethod('jwt', token);
           _jwt = token;
           debugPrint('[]>> Novo JWT salvo automaticamente');
         }
-        
+
         handler.next(response);
       },
       onError: (error, handler) {

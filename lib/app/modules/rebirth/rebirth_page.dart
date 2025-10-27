@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:big_decimal/big_decimal.dart';
@@ -7,7 +8,6 @@ import 'package:fuba_clicker/app/providers/game_providers.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/core/utils/difficulty_barriers.dart';
 import 'package:fuba_clicker/app/models/fuba_generator.dart';
-
 
 class RebirthPage extends ConsumerWidget {
   const RebirthPage({super.key});
@@ -48,6 +48,18 @@ class RebirthPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Rebirth'),
         backgroundColor: Colors.black.withAlpha(200),
+        actions: kDebugMode
+            ? [
+                IconButton(
+                  icon: const Icon(
+                    Icons.bug_report,
+                    color: Colors.white,
+                  ),
+                  tooltip: 'Debug Tools',
+                  onPressed: () => _showDebugDialog(context, ref),
+                ),
+              ]
+            : null,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -179,12 +191,13 @@ class RebirthPage extends ConsumerWidget {
 
     final isUnlocked = _isRebirthTierUnlocked(tier, fuba, generatorsOwned);
     double progress;
-    
+
     // Otimização: usa SuffixNumber para comparações eficientes com números muito grandes
     if (requirement > 1e50) {
       // Para requisitos astronômicos, usa comparação de SuffixNumber
       final fubaSuffix = SuffixNumber.fromBigDecimal(fuba);
-      final requirementSuffix = SuffixNumber.fromBigDecimal(BigDecimal.parse(requirement.toString()));
+      final requirementSuffix =
+          SuffixNumber.fromBigDecimal(BigDecimal.parse(requirement.toString()));
       progress = fubaSuffix.isGreaterOrEqual(requirementSuffix) ? 1.0 : 0.0;
     } else {
       try {
@@ -199,7 +212,8 @@ class RebirthPage extends ConsumerWidget {
       } catch (e) {
         // Se houver erro na divisão, usa comparação de SuffixNumber
         final fubaSuffix = SuffixNumber.fromBigDecimal(fuba);
-        final requirementSuffix = SuffixNumber.fromBigDecimal(BigDecimal.parse(requirement.toString()));
+        final requirementSuffix = SuffixNumber.fromBigDecimal(
+            BigDecimal.parse(requirement.toString()));
         progress = fubaSuffix.isGreaterOrEqual(requirementSuffix) ? 1.0 : 0.0;
       }
     }
@@ -211,14 +225,14 @@ class RebirthPage extends ConsumerWidget {
       color: isLocked
           ? Colors.grey.shade800.withAlpha(150)
           : (canRebirth
-                ? _getTierColor(tier).withAlpha(100)
-                : Colors.grey.shade900.withAlpha(150)),
+              ? _getTierColor(tier).withAlpha(100)
+              : Colors.grey.shade900.withAlpha(150)),
       child: InkWell(
         onTap: isLocked
             ? null
             : (canRebirth
-                  ? () => _showRebirthConfirmation(context, ref, tier, 1)
-                  : null),
+                ? () => _showRebirthConfirmation(context, ref, tier, 1)
+                : null),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -238,7 +252,8 @@ class RebirthPage extends ConsumerWidget {
                             color: Colors.black.withAlpha(150),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Icon(Icons.lock, color: Colors.grey, size: 20),
+                          child: const Icon(Icons.lock,
+                              color: Colors.grey, size: 20),
                         ),
                     ],
                   ),
@@ -607,6 +622,127 @@ class RebirthPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDebugDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Consumer(
+        builder: (context, ref, child) => AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          title: const Row(
+            children: [
+              Icon(Icons.bug_report, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Debug Tools'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'ADICIONAR REBIRTHS',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildDebugButton(
+                dialogContext,
+                ref,
+                'Rebirth',
+                RebirthTier.rebirth,
+              ),
+              const SizedBox(height: 8),
+              _buildDebugButton(
+                dialogContext,
+                ref,
+                'Ascensão',
+                RebirthTier.ascension,
+              ),
+              const SizedBox(height: 8),
+              _buildDebugButton(
+                dialogContext,
+                ref,
+                'Transcendência',
+                RebirthTier.transcendence,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Fechar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDebugButton(
+    BuildContext context,
+    WidgetRef ref,
+    String label,
+    RebirthTier tier,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.white70)),
+        Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                ref.read(rebirthNotifierProvider).addDebugRebirth(tier, 1);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('+1 $label adicionado'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add_circle_outline),
+              color: Colors.green,
+              tooltip: 'Adicionar 1',
+            ),
+            IconButton(
+              onPressed: () {
+                ref.read(rebirthNotifierProvider).addDebugRebirth(tier, 10);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('+10 $label adicionados'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add_circle),
+              color: Colors.green,
+              tooltip: 'Adicionar 10',
+            ),
+            IconButton(
+              onPressed: () {
+                ref.read(rebirthNotifierProvider).addDebugRebirth(tier, 100);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('+100 $label adicionados'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add_circle_rounded),
+              color: Colors.green,
+              tooltip: 'Adicionar 100',
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

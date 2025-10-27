@@ -11,15 +11,17 @@ import 'app/services/save_service.dart';
 import 'app/services/sync_service.dart';
 import 'app/modules/home/home_page.dart';
 import 'app/modules/account/components/welcome_popup.dart';
+import 'app/global_widgets/sync_conflict_dialog.dart';
+import 'app/providers/sync_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     Sentry.captureException(details.exception, stackTrace: details.stack);
   };
-  
+
   await SentryFlutter.init(
     (options) {
       options.dsn =
@@ -174,7 +176,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
   Future<void> _requestAudioPermission() async {
     if (kIsWeb) return;
-    
+
     try {
       final status = await Permission.audio.status;
       if (status.isDenied) {
@@ -196,6 +198,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
     });
 
     final authState = ref.watch(authStateProvider);
+    final syncConflict = ref.watch(syncNotifierProvider);
 
     if (authState.isAuthenticated && _showWelcomePopup) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -205,7 +208,18 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
       });
     }
 
+    if (syncConflict == SyncConflictType.needsConfirmation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const SyncConflictDialog(),
+        );
+      });
+    }
+
     return MaterialApp(
+      navigatorKey: kGlobalNavigationKey,
       title: 'Fuba Clicker',
       home: _isLoading ? _buildLoadingScreen() : const HomePage(),
       theme: ThemeData(
@@ -238,3 +252,5 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
     );
   }
 }
+
+final kGlobalNavigationKey = GlobalKey<NavigatorState>();

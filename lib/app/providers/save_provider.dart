@@ -32,8 +32,11 @@ class SaveNotifier extends StateNotifier<bool> {
   }
 
   void _listenToSyncNotifier() {
-    ref.listen<bool>(syncNotifierProvider, (previous, next) {
-      if (next) {
+    ref.listen<SyncConflictType>(syncNotifierProvider, (previous, next) {
+      if (next == SyncConflictType.needsConfirmation) {
+        return;
+      }
+      if (previous == SyncConflictType.needsConfirmation && next == SyncConflictType.none) {
         loadGame();
         ref.read(syncNotifierProvider.notifier).reset();
       }
@@ -66,7 +69,14 @@ class SaveNotifier extends StateNotifier<bool> {
       final isAuthenticated = ref.read(isAuthenticatedProvider);
       if (isAuthenticated) {
         try {
-          await ref.read(syncServiceProvider.notifier).syncToCloud();
+          final success = await ref.read(syncServiceProvider.notifier).syncToCloud();
+          
+          if (!success) {
+            final hasConflict = ref.read(syncServiceProvider.notifier).hasConflict();
+            if (hasConflict) {
+              ref.read(syncNotifierProvider.notifier).notifyConflict();
+            }
+          }
         } catch (e) {
           print('Erro ao sincronizar para nuvem: $e');
         }
