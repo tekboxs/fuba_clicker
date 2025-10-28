@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
 import 'package:fuba_clicker/app/models/fuba_generator.dart';
 import '../services/save_service.dart';
 import '../services/sync_service.dart';
@@ -72,8 +71,8 @@ class SaveNotifier extends StateNotifier<bool> {
           final success = await ref.read(syncServiceProvider.notifier).syncToCloud();
           
           if (!success) {
-            final hasConflict = ref.read(syncServiceProvider.notifier).hasConflict();
-            if (hasConflict) {
+            final cloudSaveData = ref.read(syncServiceProvider.notifier).getCloudSaveData();
+            if (cloudSaveData != null && !cloudSaveData.isEmpty) {
               ref.read(syncNotifierProvider.notifier).notifyConflict();
             }
           }

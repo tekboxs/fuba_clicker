@@ -9,21 +9,16 @@ class SyncConflictDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final syncService = ref.read(syncServiceProvider.notifier);
-    final localSave = syncService.getLocalSaveData();
-    final cloudSave = syncService.getCloudSaveData();
+    final cloudSaveData = syncService.getCloudSaveData();
 
-    if (localSave == null || cloudSave == null) {
+    if (cloudSaveData == null || cloudSaveData.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final localRebirths = localSave.rebirthData.rebirthCount +
-        localSave.rebirthData.ascensionCount +
-        localSave.rebirthData.transcendenceCount;
-
-    final cloudRebirths =
-        (cloudSave.rebirthData?['rebirthCount'] as int? ?? 0) +
-            (cloudSave.rebirthData?['ascensionCount'] as int? ?? 0) +
-            (cloudSave.rebirthData?['transcendenceCount'] as int? ?? 0);
+    final cloudSave = cloudSaveData.userData;
+    final cloudRebirths = (cloudSave.rebirthData?['rebirthCount'] as int? ?? 0) +
+        (cloudSave.rebirthData?['ascensionCount'] as int? ?? 0) +
+        (cloudSave.rebirthData?['transcendenceCount'] as int? ?? 0);
 
     return AlertDialog(
       title: const Text('Conflito de Sincronização'),
@@ -42,36 +37,7 @@ class SyncConflictDialog extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.phone_android, color: Colors.red, size: 16),
-                      SizedBox(width: 8),
-                      Text(
-                        'Save Local',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Rebirths: $localRebirths'),
-                  Text('Fuba: ${localSave.fuba.toString()}'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -93,6 +59,10 @@ class SyncConflictDialog extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text('Rebirths: $cloudRebirths'),
                   Text('Fuba: ${cloudSave.fuba}'),
+                  Text(
+                    'Último sync: ${cloudSaveData.lastSync.toString().substring(0, 19)}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -102,23 +72,22 @@ class SyncConflictDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () {
-            syncService.clearConflict();
             Navigator.of(context).pop();
           },
           child: const Text('Cancelar'),
         ),
         TextButton(
           onPressed: () async {
-            await syncService.forceUploadLocalSave();
+            await syncService.forceSync();
             if (context.mounted) {
               Navigator.of(context).pop();
             }
           },
-          child: const Text('Usar Local'),
+          child: const Text('Forçar Upload'),
         ),
         ElevatedButton(
           onPressed: () async {
-            await syncService.forceDownloadCloudSave();
+            await syncService.downloadCloudToLocal();
             ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
             if (context.mounted) {
               Navigator.of(context).pop();

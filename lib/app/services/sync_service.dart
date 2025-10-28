@@ -1,6 +1,9 @@
 import 'dart:async';
+
 import 'package:big_decimal/big_decimal.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:fuba_clicker/app/core/utils/navigator.dart';
 import 'package:fuba_clicker/app/services/save_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,14 +19,24 @@ import '../providers/achievement_provider.dart';
 import '../providers/rebirth_upgrade_provider.dart';
 import '../core/utils/save_validation.dart';
 
+class CloudSaveData {
+  final UserData userData;
+  final DateTime lastSync;
+
+  CloudSaveData({
+    required this.userData,
+    required this.lastSync,
+  });
+
+  bool get isEmpty => userData.isEmpty;
+}
+
 class SyncService extends StateNotifier<bool> {
   final Ref _ref;
   final AuthService _authService = AuthService();
   Timer? _syncTimer;
   DateTime? _lastSyncTime;
-  bool _hasConflict = false;
-  GameSaveData? _conflictingLocalSave;
-  UserData? _conflictingCloudSave;
+  CloudSaveData? _cloudSaveData;
 
   SyncService(this._ref) : super(false);
 
@@ -51,39 +64,57 @@ class SyncService extends StateNotifier<bool> {
     return await _authService.getCurrentUser();
   }
 
-  Future<bool> syncToCloud({bool forceUpload = false}) async {
+  Future<bool> syncToCloud({bool forceSync = false}) async {
     if (!await isAuthenticated()) return false;
 
     try {
-      final localSaveData = await _getCurrentGameData();
+      final localData = await _getCurrentGameData();
 
-      if (!forceUpload) {
-        try {
-          final cloudUserData = await _authService.fetchUserData();
-          final isSmaller =
-              SaveValidation.isLocalSaveSmaller(localSaveData, cloudUserData);
+      if (!forceSync && _cloudSaveData != null) {
+        final isLocalSmaller = SaveValidation.isLocalSaveSmaller(
+          localData,
+          _cloudSaveData!.userData,
+        );
 
-          if (isSmaller) {
-            _hasConflict = true;
-            _conflictingLocalSave = localSaveData;
-            _conflictingCloudSave = cloudUserData;
-            // Most basic dialog example using Flutter:
-
-            print(
-                'Aviso: Save local tem menos rebirths que o da nuvem. Conflito detectado.');
+        if (isLocalSmaller) {
+          final result = await Future(() async => await showDialog(
+                    context: kGlobalKeyNavigator.currentContext!,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Erro ao sincronizar para nuvem'),
+                      content: const Text(
+                          'O save local é menor que o save da nuvem'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                          child: const Text('Cancelar'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                          },
+                          child: const Text('Forçar Upload'),
+                        ),
+                      ],
+                    ),
+                  )) ??
+              false;
+          if (!result) {
             return false;
           }
-        } catch (e) {
-          print('Erro ao verificar save da nuvem: $e');
         }
       }
 
-      _hasConflict = false;
-      _conflictingLocalSave = null;
-      _conflictingCloudSave = null;
-
-      await _authService.updateUserData(localSaveData.toJson());
+      await _authService.updateUserData(localData.toJson());
       _lastSyncTime = DateTime.now();
+
+      final updatedUserData = await _authService.fetchUserData();
+      _cloudSaveData = CloudSaveData(
+        userData: updatedUserData,
+        lastSync: _lastSyncTime!,
+      );
+
       return true;
     } catch (e) {
       print('Erro ao sincronizar para nuvem: $e');
@@ -91,19 +122,81 @@ class SyncService extends StateNotifier<bool> {
     }
   }
 
-  Future<bool> loadFromCloud() async {
+  Future<bool> syncFromCloud() async {
     if (!await isAuthenticated()) return false;
 
     try {
       final userData = await _authService.fetchUserData();
-      if (userData.fuba.isNotEmpty) {
-        _applyCloudDataToLocal(userData);
-        _lastSyncTime = DateTime.now();
-        return true;
+      _lastSyncTime = DateTime.now();
+
+      _cloudSaveData = CloudSaveData(
+        userData: userData,
+        lastSync: _lastSyncTime!,
+      );
+
+      if (!userData.isEmpty) {
+        await _applyCloudDataToLocal(userData);
+        _ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
       }
-      return false;
+
+      return true;
     } catch (e) {
       print('Erro ao carregar da nuvem: $e');
+      return false;
+    }
+  }
+
+  Future<void> forceSync() async {
+    if (!await isAuthenticated()) return;
+
+    await syncToCloud(forceSync: true);
+  }
+
+  CloudSaveData? getCloudSaveData() {
+    return _cloudSaveData;
+  }
+
+  Future<bool> uploadLocalToCloud() async {
+    if (!await isAuthenticated()) return false;
+
+    try {
+      final localData = await _getCurrentGameData();
+      await _authService.updateUserData(localData.toJson());
+      _lastSyncTime = DateTime.now();
+
+      final updatedUserData = await _authService.fetchUserData();
+      _cloudSaveData = CloudSaveData(
+        userData: updatedUserData,
+        lastSync: _lastSyncTime!,
+      );
+
+      return true;
+    } catch (e) {
+      print('Erro ao fazer upload para nuvem: $e');
+      return false;
+    }
+  }
+
+  Future<bool> downloadCloudToLocal() async {
+    if (!await isAuthenticated()) return false;
+
+    try {
+      final userData = await _authService.fetchUserData();
+      _lastSyncTime = DateTime.now();
+
+      _cloudSaveData = CloudSaveData(
+        userData: userData,
+        lastSync: _lastSyncTime!,
+      );
+
+      if (!userData.isEmpty) {
+        await _applyCloudDataToLocal(userData);
+        _ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
+      }
+
+      return true;
+    } catch (e) {
+      print('Erro ao fazer download da nuvem: $e');
       return false;
     }
   }
@@ -136,49 +229,28 @@ class SyncService extends StateNotifier<bool> {
   }
 
   Future<void> _applyCloudDataToLocal(UserData userData) async {
-    if (userData.fuba.isNotEmpty) {
-      try {
-        final fuba = BigDecimal.parse(userData.fuba);
-        await SaveService().saveGame(
-          fuba: fuba,
-          generators: userData.generators ?? [],
-          inventory: userData.inventory ?? {},
-          equipped: userData.equipped ?? [],
-          rebirthData: RebirthData.fromJson(userData.rebirthData ?? {}),
-          achievements: userData.achievements ?? [],
-          achievementStats: userData.achievementStats ?? {},
-          upgrades: userData.upgrades ?? {},
-        );
-        _lastSyncTime = DateTime.now();
-
-        _ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
-      } catch (e) {
-        print('Erro ao aplicar dados da nuvem: $e');
-      }
-    }
-  }
-
-  Future<Map<String, dynamic>?> getCloudSaveDataJson() async {
-    if (!await isAuthenticated()) return null;
-
     try {
-      final userData = await _authService.getCurrentUser();
-      if (userData?.fuba.isNotEmpty == true) {
-        return {
-          'fuba': userData!.fuba,
-          'generators': userData.generators ?? [],
-          'inventory': userData.inventory ?? {},
-          'equipped': userData.equipped ?? [],
-          'rebirthData': userData.rebirthData ?? {},
-          'achievements': userData.achievements ?? [],
-          'achievementStats': userData.achievementStats ?? {},
-          'upgrades': userData.upgrades ?? {},
-        };
-      }
-      return null;
+      final fuba = BigDecimal.parse(userData.fuba);
+      await SaveService().saveGame(
+        fuba: fuba,
+        generators: userData.generators ?? [],
+        inventory: userData.inventory ?? {},
+        equipped: userData.equipped ?? [],
+        rebirthData: RebirthData.fromJson(userData.rebirthData ?? {}),
+        achievements: userData.achievements ?? [],
+        achievementStats: userData.achievementStats ?? {},
+        upgrades: userData.upgrades ?? {},
+      );
+
+      _ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
     } catch (e) {
-      print('Erro ao obter dados da nuvem: $e');
-      return null;
+      showDialog(
+        context: kGlobalKeyNavigator.currentContext!,
+        builder: (context) => AlertDialog(
+          title: const Text('Erro ao aplicar dados da nuvem'),
+          content: Text(e.toString()),
+        ),
+      );
     }
   }
 
@@ -188,7 +260,7 @@ class SyncService extends StateNotifier<bool> {
 
   Future<void> syncOnAppStart() async {
     if (await isAuthenticated()) {
-      await loadFromCloud();
+      await syncFromCloud();
     }
   }
 
@@ -196,51 +268,6 @@ class SyncService extends StateNotifier<bool> {
     if (await isAuthenticated()) {
       await syncToCloud();
     }
-  }
-
-  bool hasConflict() {
-    return _hasConflict;
-  }
-
-  GameSaveData? getLocalSaveData() {
-    return _conflictingLocalSave;
-  }
-
-  UserData? getCloudSaveData() {
-    return _conflictingCloudSave;
-  }
-
-  Future<void> forceUploadLocalSave() async {
-    if (_conflictingLocalSave == null) return;
-
-    final success = await syncToCloud(forceUpload: true);
-    if (success) {
-      _hasConflict = false;
-      _conflictingLocalSave = null;
-      _conflictingCloudSave = null;
-    }
-  }
-
-  Future<void> forceDownloadCloudSave({bool ignoreValidation = false}) async {
-    if (_conflictingCloudSave == null && !ignoreValidation) return;
-
-    final toApply = _conflictingCloudSave ??
-        UserData.fromJson(
-          await getCloudSaveDataJson() ?? {},
-        );
-
-    if (!toApply.isEmpty) {
-      await _applyCloudDataToLocal(toApply);
-    }
-    _hasConflict = false;
-    _conflictingLocalSave = null;
-    _conflictingCloudSave = null;
-  }
-
-  void clearConflict() {
-    _hasConflict = false;
-    _conflictingLocalSave = null;
-    _conflictingCloudSave = null;
   }
 
   @override

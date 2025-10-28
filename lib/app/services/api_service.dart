@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
@@ -27,6 +28,9 @@ class ApiService {
       headers: {
         'Content-Type': 'application/json',
       },
+      extra: {
+        'withCredentials': kIsWeb,
+      },
     ));
 
     _dio.interceptors.add(InterceptorsWrapper(
@@ -37,6 +41,10 @@ class ApiService {
 
         if (_jwt != null) {
           options.headers['Authorization'] = 'Bearer $_jwt';
+        }
+
+        if (kIsWeb) {
+          options.extra['withCredentials'] = true;
         }
 
         debugPrint('[]>> Headers sendo enviados: ${options.headers}');
@@ -195,7 +203,7 @@ class ApiService {
       // useObfuscation: true,
     );
 
-    final authResponse = AuthResponse.fromJson(response);
+    final authResponse = AuthResponse.fromJson(jsonDecode(response['data']));
 
     if (authResponse.rt != null) {
       setRefreshToken(authResponse.rt);

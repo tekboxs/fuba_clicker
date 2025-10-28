@@ -166,29 +166,24 @@ class AccountSettings extends ConsumerWidget {
       try {
         final syncService = ref.read(syncServiceProvider.notifier);
 
-        await syncService.forceDownloadCloudSave(ignoreValidation: true);
-        ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Progresso carregado da nuvem com sucesso!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // final success =
-        //     await ref.read(authNotifierProvider.notifier).loadFromCloud();
+        final success = await syncService.downloadCloudToLocal();
 
-        // if (context.mounted) {
-        //   ScaffoldMessenger.of(context).showSnackBar(
-        //     SnackBar(
-        //       content: Text(
-        //         success
-        //             ? 'Progresso carregado da nuvem com sucesso!'
-        //             : 'Erro ao carregar da nuvem',
-        //       ),
-        //       backgroundColor: success ? Colors.green : Colors.red,
-        //     ),
-        //   );
-        // }
+        if (success) {
+          ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Progresso carregado da nuvem com sucesso!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          if (context.mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => const Text('Erro ao carregar da nuvem'),
+            );
+          }
+        }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

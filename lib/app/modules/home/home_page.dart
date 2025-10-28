@@ -112,8 +112,8 @@ class _HomePageState extends ConsumerState<HomePage>
 
           BigDecimal totalProduction = autoProduction;
 
-          if (autoClickerRate > 0 && 
-              autoClickerRate.isFinite && 
+          if (autoClickerRate > 0 &&
+              autoClickerRate.isFinite &&
               !autoClickerRate.isNaN) {
             final clickMultiplier =
                 ref.read(upgradeNotifierProvider).getClickMultiplier();
@@ -137,7 +137,8 @@ class _HomePageState extends ConsumerState<HomePage>
               totalProduction += autoClickValue;
 
               final autoClickValueDouble = autoClickValue.toDouble();
-              if (autoClickValueDouble.isFinite && !autoClickValueDouble.isNaN) {
+              if (autoClickValueDouble.isFinite &&
+                  !autoClickValueDouble.isNaN) {
                 _processAutoClicks(autoClickerRate, autoClickValueDouble);
               }
             }
@@ -185,13 +186,12 @@ class _HomePageState extends ConsumerState<HomePage>
                 ],
               ),
             ),
-            floatingActionButton: _buildSupporterButton(),
           );
         } catch (error, stackTrace) {
           if (kDebugMode) {
             print('Erro na HomePage: $error\n$stackTrace');
           }
-          
+
           return Scaffold(
             backgroundColor: Colors.black,
             body: SafeArea(
@@ -309,7 +309,17 @@ class _HomePageState extends ConsumerState<HomePage>
         ),
         _buildDetailedMultipliers(ref),
         const SizedBox(height: 4),
-        _buildCakeButton(),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            _buildCakeButton(),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: _buildSupporterButton(),
+            ),
+          ],
+        ),
         const SizedBox(height: 8),
         const Expanded(child: GeneratorSection()),
       ],
@@ -327,6 +337,7 @@ class _HomePageState extends ConsumerState<HomePage>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Spacer(),
               _buildTitle(),
               const SizedBox(height: 16),
               _buildCounter(),
@@ -339,8 +350,12 @@ class _HomePageState extends ConsumerState<HomePage>
                 ),
               ),
               _buildDetailedMultipliers(ref),
-              const SizedBox(height: 20),
+              const Spacer(),
               _buildCakeButton(),
+              const Spacer(),
+              Align(
+                  alignment: Alignment.bottomLeft,
+                  child: _buildSupporterButton()),
             ],
           ),
         ),
@@ -560,13 +575,11 @@ class _HomePageState extends ConsumerState<HomePage>
       return;
     }
 
-    final safeClickRate = clickRate.isInfinite || clickRate.isNaN 
-        ? 0.0 
-        : clickRate;
+    final safeClickRate =
+        clickRate.isInfinite || clickRate.isNaN ? 0.0 : clickRate;
 
-    final safeTotalValue = totalValue.isInfinite || totalValue.isNaN 
-        ? 0.0 
-        : totalValue;
+    final safeTotalValue =
+        totalValue.isInfinite || totalValue.isNaN ? 0.0 : totalValue;
 
     ref
         .read(achievementNotifierProvider)
@@ -582,10 +595,11 @@ class _HomePageState extends ConsumerState<HomePage>
       }
     }
 
-    final safeIntClickRate = safeClickRate > 0 ? safeClickRate.clamp(0, 1e6).toInt() : 0;
+    final safeIntClickRate =
+        safeClickRate > 0 ? safeClickRate.clamp(0, 1e6).toInt() : 0;
     _currentStreak += safeIntClickRate;
     _lastStreakTime = DateTime.now();
-    
+
     if (_currentStreak.isFinite && !_currentStreak.isNaN) {
       ref
           .read(achievementNotifierProvider)

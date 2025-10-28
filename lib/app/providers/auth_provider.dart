@@ -14,7 +14,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _initialize() async {
     await _authService.init();
     await ref.read(syncServiceProvider.notifier).init();
-    
+
     final isAuthenticated = await _authService.isAuthenticated();
     if (isAuthenticated) {
       final user = await _authService.getCurrentUser();
@@ -25,10 +25,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> login(String email, String password) async {
     try {
       state = AuthState.loading();
-      
+
       await _authService.login(email, password);
       final user = await _authService.fetchUserData();
-      
+
       state = AuthState.authenticated(user);
       return true;
     } catch (e) {
@@ -40,9 +40,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> register(String email, String username, String password) async {
     try {
       state = AuthState.loading();
-      
+
       await _authService.register(email, username, password);
-      
+
       final loginSuccess = await login(email, password);
       return loginSuccess;
     } catch (e) {
@@ -69,7 +69,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> syncToCloud() async {
     if (!state.isAuthenticated) return false;
-    
+
     try {
       await ref.read(syncServiceProvider.notifier).syncToCloud();
       return true;
@@ -80,9 +80,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> loadFromCloud() async {
     if (!state.isAuthenticated) return false;
-    
+
     try {
-      return await ref.read(syncServiceProvider.notifier).loadFromCloud();
+      return await ref
+          .read(syncServiceProvider.notifier)
+          .downloadCloudToLocal();
     } catch (e) {
       return false;
     }
@@ -133,7 +135,8 @@ class AuthState {
   }
 }
 
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+final authNotifierProvider =
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref);
 });
 
@@ -154,4 +157,3 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
 });
-

@@ -704,7 +704,7 @@ class RebirthPage extends ConsumerWidget {
             IconButton(
               onPressed: () {
                 ref.read(rebirthNotifierProvider).addDebugRebirth(tier, 1);
-                Navigator.pop(context);
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('+1 $label adicionado'),
@@ -719,7 +719,7 @@ class RebirthPage extends ConsumerWidget {
             IconButton(
               onPressed: () {
                 ref.read(rebirthNotifierProvider).addDebugRebirth(tier, 10);
-                Navigator.pop(context);
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('+10 $label adicionados'),
@@ -734,7 +734,7 @@ class RebirthPage extends ConsumerWidget {
             IconButton(
               onPressed: () {
                 ref.read(rebirthNotifierProvider).addDebugRebirth(tier, 100);
-                Navigator.pop(context);
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('+100 $label adicionados'),
