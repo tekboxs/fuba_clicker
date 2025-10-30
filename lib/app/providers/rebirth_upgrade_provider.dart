@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
+import '../core/utils/efficient_number.dart';
 import '../models/rebirth_upgrade.dart';
 import 'rebirth_provider.dart';
 import 'game_providers.dart';
@@ -79,15 +79,18 @@ class UpgradeNotifier {
     return upgrade.getEffectValue(level);
   }
 
-  BigDecimal getTotalProductionMultiplier() {
-    BigDecimal multiplier = BigDecimal.one;
-    multiplier *= BigDecimal.parse(getUpgradeEffect(UpgradeType.idleBoost).toString());
-    multiplier *= BigDecimal.parse(getUpgradeEffect(UpgradeType.productionMultiplier).toString());
+  EfficientNumber getTotalProductionMultiplier() {
+    EfficientNumber multiplier = EfficientNumber.one();
+    multiplier *= EfficientNumber.fromValues(
+        getUpgradeEffect(UpgradeType.idleBoost), 0);
+    multiplier *= EfficientNumber.fromValues(
+        getUpgradeEffect(UpgradeType.productionMultiplier), 0);
     return multiplier;
   }
 
-  BigDecimal getClickMultiplier() {
-    return BigDecimal.parse(getUpgradeEffect(UpgradeType.clickPower).toString());
+  EfficientNumber getClickMultiplier() {
+    return EfficientNumber.fromValues(
+        getUpgradeEffect(UpgradeType.clickPower), 0);
   }
 
   double getAutoClickerRate() {
@@ -115,7 +118,7 @@ final upgradeNotifierProvider = Provider<UpgradeNotifier>((ref) {
   return UpgradeNotifier(ref);
 });
 
-final upgradeProductionMultiplierProvider = Provider<BigDecimal>((ref) {
+final upgradeProductionMultiplierProvider = Provider<EfficientNumber>((ref) {
   return ref.watch(upgradeNotifierProvider).getTotalProductionMultiplier();
 });
 

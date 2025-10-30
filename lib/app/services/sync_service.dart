@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:big_decimal/big_decimal.dart';
+import '../core/utils/efficient_number.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fuba_clicker/app/core/utils/navigator.dart';
@@ -18,6 +18,7 @@ import '../providers/rebirth_provider.dart';
 import '../providers/achievement_provider.dart';
 import '../providers/rebirth_upgrade_provider.dart';
 import '../core/utils/save_validation.dart';
+import '../models/fuba_generator.dart';
 
 class CloudSaveData {
   final UserData userData;
@@ -230,16 +231,67 @@ class SyncService extends StateNotifier<bool> {
 
   Future<void> _applyCloudDataToLocal(UserData userData) async {
     try {
-      final fuba = BigDecimal.parse(userData.fuba);
+      final fuba = EfficientNumber.parse(userData.fuba);
+      _ref.read(fubaProvider.notifier).state = fuba;
+
+      final generators = List<int>.from(userData.generators ?? []);
+      while (generators.length < availableGenerators.length) {
+        generators.add(0);
+      }
+      _ref.read(generatorsProvider.notifier).state = generators;
+
+      _ref.read(inventoryProvider.notifier).state =
+          Map<String, int>.from(userData.inventory ?? {});
+      _ref.read(equippedAccessoriesProvider.notifier).state =
+          List<String>.from(userData.equipped ?? []);
+      _ref.read(rebirthDataProvider.notifier).state =
+          RebirthData.fromJson(userData.rebirthData ?? {});
+      _ref.read(unlockedAchievementsProvider.notifier).state =
+          List<String>.from(userData.achievements ?? []);
+
+      final defaultStats = <String, double>{
+        'total_clicks': 0,
+        'total_production': 0,
+        'different_generators': 0,
+        'lootboxes_opened': 0,
+        'legendary_count': 0,
+        'mythical_count': 0,
+        'equipped_count': 0,
+        'clicks_per_second': 0,
+        'max_clicks_per_second': 0,
+        'click_streak': 0,
+        'max_click_streak': 0,
+        'fuba_per_click': 0,
+        'max_fuba_per_click': 0,
+        'clicks_in_10_seconds': 0,
+        'time_since_last_click': 0,
+        'total_click_fuba': 0,
+        'all_mythical_equipped': 0,
+        'total_inventory_accessories': 0,
+        'legendary_lootbox_streak': 0,
+        'time_without_clicking': 0,
+        'max_time_without_clicking': 0,
+        'consecutive_play_time': 0,
+        'max_consecutive_play_time': 0,
+      };
+      final mergedStats = {
+        ...defaultStats,
+        ...Map<String, double>.from(userData.achievementStats ?? {}),
+      };
+      _ref.read(achievementStatsProvider.notifier).state = mergedStats;
+      _ref.read(upgradesLevelProvider.notifier).state =
+          Map<String, int>.from(userData.upgrades ?? {});
+
       await SaveService().saveGame(
         fuba: fuba,
-        generators: userData.generators ?? [],
-        inventory: userData.inventory ?? {},
-        equipped: userData.equipped ?? [],
+        generators: generators,
+        inventory: Map<String, int>.from(userData.inventory ?? {}),
+        equipped: List<String>.from(userData.equipped ?? []),
         rebirthData: RebirthData.fromJson(userData.rebirthData ?? {}),
-        achievements: userData.achievements ?? [],
-        achievementStats: userData.achievementStats ?? {},
-        upgrades: userData.upgrades ?? {},
+        achievements: List<String>.from(userData.achievements ?? []),
+        achievementStats:
+            Map<String, double>.from(userData.achievementStats ?? {}),
+        upgrades: Map<String, int>.from(userData.upgrades ?? {}),
       );
 
       _ref.read(syncNotifierProvider.notifier).notifyDataLoaded();

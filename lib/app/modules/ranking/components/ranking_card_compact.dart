@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fuba_clicker/app/theme/tokens.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/models/ranking_entry.dart';
 import 'package:fuba_clicker/app/modules/ranking/utils/ranking_utils.dart';
@@ -19,15 +20,10 @@ class RankingCardCompact extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF333333),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.level1,
       ),
       child: Row(
         children: [
@@ -35,14 +31,14 @@ class RankingCardCompact extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: Colors.grey[700],
-              borderRadius: BorderRadius.circular(8),
+              color: Theme.of(context).colorScheme.secondary,
+              borderRadius: BorderRadius.circular(AppRadii.md),
             ),
             child: Center(
               child: Text(
                 rank.toString().padLeft(2, '0'),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onSecondary,
                       fontWeight: FontWeight.bold,
                     ),
               ),
@@ -53,7 +49,7 @@ class RankingCardCompact extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.2),
@@ -63,16 +59,16 @@ class RankingCardCompact extends StatelessWidget {
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadii.md),
               child: Image.network(
                 RankingUtils.getAvatarUrl(entry.username),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Colors.grey[800],
+                    color: Theme.of(context).colorScheme.surfaceVariant,
                     child: Icon(
                       Icons.person,
-                      color: Colors.grey[400],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       size: 20,
                     ),
                   );
@@ -87,16 +83,20 @@ class RankingCardCompact extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.cake_outlined,
-                      color: Colors.white70,
-                      size: 14,
-                    ),
+                    Icon(Icons.cake_outlined,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.7),
+                        size: 14),
                     const SizedBox(width: 4),
                     Text(
                       RankingUtils.formatWalletId(entry.username),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white70,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.7),
                           ),
                     ),
                   ],
@@ -107,7 +107,7 @@ class RankingCardCompact extends StatelessWidget {
                     Text(
                       GameConstants.formatNumber(entry.fuba),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -115,7 +115,10 @@ class RankingCardCompact extends StatelessWidget {
                     Text(
                       'Fubá',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.7),
                           ),
                     ),
                   ],
@@ -137,7 +140,7 @@ class RankingCardCompact extends StatelessWidget {
                 Text(
                   '${entry.achievementCount} achievements',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                 ),
             ],

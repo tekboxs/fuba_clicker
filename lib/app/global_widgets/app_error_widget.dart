@@ -20,11 +20,15 @@ class AppErrorWidget extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
+              Icon(Icons.error_outline,
+                  color: Theme.of(context).colorScheme.error, size: 48),
               const SizedBox(height: 16),
               Text(
                 message ?? defaultMessage,
-                style: const TextStyle(color: Colors.white),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: Theme.of(context).colorScheme.onSurface),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -36,11 +40,15 @@ class AppErrorWidget extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.error_outline, color: Colors.redAccent, size: 24),
+        Icon(Icons.error_outline,
+            color: Theme.of(context).colorScheme.error, size: 24),
         const SizedBox(height: 8),
         Text(
           message ?? defaultMessage,
-          style: const TextStyle(color: Colors.white),
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurface),
           textAlign: TextAlign.center,
         ),
       ],

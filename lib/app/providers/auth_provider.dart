@@ -23,18 +23,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> login(String email, String password) async {
-    try {
-      state = AuthState.loading();
+    state = AuthState.loading();
 
-      await _authService.login(email, password);
-      final user = await _authService.fetchUserData();
+    for (int attempt = 0; attempt < 2; attempt++) {
+      try {
+        await _authService.login(email, password);
+        final user = await _authService.fetchUserData();
 
-      state = AuthState.authenticated(user);
-      return true;
-    } catch (e) {
-      state = AuthState.error(e.toString());
-      return false;
+        state = AuthState.authenticated(user);
+        return true;
+      } catch (e) {
+        if (attempt == 1) {
+          state = AuthState.error(e.toString());
+          return false;
+        }
+      }
     }
+
+    return false;
   }
 
   Future<bool> register(String email, String username, String password) async {
@@ -71,8 +77,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (!state.isAuthenticated) return false;
 
     try {
-      await ref.read(syncServiceProvider.notifier).syncToCloud();
-      return true;
+      return await ref
+          .read(syncServiceProvider.notifier)
+          .syncToCloud();
     } catch (e) {
       return false;
     }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuba_clicker/app/services/api_service.dart';
 import 'package:fuba_clicker/app/models/ranking_entry.dart';
-import 'package:fuba_clicker/app/models/rebirth_data.dart';
 import 'package:fuba_clicker/app/modules/ranking/components/ranking_card_desktop.dart';
 import 'package:fuba_clicker/app/modules/ranking/components/ranking_card_compact.dart';
 import 'package:fuba_clicker/app/modules/ranking/components/ranking_list_mobile.dart';

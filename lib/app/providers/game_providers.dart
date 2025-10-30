@@ -1,23 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
 import '../models/fuba_generator.dart';
+import '../core/utils/efficient_number.dart';
 import 'accessory_provider.dart';
 import 'rebirth_provider.dart';
 import 'rebirth_upgrade_provider.dart';
 import 'achievement_provider.dart';
 
 
-final fubaProvider = StateProvider<BigDecimal>((ref) {
-  return BigDecimal.zero;
+final fubaProvider = StateProvider<EfficientNumber>((ref) {
+  return EfficientNumber.zero();
 });
 
 final generatorsProvider = StateProvider<List<int>>((ref) {
   return List.filled(availableGenerators.length, 0);
 });
 
-final baseAutoProductionProvider = Provider<BigDecimal>((ref) {
+final baseAutoProductionProvider = Provider<EfficientNumber>((ref) {
   final generators = ref.watch(generatorsProvider);
-  BigDecimal totalProduction = BigDecimal.zero;
+  EfficientNumber totalProduction = EfficientNumber.zero();
 
   for (int i = 0; i < availableGenerators.length; i++) {
     totalProduction += availableGenerators[i].getProduction(generators[i]);
@@ -26,11 +26,11 @@ final baseAutoProductionProvider = Provider<BigDecimal>((ref) {
   return totalProduction;
 });
 
-final autoProductionProvider = Provider<BigDecimal>((ref) {
+final autoProductionProvider = Provider<EfficientNumber>((ref) {
   final baseProduction = ref.watch(baseAutoProductionProvider);
-  if (baseProduction.compareTo(BigDecimal.zero) == 0) return BigDecimal.zero;
+  if (baseProduction.mantissa == 0) return EfficientNumber.zero();
 
-  BigDecimal totalProduction = baseProduction;
+  EfficientNumber totalProduction = baseProduction;
 
   final accessoryMultiplier = ref.watch(accessoryMultiplierProvider);
   totalProduction *= accessoryMultiplier;
@@ -50,8 +50,8 @@ final autoProductionProvider = Provider<BigDecimal>((ref) {
   return totalProduction;
 });
 
-final totalMultiplierProvider = Provider<BigDecimal>((ref) {
-  BigDecimal total = BigDecimal.one;
+final totalMultiplierProvider = Provider<EfficientNumber>((ref) {
+  EfficientNumber total = EfficientNumber.one();
   total *= ref.watch(accessoryMultiplierProvider);
   total *= ref.watch(rebirthMultiplierProvider);
   total *= ref.watch(upgradeProductionMultiplierProvider);

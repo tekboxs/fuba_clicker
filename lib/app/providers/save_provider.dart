@@ -3,14 +3,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuba_clicker/app/models/fuba_generator.dart';
 import '../services/save_service.dart';
-import '../services/sync_service.dart';
 import 'game_providers.dart';
 import 'accessory_provider.dart';
 import 'rebirth_provider.dart';
 import 'achievement_provider.dart';
 import 'rebirth_upgrade_provider.dart';
 import 'visual_settings_provider.dart';
-import 'auth_provider.dart';
 import 'sync_notifier.dart';
 
 class SaveNotifier extends StateNotifier<bool> {
@@ -64,22 +62,6 @@ class SaveNotifier extends StateNotifier<bool> {
         achievementStats: achievementStats,
         upgrades: upgrades,
       );
-
-      final isAuthenticated = ref.read(isAuthenticatedProvider);
-      if (isAuthenticated) {
-        try {
-          final success = await ref.read(syncServiceProvider.notifier).syncToCloud();
-          
-          if (!success) {
-            final cloudSaveData = ref.read(syncServiceProvider.notifier).getCloudSaveData();
-            if (cloudSaveData != null && !cloudSaveData.isEmpty) {
-              ref.read(syncNotifierProvider.notifier).notifyConflict();
-            }
-          }
-        } catch (e) {
-          print('Erro ao sincronizar para nuvem: $e');
-        }
-      }
 
       await _optimizeStorageIfNeeded();
       state = false;

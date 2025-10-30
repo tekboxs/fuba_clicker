@@ -13,21 +13,28 @@ class AppLoadingDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       shadowColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
+      backgroundColor:
+          Theme.of(context).colorScheme.surface.withOpacity(0.92),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(),
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
           if (message != null) ...[
             const SizedBox(height: 16),
             Text(
               message!,
-              style: const TextStyle(color: Colors.white),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
               textAlign: TextAlign.center,
             ),
           ],

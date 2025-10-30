@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
+import '../../core/utils/efficient_number.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fuba_clicker/app/models/loot_box.dart';
 import 'package:fuba_clicker/app/models/cake_accessory.dart';
@@ -66,7 +66,7 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   bool _isLootBoxTierUnlocked(
     LootBoxTier tier,
-    BigDecimal fuba,
+    EfficientNumber fuba,
     List<int> generatorsOwned,
   ) {
     final barriers = DifficultyBarrierManager.getBarriersForCategory('lootbox');
@@ -209,17 +209,21 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     );
   }
 
-  Widget _buildLootBoxCard(LootBoxTier tier, BigDecimal fuba) {
+  Widget _buildLootBoxCard(LootBoxTier tier, EfficientNumber fuba) {
     final generatorsOwned = ref.watch(generatorsProvider);
     final isUnlocked = _isLootBoxTierUnlocked(tier, fuba, generatorsOwned);
     final tierCost = tier.getCost(fuba);
     final canAfford = isUnlocked && fuba.compareTo(tierCost) >= 0;
     final canAfford5 =
-        isUnlocked && fuba.compareTo(tierCost * BigDecimal.parse('5')) >= 0;
+        isUnlocked && fuba.compareTo(tierCost * EfficientNumber.parse('5')) >= 0;
     final canAfford10 =
-        isUnlocked && fuba.compareTo(tierCost * BigDecimal.parse('10')) >= 0;
-    final canAfford30 =
-        isUnlocked && fuba.compareTo(tierCost * BigDecimal.parse('30')) >= 0;
+        isUnlocked && fuba.compareTo(tierCost * EfficientNumber.parse('10')) >= 0;
+    EfficientNumber basePrimordial = EfficientNumber.parse('1e80');
+    bool canAfford30 = isUnlocked &&
+        fuba.compareTo(tierCost * EfficientNumber.parse('30')) >= 0;
+    if (tier == LootBoxTier.primordial && fuba.compareTo(basePrimordial) > 0) {
+      canAfford30 = true;
+    }
     final isMobile = GameConstants.isMobile(context);
 
     final barrier = _getBarrierForTier(tier);
@@ -345,8 +349,8 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   Widget _buildPurchaseButtons(
     LootBoxTier tier,
-    BigDecimal fuba,
-    BigDecimal tierCost,
+    EfficientNumber fuba,
+    EfficientNumber tierCost,
     bool canAfford,
     bool canAfford5,
     bool canAfford10,
@@ -396,8 +400,8 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   Widget _buildSinglePurchaseButton(
     LootBoxTier tier,
-    BigDecimal fuba,
-    BigDecimal tierCost,
+    EfficientNumber fuba,
+    EfficientNumber tierCost,
     bool canAfford,
     bool isMobile,
   ) {
@@ -445,14 +449,21 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   Widget _buildBulkPurchaseButton(
     LootBoxTier tier,
     int quantity,
-    BigDecimal tierCost,
+    EfficientNumber tierCost,
     bool canAfford,
     bool isMobile,
   ) {
-    final totalCost = tierCost * BigDecimal.parse(quantity.toString());
+    EfficientNumber totalCost =
+        tierCost * EfficientNumber.parse(quantity.toString());
+    if (tier == LootBoxTier.primordial && quantity == 30) {
+      final fuba = ref.read(fubaProvider);
+      if (fuba.compareTo(EfficientNumber.parse('1e80')) > 0) {
+        totalCost = fuba;
+      }
+    }
     const discount = 0;
     final discountedCost =
-        totalCost * BigDecimal.parse((1 - discount).toString());
+        totalCost * EfficientNumber.parse((1 - discount).toString());
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -512,11 +523,11 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   Widget _buildBarrierProgress(
     DifficultyBarrier barrier,
-    BigDecimal fuba,
+    EfficientNumber fuba,
     List<int> generatorsOwned,
     bool isMobile,
   ) {
-    double progress = barrier.getProgress(BigDecimal.zero, generatorsOwned);
+      double progress = barrier.getProgress(const EfficientNumber.zero(), generatorsOwned);
     progress -= 0.5;
     return Column(
       children: [
@@ -628,8 +639,8 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     final fuba = ref.read(fubaProvider);
     final tierCost = tier.getCost(fuba);
 
-    final totalCost = BigDecimal.parse(
-      (tierCost * BigDecimal.parse(quantity.toString())).toString(),
+    final totalCost = EfficientNumber.parse(
+      (tierCost * EfficientNumber.parse(quantity.toString())).toString(),
     );
 
     if (fuba.compareTo(totalCost) < 0) return;

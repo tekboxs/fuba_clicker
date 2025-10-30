@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
+import '../../../core/utils/efficient_number.dart';
 import '../../../models/fuba_generator.dart';
 import '../../../providers/game_providers.dart';
 import '../../../providers/achievement_provider.dart';
 import '../../../providers/save_provider.dart';
 import '../../../core/utils/constants.dart';
+import '../../../theme/tokens.dart';
+import '../../../theme/components.dart';
 import 'particle_system.dart';
 
 /// Widget da seção de geradores de fubá
@@ -28,81 +31,97 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
     final generators = ref.watch(generatorsProvider);
     final fuba = ref.watch(fubaProvider);
 
-    return Container(
-      padding: EdgeInsets.all(GameConstants.getCardPadding(context)),
-      decoration: BoxDecoration(
-        color: Colors.black.withAlpha(GameConstants.primaryColorAlpha),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.orange.withAlpha(GameConstants.borderColorAlpha),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadii.xl),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          padding: EdgeInsets.all(GameConstants.getCardPadding(context)),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.card.withOpacity(0.6),
+                AppColors.card.withOpacity(0.4),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(AppRadii.xl),
+            border: Border.all(
+              color: AppColors.border,
+              width: 1.5,
+            ),
+            boxShadow: AppShadows.level2,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'FUGERADORES',
-                style: TextStyle(
-                  fontSize: GameConstants.getTitleFontSize(context),
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GradientText(
+                    'FUGERADORES',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: GameConstants.getTitleFontSize(context),
+                          fontWeight: FontWeight.bold,
+                        ),
+                    gradient: AppGradients.purpleCyan,
+                  ),
+                  _buildGlobalMultiBuyButtons(ref, context),
+                ],
+              ),
+              SizedBox(height: GameConstants.isMobile(context) ? 8 : 12),
+              Expanded(
+                child: ListView.builder(
+                  cacheExtent: 1000,
+                  itemExtent: null,
+                  addRepaintBoundaries: true,
+                  itemCount: availableGenerators.length,
+                  itemBuilder: (context, index) {
+                    final generator = availableGenerators[index];
+                    final owned = generators[index];
+                    final cost = generator.getCost(owned);
+                    final isUnlocked =
+                        generator.isUnlocked(generators, <String>{});
+                    final canAfford = fuba.compareTo(cost) >= 0 && isUnlocked;
+
+                    return InkWell(
+                      onTap: canAfford
+                          ? () => _buyGenerator(ref, index, cost, context)
+                          : null,
+                      child: GestureDetector(
+                        onLongPressStart: canAfford
+                            ? (_) => _startAutoBuyForGenerator(
+                                ref, index, cost, context)
+                            : null,
+                        onLongPressEnd: canAfford
+                            ? (_) => _stopAutoBuyForGenerator(ref, index)
+                            : null,
+                        child: RepaintBoundary(
+                          child: _GeneratorCard(
+                            key: ValueKey('generator_$index'),
+                            generator: generator,
+                            owned: owned,
+                            cost: cost,
+                            canAfford: canAfford,
+                            isUnlocked: isUnlocked,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
-              _buildGlobalMultiBuyButtons(ref, context),
             ],
           ),
-          SizedBox(height: GameConstants.isMobile(context) ? 8 : 12),
-          Expanded(
-            child: ListView.builder(
-              cacheExtent: 1000,
-              itemExtent: 95,
-              addRepaintBoundaries: true,
-              itemCount: availableGenerators.length,
-              itemBuilder: (context, index) {
-                final generator = availableGenerators[index];
-                final owned = generators[index];
-                final cost = generator.getCost(owned);
-                final isUnlocked = generator.isUnlocked(generators, <String>{});
-                final canAfford = fuba.compareTo(cost) >= 0 && isUnlocked;
-
-                return InkWell(
-                  onTap: canAfford
-                      ? () => _buyGenerator(ref, index, cost, context)
-                      : null,
-                  child: GestureDetector(
-                    onLongPressStart: canAfford
-                        ? (_) =>
-                            _startAutoBuyForGenerator(ref, index, cost, context)
-                        : null,
-                    onLongPressEnd: canAfford
-                        ? (_) => _stopAutoBuyForGenerator(ref, index)
-                        : null,
-                    child: RepaintBoundary(
-                      child: _GeneratorCard(
-                        key: ValueKey('generator_$index'),
-                        generator: generator,
-                        owned: owned,
-                        cost: cost,
-                        canAfford: canAfford,
-                        isUnlocked: isUnlocked,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   /// Compra um gerador
   void _buyGenerator(
-      WidgetRef ref, int index, BigDecimal cost, BuildContext context) {
+      WidgetRef ref, int index, EfficientNumber cost, BuildContext context) {
     if (_activeMultiBuyQuantity > 0) {
       _buyMultipleGenerators(ref, index, _activeMultiBuyQuantity, context);
     } else if (_activeMultiBuyQuantity == -1) {
@@ -119,7 +138,7 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
     final generators = List<int>.from(ref.read(generatorsProvider));
     final generator = availableGenerators[index];
 
-    BigDecimal totalCost = BigDecimal.zero;
+    EfficientNumber totalCost = const EfficientNumber.zero();
     int actualQuantity = 0;
 
     for (int i = 0; i < quantity; i++) {
@@ -156,7 +175,7 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
     final generators = List<int>.from(ref.read(generatorsProvider));
     final generator = availableGenerators[index];
 
-    BigDecimal totalCost = BigDecimal.zero;
+    EfficientNumber totalCost = const EfficientNumber.zero();
     int actualQuantity = 0;
 
     while (true) {
@@ -189,7 +208,7 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
 
   /// Inicia a compra automática de um gerador
   void _startAutoBuyForGenerator(
-      WidgetRef ref, int index, BigDecimal cost, BuildContext context) {
+      WidgetRef ref, int index, EfficientNumber cost, BuildContext context) {
     _autoBuyTimers[index]?.cancel();
     _autoBuyTimers[index] =
         Timer.periodic(const Duration(milliseconds: 150), (timer) {
@@ -273,7 +292,7 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
 class _GeneratorCard extends StatefulWidget {
   final FubaGenerator generator;
   final int owned;
-  final BigDecimal cost;
+  final EfficientNumber cost;
   final bool canAfford;
   final bool isUnlocked;
 
@@ -391,7 +410,7 @@ class _GeneratorCardState extends State<_GeneratorCard>
     Color borderColor;
 
     if (!widget.isUnlocked) {
-      backgroundColor = Colors.grey.withAlpha(GameConstants.affordColorAlpha);
+      backgroundColor = const Color.fromARGB(255, 94, 94, 94).withAlpha(GameConstants.affordColorAlpha);
       borderColor = Colors.grey.withAlpha(GameConstants.affordBorderAlpha);
     } else if (widget.canAfford) {
       backgroundColor = widget.generator.tierColor.withAlpha(
@@ -401,7 +420,7 @@ class _GeneratorCardState extends State<_GeneratorCard>
         GameConstants.affordBorderAlpha,
       );
     } else {
-      backgroundColor = Colors.grey.withAlpha(GameConstants.affordColorAlpha);
+      backgroundColor = const Color.fromARGB(255, 102, 102, 102).withAlpha(GameConstants.affordColorAlpha);
       borderColor = Colors.grey.withAlpha(GameConstants.affordBorderAlpha);
     }
 
@@ -426,271 +445,281 @@ class _GeneratorCardState extends State<_GeneratorCard>
             builder: (context, child) {
               return Transform.scale(
                 scale: scale * (1.0 + _scaleAnimation.value * 0.05),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        backgroundColor,
-                        backgroundColor.withAlpha(backgroundColor.a ~/ 2),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: borderColor,
-                      width: widget.owned > 0 ||
-                              widget.generator.tier == GeneratorTier.absolute
-                          ? 2.0
-                          : 1.0,
-                    ),
-                    boxShadow: widget.owned > 5 ||
-                            widget.generator.tier == GeneratorTier.absolute
-                        ? [
-                            BoxShadow(
-                              color: widget.generator.tier ==
-                                      GeneratorTier.absolute
-                                  ? Colors.white.withAlpha(100)
-                                  : widget.generator.tierColor.withAlpha(
-                                      (255 * glowIntensity * 0.3).toInt(),
-                                    ),
-                              blurRadius: widget.generator.tier ==
-                                      GeneratorTier.absolute
-                                  ? 12.0
-                                  : (6 + (widget.owned * 0.3))
-                                      .clamp(6.0, 15.0)
-                                      .toDouble(),
-                              spreadRadius: widget.generator.tier ==
-                                      GeneratorTier.absolute
-                                  ? 2.0
-                                  : (1 + (widget.owned * 0.05))
-                                      .clamp(1.0, 4.0)
-                                      .toDouble(),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(
-                        GameConstants.isMobile(context) ? 6 : 16),
-                    child: Row(
-                      children: [
-                        _buildGeneratorVisual(),
-                        SizedBox(
-                            width: GameConstants.isMobile(context) ? 6 : 12),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.isUnlocked
-                                        ? widget.generator.name
-                                        : '? ? ?',
-                                    style: TextStyle(
-                                      fontSize: GameConstants
-                                          .getGeneratorNameFontSize(context),
-                                      fontWeight: FontWeight.bold,
-                                      color: widget.isUnlocked
-                                          ? (widget.generator.tier ==
-                                                  GeneratorTier.absolute
-                                              ? Colors.white
-                                              : widget.generator.tierColor)
-                                          : Colors.grey,
-                                    ),
-                                  ),
-                                  Text(
-                                    widget.isUnlocked
-                                        ? widget.generator.description
-                                        : 'Compre mais geradores para desbloquear',
-                                    style: TextStyle(
-                                      fontSize: GameConstants
-                                          .getGeneratorDescFontSize(context),
-                                      color: widget.isUnlocked
-                                          ? Colors.grey[400]
-                                          : Colors.grey[600],
-                                    ),
-                                  ),
-                                  if (widget.owned > 0 && widget.isUnlocked)
-                                    Text(
-                                      '${GameConstants.formatNumber(widget.generator.getProduction(widget.owned))} fubá/s',
-                                      style: TextStyle(
-                                        fontSize: GameConstants
-                                            .getGeneratorProductionFontSize(
-                                                context),
-                                        color: widget.generator.tier ==
-                                                GeneratorTier.absolute
-                                            ? Colors.white
-                                            : widget.generator.tierColor,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            backgroundColor.withOpacity(0.8),
+                            backgroundColor.withOpacity(0.4),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            if (widget.isUnlocked)
-                              Text(
-                                '${GameConstants.formatNumber(widget.cost)} fubá',
-                                style: TextStyle(
-                                  fontSize:
-                                      GameConstants.getGeneratorCostFontSize(
-                                          context),
-                                  fontWeight: FontWeight.bold,
-                                  color: widget.canAfford
-                                      ? Colors.green
-                                      : Colors.grey,
-                                ),
-                              )
-                            else
-                              const Text('', style: TextStyle(fontSize: 20)),
-                            if (widget.owned > 0 && widget.isUnlocked)
-                              Text(
-                                'Tem: ${widget.owned}',
-                                style: TextStyle(
-                                  fontSize:
-                                      GameConstants.getGeneratorOwnedFontSize(
-                                          context),
+                        borderRadius: BorderRadius.circular(AppRadii.lg),
+                        border: Border.all(
+                          color: borderColor.withOpacity(0.6),
+                          width: widget.owned > 0 ||
+                                  widget.generator.tier ==
+                                      GeneratorTier.absolute
+                              ? 2.0
+                              : 1.5,
+                        ),
+                        boxShadow: widget.owned > 5 ||
+                                widget.generator.tier == GeneratorTier.absolute
+                            ? [
+                                BoxShadow(
                                   color: widget.generator.tier ==
                                           GeneratorTier.absolute
-                                      ? Colors.white
-                                      : widget.generator.tierColor,
-                                  fontWeight: FontWeight.bold,
+                                      ? Colors.white.withOpacity(0.4)
+                                      : widget.generator.tierColor.withOpacity(
+                                          glowIntensity * 0.5,
+                                        ),
+                                  blurRadius: widget.generator.tier ==
+                                          GeneratorTier.absolute
+                                      ? 24.0
+                                      : (12 + (widget.owned * 0.5))
+                                          .clamp(12.0, 32.0)
+                                          .toDouble(),
+                                  offset: const Offset(0, 0),
                                 ),
+                              ]
+                            : null,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: widget.isUnlocked
+                                        ? widget.generator.tierColor
+                                            .withOpacity(0.2)
+                                        : Colors.grey.withOpacity(0.2),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadii.md),
+                                    border: Border.all(
+                                      color: widget.isUnlocked
+                                          ? widget.generator.tierColor
+                                              .withOpacity(0.4)
+                                          : Colors.grey.withOpacity(0.4),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      widget.isUnlocked
+                                          ? widget.generator.emoji
+                                          : '🔒',
+                                      style: const TextStyle(fontSize: 24),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        widget.isUnlocked
+                                            ? widget.generator.name
+                                            : '? ? ?',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: widget.isUnlocked
+                                              ? AppColors.foreground
+                                              : Colors.grey,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        widget.isUnlocked
+                                            ? widget.generator.description
+                                            : 'Compre mais geradores para desbloquear',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.mutedForeground,
+                                          height: 1.3,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (widget.isUnlocked && widget.owned > 0)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: widget.generator.tierColor
+                                          .withOpacity(0.2),
+                                      borderRadius:
+                                          BorderRadius.circular(AppRadii.sm),
+                                      border: Border.all(
+                                        color: widget.generator.tierColor
+                                            .withOpacity(0.4),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.star,
+                                          size: 12,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Nv ${_calculateLevel(widget.owned)}',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            if (widget.isUnlocked) ...[
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildStatCard(
+                                      icon: Icons.trending_up,
+                                      label: 'Prod.',
+                                      value:
+                                          '${GameConstants.formatNumber(widget.generator.getProduction(widget.owned))}/s',
+                                      color: AppColors.foreground,
+                                      isHighlighted: false,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: _buildStatCard(
+                                      icon: Icons.numbers,
+                                      label: 'Qtd.',
+                                      value: '${widget.owned}',
+                                      color: AppColors.foreground,
+                                      isHighlighted: false,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: _buildStatCard(
+                                      icon: Icons.attach_money,
+                                      label: 'Custo',
+                                      value: GameConstants.formatNumber(
+                                          widget.cost),
+                                      color: widget.canAfford
+                                          ? AppColors.amber400
+                                          : AppColors.mutedForeground,
+                                      isHighlighted: true,
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ],
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               );
             },
           ),
-          if (_showParticles)
-            Positioned.fill(
-              child: ParticleSystem(
-                shouldAnimate: _showParticles,
-                particleColor: widget.generator.tierColor,
-                onComplete: () {
-                  setState(() {
-                    _showParticles = false;
-                  });
-                },
-              ),
-            ),
-          if (_showMilestone)
-            AnimatedBuilder(
-              animation: _rotationAnimation,
-              builder: (context, child) {
-                return Positioned.fill(
-                  child: Center(
-                    child: Transform.scale(
-                      scale: _milestoneController.value,
-                      child: Transform.rotate(
-                        angle: _rotationAnimation.value * 0.5,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withAlpha(200),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.yellow,
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.yellow.withAlpha(100),
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Transform.rotate(
-                                angle: _rotationAnimation.value * 2,
-                                child: Text(
-                                  '🏆',
-                                  style: TextStyle(
-                                    fontSize: 24 * _milestoneController.value,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'MILESTONE!',
-                                style: TextStyle(
-                                  fontSize: 16 * _milestoneController.value,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.yellow,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Transform.rotate(
-                                angle: -_rotationAnimation.value * 2,
-                                child: Text(
-                                  '🏆',
-                                  style: TextStyle(
-                                    fontSize: 24 * _milestoneController.value,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
         ],
       ),
     );
   }
 
-  Widget _buildGeneratorVisual() {
-    return AnimatedBuilder(
-      animation: _glowAnimation,
-      builder: (context, child) {
-        return Container(
-          decoration: widget.owned > 0
-              ? BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: widget.generator.tierColor.withAlpha(
-                        (80 * _glowAnimation.value).toInt(),
-                      ),
-                      blurRadius: (8 + (widget.owned * 1.5))
-                          .clamp(8.0, 30.0)
-                          .toDouble(),
-                      spreadRadius: (1.5 + (widget.owned * 0.3))
-                          .clamp(1.5, 10.0)
-                          .toDouble(),
-                    ),
-                  ],
-                )
-              : null,
-          child: Text(
-            widget.isUnlocked ? widget.generator.emoji : '🔒',
+  int _calculateLevel(int owned) {
+    if (owned < 10) return 1;
+    if (owned < 25) return 2;
+    if (owned < 50) return 3;
+    if (owned < 100) return 5;
+    if (owned < 250) return 10;
+    if (owned < 500) return 15;
+    if (owned < 1000) return 25;
+    if (owned < 2500) return 50;
+    return (owned / 100).floor();
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    required bool isHighlighted,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: isHighlighted
+            ? color.withOpacity(0.15)
+            : AppColors.secondary.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        border: Border.all(
+          color: isHighlighted
+              ? color.withOpacity(0.4)
+              : AppColors.border.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 12,
+                color: color.withOpacity(0.7),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: color.withOpacity(0.7),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
             style: TextStyle(
-              fontSize: GameConstants.getGeneratorEmojiSize(context),
-              color: widget.isUnlocked ? null : Colors.grey,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

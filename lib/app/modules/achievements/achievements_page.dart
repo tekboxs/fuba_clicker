@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
+import '../../core/utils/efficient_number.dart';
 import 'package:fuba_clicker/app/models/achievement.dart';
 import 'package:fuba_clicker/app/providers/achievement_provider.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
@@ -67,7 +67,7 @@ class AchievementsPage extends ConsumerWidget {
     return 2;
   }
 
-  Widget _buildHeader(int unlockedCount, BigDecimal multiplier) {
+  Widget _buildHeader(int unlockedCount, EfficientNumber multiplier) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),

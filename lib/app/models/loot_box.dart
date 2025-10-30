@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:big_decimal/big_decimal.dart';
+import '../core/utils/efficient_number.dart';
 import 'cake_accessory.dart';
 
 enum LootBoxTier {
@@ -114,83 +114,83 @@ enum LootBoxTier {
     }
   }
 
-  BigDecimal getCost([BigDecimal? currentFuba]) {
+  EfficientNumber getCost([EfficientNumber? currentFuba]) {
     switch (this) {
       case LootBoxTier.basic:
-        return BigDecimal.parse('1000');
+        return EfficientNumber.parse('1000');
       case LootBoxTier.advanced:
-        return BigDecimal.parse('25000');
+        return EfficientNumber.parse('25000');
       case LootBoxTier.premium:
-        return BigDecimal.parse('500000');
+        return EfficientNumber.parse('500000');
       case LootBoxTier.ultimate:
-        return BigDecimal.parse('10000000');
+        return EfficientNumber.parse('10000000');
       case LootBoxTier.divine:
-        return BigDecimal.parse('500000000');
+        return EfficientNumber.parse('500000000');
       case LootBoxTier.transcendent:
-        return BigDecimal.parse('50000000000');
+        return EfficientNumber.parse('50000000000');
       case LootBoxTier.primordial:
         if (currentFuba != null) {
-          final baseCost = BigDecimal.parse('1e80');
+          final baseCost = EfficientNumber.parse('1e80');
           if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba.divide(BigDecimal.parse('30'), scale: 0, roundingMode: RoundingMode.DOWN);
+            return currentFuba / EfficientNumber.parse('30');
           }
           return baseCost;
         }
-        return BigDecimal.parse('1e80');
+        return EfficientNumber.parse('1e80');
       case LootBoxTier.cosmic:
         if (currentFuba != null) {
-          final baseCost = BigDecimal.parse('1e120');
+          final baseCost = EfficientNumber.parse('1e120');
           if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba.divide(BigDecimal.parse('50'), scale: 0, roundingMode: RoundingMode.DOWN);
+            return currentFuba / EfficientNumber.parse('50');
           }
           return baseCost;
         }
-        return BigDecimal.parse('1e120');
+        return EfficientNumber.parse('1e120');
       case LootBoxTier.infinite:
         if (currentFuba != null) {
-          final baseCost = BigDecimal.parse('1e200');
+          final baseCost = EfficientNumber.parse('1e200');
           if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba.divide(BigDecimal.parse('100'), scale: 0, roundingMode: RoundingMode.DOWN);
+            return currentFuba / EfficientNumber.parse('100');
           }
           return baseCost;
         }
-        return BigDecimal.parse('1e200');
+        return EfficientNumber.parse('1e200');
       case LootBoxTier.reality:
         if (currentFuba != null) {
-          final baseCost = BigDecimal.parse('1e300');
+          final baseCost = EfficientNumber.parse('1e300');
           if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba.divide(BigDecimal.parse('200'), scale: 0, roundingMode: RoundingMode.DOWN);
+            return currentFuba / EfficientNumber.parse('200');
           }
           return baseCost;
         }
-        return BigDecimal.parse('1e300');
+        return EfficientNumber.parse('1e300');
       case LootBoxTier.omniversal:
         if (currentFuba != null) {
-          final baseCost = BigDecimal.parse('1e400');
+          final baseCost = EfficientNumber.parse('1e400');
           if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba.divide(BigDecimal.parse('500'), scale: 0, roundingMode: RoundingMode.DOWN);
+            return currentFuba / EfficientNumber.parse('500');
           }
           return baseCost;
         }
-        return BigDecimal.parse('1e400');
+        return EfficientNumber.parse('1e400');
       case LootBoxTier.tek:
         if (currentFuba != null) {
-          final baseCost = BigDecimal.parse('1e500');
+          final baseCost = EfficientNumber.parse('1e500');
           if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba.divide(BigDecimal.parse('1000'), scale: 0, roundingMode: RoundingMode.DOWN);
+            return currentFuba / EfficientNumber.parse('1000');
           }
           return baseCost;
         }
-        return BigDecimal.parse('1e500');
+        return EfficientNumber.parse('1e500');
       case LootBoxTier.absolute:
         if (currentFuba != null) {
-          final baseCost = BigDecimal.parse('1e600');
+          final baseCost = EfficientNumber.parse('1e600');
           if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba.divide(BigDecimal.parse('2000'), scale: 0, roundingMode: RoundingMode.DOWN);
+            return currentFuba / EfficientNumber.parse('2000');
           }
           return baseCost;
         }
-        return BigDecimal.parse('1e600');
+        return EfficientNumber.parse('1e600');
     }
   }
 

@@ -17,7 +17,7 @@ class GameSaveDataAdapter extends TypeAdapter<GameSaveData> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return GameSaveData(
-      fuba: fields[0] as BigDecimal,
+      fuba: fields[0] as EfficientNumber,
       generators: (fields[1] as List).cast<int>(),
       inventory: (fields[2] as Map).cast<String, int>(),
       equipped: (fields[3] as List).cast<String>(),

@@ -189,9 +189,9 @@ class _AchievementPopupState extends State<AchievementPopup>
                           color: Colors.grey.withAlpha(100),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                           size: 18,
                         ),
                       ),
@@ -240,10 +240,10 @@ class _AchievementPopupState extends State<AchievementPopup>
                 const SizedBox(height: 8),
                 Text(
                   widget.achievement.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -266,7 +266,10 @@ class _AchievementPopupState extends State<AchievementPopup>
                   widget.achievement.description,
                   style: TextStyle(
                     fontSize: 15,
-                    color: Colors.grey.shade300,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.7),
                     height: 1.3,
                   ),
                   textAlign: TextAlign.center,

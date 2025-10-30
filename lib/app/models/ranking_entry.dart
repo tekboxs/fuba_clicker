@@ -1,11 +1,11 @@
-import 'package:big_decimal/big_decimal.dart';
+import '../core/utils/efficient_number.dart';
 import 'package:fuba_clicker/app/models/rebirth_data.dart';
 
 class RankingEntry {
   final String username;
   final RebirthData rebirthData;
   final List<String> achievements;
-  final BigDecimal fuba;
+  final EfficientNumber fuba;
   RankingEntry({
     required this.username,
     required this.rebirthData,
@@ -18,7 +18,7 @@ class RankingEntry {
       username: json['username'] ?? '',
       rebirthData: RebirthData.fromJson(json['rebirthData'] ?? {}),
       achievements: List<String>.from(json['achievements'] ?? []),
-      fuba: BigDecimal.parse(json['fuba'] ?? '0'),
+      fuba: EfficientNumber.parse(json['fuba'] ?? '0'),
     );
   }
 

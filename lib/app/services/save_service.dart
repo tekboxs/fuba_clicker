@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:big_decimal/big_decimal.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../models/big_decimal_adapter.dart';
+import '../models/efficient_number_adapter.dart';
+import '../core/utils/efficient_number.dart';
 import '../models/rebirth_data.dart';
 import '../models/game_save_data.dart';
 
@@ -23,7 +23,7 @@ class SaveService {
 
     Hive.registerAdapter(GameSaveDataAdapter());
     Hive.registerAdapter(RebirthDataAdapter());
-    Hive.registerAdapter(BigDecimalAdapter());
+    Hive.registerAdapter(EfficientNumberAdapter());
 
     final key = _deriveEncryptionKey('fuba_secret_key_2024');
 
@@ -52,7 +52,7 @@ class SaveService {
   }
 
   Future<void> saveGame({
-    required BigDecimal fuba,
+    required EfficientNumber fuba,
     required List<int> generators,
     required Map<String, int> inventory,
     required List<String> equipped,
@@ -139,7 +139,7 @@ class SaveService {
 
   GameSaveData _getDefaultSaveData() {
     return GameSaveData(
-      fuba: BigDecimal.zero,
+      fuba: const EfficientNumber.zero(),
       generators: <int>[],
       inventory: <String, int>{},
       equipped: <String>[],

@@ -1,6 +1,7 @@
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:big_decimal/big_decimal.dart';
+import 'efficient_number.dart';
 
 class UIConstants {
   static const double defaultMargin = 16.0;
@@ -178,17 +179,16 @@ class GameConstants {
     return isMobile(context) ? cardPaddingMobile : defaultPadding;
   }
 
-  /// Formata números grandes para melhor legibilidade
-  static String formatNumber(BigDecimal number) {
+  static String formatNumber(EfficientNumber number) {
     try {
-      if (number.compareTo(BigDecimal.zero) == 0) {
+      if (number.mantissa == 0) {
         return '0.0';
       }
 
-      bool isNegative = number.compareTo(BigDecimal.zero) < 0;
-      BigDecimal absNumber = isNegative ? (-number) : number;
+      bool isNegative = number.mantissa < 0;
+      EfficientNumber absNumber = number.abs();
+      int exponent = absNumber.exponent;
 
-    // Define suffixes for thousands, millions, billions, etc.
     const List<String> baseSuffixes = [
       // Units
       '', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No',
@@ -340,16 +340,6 @@ class GameConstants {
       'Spspcig', 'Ocspcig', 'Nospcig'
     ];
 
-    String numberString = absNumber.toPlainString();
-    int exponent = 0;
-
-    int decimalPointIndex = numberString.indexOf('.');
-    if (decimalPointIndex != -1) {
-      exponent = decimalPointIndex - 1;
-    } else {
-      exponent = numberString.length - 1;
-    }
-
     if (exponent < 3) {
       final doubleValue = absNumber.toDouble();
       if (doubleValue.isInfinite || doubleValue.isNaN) {
@@ -363,11 +353,10 @@ class GameConstants {
       return 'Fubinity';
     }
 
-    BigDecimal divisor = BigDecimal.parse('1${'0' * (magnitude * 3)}');
-    BigDecimal result = absNumber.divide(divisor,
-        scale: 10, roundingMode: RoundingMode.HALF_UP);
+    final numDivisor = EfficientNumber.fromPower(10.0, magnitude * 3);
+    EfficientNumber result = absNumber / numDivisor;
 
-    final doubleValue = result.toDouble();
+    final doubleValue = result.mantissa * math.pow(10, result.exponent);
     if (doubleValue.isInfinite || doubleValue.isNaN) {
       return 'Fubinity';
     }
@@ -389,14 +378,14 @@ class SuffixNumber {
 
   SuffixNumber(this.value, this.magnitude, this.suffix);
 
-  /// Converte BigDecimal para SuffixNumber
-  static SuffixNumber fromBigDecimal(BigDecimal number) {
-    if (number.compareTo(BigDecimal.zero) == 0) {
+  /// Converte EfficientNumber para SuffixNumber
+  static SuffixNumber fromEfficientNumber(EfficientNumber number) {
+    if (number == EfficientNumber.zero()) {
       return SuffixNumber(0.0, 0, '');
     }
 
-    bool isNegative = number.compareTo(BigDecimal.zero) < 0;
-    BigDecimal absNumber = isNegative ? (-number) : number;
+    bool isNegative = number < EfficientNumber.zero();
+    EfficientNumber absNumber = isNegative ? -number : number;
 
     String numberString = absNumber.toPlainString();
     int exponent = 0;
@@ -941,12 +930,16 @@ class SuffixNumber {
       return SuffixNumber(1.0, 500, 'Fubinity');
     }
 
-    BigDecimal divisor = BigDecimal.parse('1${'0' * (magnitude * 3)}');
-    BigDecimal result =
-        absNumber.divide(divisor, scale: 6, roundingMode: RoundingMode.HALF_UP);
+    final divisor = EfficientNumber.fromPower(10.0, magnitude * 3.0);
+    final result = absNumber / divisor;
 
     return SuffixNumber(isNegative ? -result.toDouble() : result.toDouble(),
         magnitude, baseSuffixes[magnitude]);
+  }
+
+  /// Converte EfficientNumber para SuffixNumber (alias para compatibilidade)
+  static SuffixNumber fromBigDecimal(EfficientNumber number) {
+    return fromEfficientNumber(number);
   }
 
   /// Compara dois SuffixNumber
@@ -962,14 +955,19 @@ class SuffixNumber {
     return compareTo(other) >= 0;
   }
 
-  /// Converte de volta para BigDecimal (aproximado)
-  BigDecimal toBigDecimal() {
+  /// Converte de volta para EfficientNumber (aproximado)
+  EfficientNumber toEfficientNumber() {
     if (magnitude == 0) {
-      return BigDecimal.parse(value.toString());
+      return EfficientNumber.parse(value.toString());
     }
 
-    final multiplier = BigDecimal.parse('1${'0' * (magnitude * 3)}');
-    return BigDecimal.parse(value.toString()) * multiplier;
+    final multiplier = EfficientNumber.fromPower(10.0, magnitude * 3.0);
+    return EfficientNumber.parse(value.toString()) * multiplier;
+  }
+
+  /// Converte de volta para EfficientNumber (alias para compatibilidade)
+  EfficientNumber toBigDecimal() {
+    return toEfficientNumber();
   }
 
   @override

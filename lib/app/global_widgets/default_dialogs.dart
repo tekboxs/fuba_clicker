@@ -17,19 +17,21 @@ void kShowScaffoldSnackBar(
         padding: const EdgeInsets.only(bottom: 50),
         child: Row(
           children: [
-            const Icon(Icons.error, color: Colors.white),
+            Icon(Icons.error, color: Theme.of(context).colorScheme.onPrimary),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
           ],
         ),
       ),
-      backgroundColor: color ?? Colors.redAccent,
+      backgroundColor: color ?? Theme.of(context).colorScheme.error,
     ),
   );
 }
@@ -91,16 +93,23 @@ Future<void> kShowLoadingDialog({
     barrierDismissible: kDebugMode,
     builder: (_) => AlertDialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       shadowColor: Colors.transparent,
-      backgroundColor: Colors.transparent,
+      backgroundColor:
+          Theme.of(context).colorScheme.surface.withOpacity(0.92),
       insetPadding: insetPadding ?? const EdgeInsets.all(1),
-      content: const SizedBox(
+      content: SizedBox(
         width: double.infinity,
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
       ),
     ),
   );

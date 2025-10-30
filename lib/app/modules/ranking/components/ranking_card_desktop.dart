@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/models/ranking_entry.dart';
-import 'package:fuba_clicker/app/modules/ranking/utils/ranking_utils.dart';
 import 'package:fuba_clicker/gen/assets.gen.dart';
 
 class RankingCardDesktop extends StatelessWidget {

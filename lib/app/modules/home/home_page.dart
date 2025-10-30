@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
 import 'package:fuba_clicker/app/providers/save_provider.dart';
 import '../../providers/game_providers.dart';
 import '../../providers/audio_provider.dart';
@@ -19,8 +17,9 @@ import '../../models/cake_accessory.dart';
 import '../../models/fuba_generator.dart';
 import '../../models/rebirth_data.dart';
 import '../../core/utils/constants.dart';
+import '../../core/utils/efficient_number.dart';
 import 'components/generator_section.dart';
-import 'components/parallax_background.dart';
+import '../../theme/components.dart';
 import '../shop/loot_box_shop.dart';
 import 'components/floating_accessories.dart';
 import 'components/cake_display.dart';
@@ -44,6 +43,7 @@ class _HomePageState extends ConsumerState<HomePage>
   late AnimationController _animationController;
   late AnimationController _parallaxController;
   Timer? _autoProductionTimer;
+  bool _isVolumeVisible = false;
 
   // Variáveis para rastreamento de cliques
   DateTime _lastClickTime = DateTime.now();
@@ -110,7 +110,7 @@ class _HomePageState extends ConsumerState<HomePage>
           final autoClickerRate =
               ref.read(upgradeNotifierProvider).getAutoClickerRate();
 
-          BigDecimal totalProduction = autoProduction;
+          EfficientNumber totalProduction = autoProduction;
 
           if (autoClickerRate > 0 &&
               autoClickerRate.isFinite &&
@@ -132,7 +132,7 @@ class _HomePageState extends ConsumerState<HomePage>
 
             if (totalClickMultiplier.toDouble().isFinite) {
               final autoClickValue =
-                  BigDecimal.parse(autoClickerRate.toString()) *
+                  EfficientNumber.fromDouble(autoClickerRate) *
                       totalClickMultiplier;
               totalProduction += autoClickValue;
 
@@ -144,7 +144,7 @@ class _HomePageState extends ConsumerState<HomePage>
             }
           }
 
-          if (totalProduction.compareTo(BigDecimal.zero) > 0) {
+          if (totalProduction.compareTo(const EfficientNumber.zero()) > 0) {
             ref.read(fubaProvider.notifier).update((state) {
               return state + totalProduction;
             });
@@ -175,15 +175,18 @@ class _HomePageState extends ConsumerState<HomePage>
     return Builder(
       builder: (context) {
         try {
+          final isMobile = GameConstants.isMobile(context);
           return Scaffold(
-            body: SafeArea(
-              child: Stack(
-                children: [
-                  ParallaxBackground(parallaxController: _parallaxController),
-                  _buildMainContent(),
-                  _buildTopRightButtons(),
-                  _buildTopLeftButtons(),
-                ],
+            body: AnimatedGradientBackground(
+              child: SafeArea(
+                child: isMobile
+                    ? Column(
+                        children: [
+                          _buildAccessToolbar(),
+                          Expanded(child: _buildMainContent()),
+                        ],
+                      )
+                    : _buildMainContent(),
               ),
             ),
           );
@@ -274,6 +277,179 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
+  Widget _buildAccessBarInner(bool isMobile, bool isAudioPlaying) {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 6 : 10,
+            vertical: isMobile ? 4 : 6,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.black.withAlpha(110),
+            borderRadius: BorderRadius.circular(isMobile ? 22 : 26),
+            border: Border.all(color: Colors.white.withAlpha(20)),
+          ),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: isMobile ? 4 : 12,
+            runSpacing: 10,
+            children: [
+              _buildIconButtonWithLabel(
+                Icons.shopping_bag,
+                Colors.white,
+                'Loja',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const LootBoxShopPage(),
+                    ),
+                  );
+                },
+              ),
+              _buildIconButtonWithLabel(
+                Icons.auto_awesome,
+                const Color.fromARGB(255, 141, 157, 248),
+                'Upgrades',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const RebirthUpgradesPage(),
+                    ),
+                  );
+                },
+              ),
+              _buildIconButtonWithLabel(
+                Icons.refresh,
+                const Color.fromARGB(255, 255, 35, 35),
+                'Rebirth',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const RebirthPage(),
+                    ),
+                  );
+                },
+              ),
+              _buildIconButtonWithLabel(
+                Icons.account_circle,
+                Colors.blue,
+                'Conta',
+                () {
+                  _showAccountSettings();
+                },
+              ),
+              _buildIconButtonWithLabel(
+                Icons.leaderboard,
+                Colors.purple,
+                'Ranking',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const RankingPage(),
+                    ),
+                  );
+                },
+              ),
+              _buildIconButtonWithLabel(
+                Icons.emoji_events,
+                Colors.amber,
+                'Conquistas',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AchievementsPage(),
+                    ),
+                  );
+                },
+              ),
+              _buildIconButtonWithLabel(
+                Icons.settings,
+                Colors.orange,
+                'Config',
+                () {
+                  _showPerformanceModeDialog();
+                },
+              ),
+              _buildIconButtonWithLabel(
+                isAudioPlaying ? Icons.volume_up : Icons.volume_off,
+                isAudioPlaying ? Colors.orange : Colors.grey,
+                'Som',
+                () {
+                  setState(() {
+                    _isVolumeVisible = !_isVolumeVisible;
+                  });
+                },
+              ),
+              if (!isMobile) _buildSupporterButton()
+            ],
+          ),
+        ),
+        if (_isVolumeVisible)
+          Padding(
+            padding: EdgeInsets.only(top: isMobile ? 4 : 6),
+            child: _buildInlineVolumeControl(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAccessToolbar() {
+    final isMobile = GameConstants.isMobile(context);
+    final isAudioPlaying = ref.watch(audioStateProvider);
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 4 : 16,
+        isMobile ? 4 : 16,
+        isMobile ? 4 : 16,
+        0,
+      ),
+      child: _buildAccessBarInner(isMobile, isAudioPlaying),
+    );
+  }
+
+  Widget _buildAccessToolbarOverlay() {
+    final isAudioPlaying = ref.watch(audioStateProvider);
+
+    return _buildAccessBarInner(false, isAudioPlaying);
+  }
+
+  Widget _buildInlineVolumeControl() {
+    final isMobile = GameConstants.isMobile(context);
+    final currentVolume = ref.watch(audioVolumeProvider);
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 6 : 8,
+        vertical: isMobile ? 6 : 8,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(150),
+        borderRadius: BorderRadius.circular(isMobile ? 15 : 20),
+        border: Border.all(color: Colors.orange.withAlpha(100)),
+      ),
+      child: SizedBox(
+        height: isMobile ? 140 : 170,
+        width: isMobile ? 40 : 46,
+        child: RotatedBox(
+          quarterTurns: 3,
+          child: Slider(
+            value: currentVolume,
+            min: 0.01,
+            max: 1.0,
+            activeColor: Colors.orange,
+            inactiveColor: Colors.grey.withAlpha(100),
+            onChanged: (value) {
+              ref.read(audioVolumeProvider.notifier).setVolume(value);
+              ref.read(audioStateProvider.notifier).setVolume(value);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
   final TextEditingController _codeController = TextEditingController();
 
   /// Constrói o conteúdo principal da tela
@@ -325,7 +501,7 @@ class _HomePageState extends ConsumerState<HomePage>
       ],
     );
   }
-
+  final ScrollController _scrollController = ScrollController();
   /// Layout para desktop (row)
   Widget _buildDesktopLayout() {
     return Row(
@@ -334,29 +510,35 @@ class _HomePageState extends ConsumerState<HomePage>
         // Lado esquerdo - Fubá e bolo
         Expanded(
           flex: 2,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              _buildTitle(),
-              const SizedBox(height: 16),
-              _buildCounter(),
-              const SizedBox(height: 8),
-              Text(
-                '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+          child: Scrollbar(
+            controller: _scrollController,
+            trackVisibility: true,
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // const Spacer(),
+                  _buildTitle(),
+                  const SizedBox(height: 16),
+                  _buildCounter(),
+                  const SizedBox(height: 8),
+                  Text(
+                    '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  _buildDetailedMultipliers(ref),
+                  // const Spacer(),
+                  _buildCakeButton(),
+                  // const Spacer(),
+                  _buildAccessToolbarOverlay(),
+                ],
               ),
-              _buildDetailedMultipliers(ref),
-              const Spacer(),
-              _buildCakeButton(),
-              const Spacer(),
-              Align(
-                  alignment: Alignment.bottomLeft,
-                  child: _buildSupporterButton()),
-            ],
+            ),
           ),
         ),
         const SizedBox(width: 20),
@@ -481,7 +663,7 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   /// Atualiza o rastreamento de cliques para conquistas
-  void _updateClickTracking(BigDecimal clickValue) {
+  void _updateClickTracking(EfficientNumber clickValue) {
     final now = DateTime.now();
 
     // Calcular velocidade de cliques (cliques por segundo)
@@ -515,7 +697,7 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   /// Atualiza o rastreamento para conquistas secretas
-  void _updateSecretAchievementTracking(BigDecimal clickValue) {
+  void _updateSecretAchievementTracking(EfficientNumber clickValue) {
     final now = DateTime.now();
 
     // Atualizar lista de cliques para verificar cliques em 10 segundos
@@ -691,7 +873,8 @@ class _HomePageState extends ConsumerState<HomePage>
 
               if (confirmed == true) {
                 // Limpar todos os providers
-                ref.read(fubaProvider.notifier).state = BigDecimal.zero;
+                ref.read(fubaProvider.notifier).state =
+                    const EfficientNumber.zero();
                 ref.read(generatorsProvider.notifier).state = List.filled(
                   availableGenerators.length,
                   0,
@@ -732,7 +915,8 @@ class _HomePageState extends ConsumerState<HomePage>
           ),
           ElevatedButton(
             onPressed: () {
-              ref.read(fubaProvider.notifier).state *= BigDecimal.parse('1e90');
+              ref.read(fubaProvider.notifier).state *=
+                  EfficientNumber.parse('1e90');
             },
             child: const Text('mult'),
           ),
@@ -754,7 +938,7 @@ class _HomePageState extends ConsumerState<HomePage>
           ),
         ],
         const SizedBox(height: 5),
-        if (totalMultiplier.compareTo(BigDecimal.one) > 0) ...[
+        if (totalMultiplier.compareTo(const EfficientNumber.one()) > 0) ...[
           const SizedBox(height: 4),
           _buildEquippedAccessories(equippedIds),
           const SizedBox(height: 4),
@@ -763,7 +947,8 @@ class _HomePageState extends ConsumerState<HomePage>
             spacing: 8,
             runSpacing: 2,
             children: [
-              if (achievementMultiplier.compareTo(BigDecimal.one) > 0)
+              if (achievementMultiplier.compareTo(const EfficientNumber.one()) >
+                  0)
                 Text(
                   '🏆 x${achievementMultiplier.toDouble().toStringAsFixed(2)}',
                   style: const TextStyle(
@@ -772,7 +957,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              if (rebirthMultiplier.compareTo(BigDecimal.one) > 0)
+              if (rebirthMultiplier.compareTo(const EfficientNumber.one()) > 0)
                 Text(
                   '🔄 x${GameConstants.formatNumber(rebirthMultiplier)}',
                   style: const TextStyle(
@@ -781,7 +966,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              if (upgradeMultiplier.compareTo(BigDecimal.one) > 0)
+              if (upgradeMultiplier.compareTo(const EfficientNumber.one()) > 0)
                 Text(
                   '⚡ x${upgradeMultiplier.toDouble().toStringAsFixed(2)}',
                   style: const TextStyle(
@@ -790,7 +975,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              if (oneTimeMultiplier.compareTo(BigDecimal.one) > 0)
+              if (oneTimeMultiplier.compareTo(const EfficientNumber.one()) > 0)
                 Text(
                   '💎 x${oneTimeMultiplier.toDouble().toStringAsFixed(2)}',
                   style: const TextStyle(
@@ -1026,203 +1211,18 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
-  Widget _buildTopRightButtons() {
-    final isAudioPlaying = ref.watch(audioStateProvider);
-    final isMobile = GameConstants.isMobile(context);
-
-    return Positioned(
-      top: isMobile ? 4 : 16,
-      right: isMobile ? 4 : null,
-      left: isMobile
-          ? null
-          : MediaQuery.of(context).size.width / 2 -
-              MediaQuery.of(context).size.width / 5,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _buildIconButtonWithLabel(
-                Icons.emoji_events,
-                Colors.amber,
-                'Conquistas',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AchievementsPage(),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(width: isMobile ? 4 : 8),
-              _buildIconButtonWithLabel(
-                isAudioPlaying ? Icons.volume_up : Icons.volume_off,
-                isAudioPlaying ? Colors.orange : Colors.grey,
-                'Som',
-                () {
-                  _handleAudioToggle();
-                },
-              ),
-            ],
-          ),
-          if (isAudioPlaying) _buildVolumeControl(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopLeftButtons() {
-    final isMobile = GameConstants.isMobile(context);
-
-    return Positioned(
-      top: isMobile ? 4 : 16,
-      left: isMobile ? 4 : 16,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _buildIconButtonWithLabel(
-                Icons.shopping_bag,
-                Colors.white,
-                'Loja',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const LootBoxShopPage(),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(width: isMobile ? 4 : 8),
-              _buildIconButtonWithLabel(
-                Icons.auto_awesome,
-                const Color.fromARGB(255, 141, 157, 248),
-                'Upgrades',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RebirthUpgradesPage(),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(width: isMobile ? 4 : 8),
-              _buildIconButtonWithLabel(
-                Icons.refresh,
-                const Color.fromARGB(255, 255, 35, 35),
-                'Rebirth',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RebirthPage(),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(width: isMobile ? 4 : 8),
-              _buildIconButtonWithLabel(
-                Icons.settings,
-                Colors.orange,
-                'Performance',
-                () {
-                  _showPerformanceModeDialog();
-                },
-              ),
-              SizedBox(width: isMobile ? 4 : 8),
-              _buildIconButtonWithLabel(
-                Icons.account_circle,
-                Colors.blue,
-                'Conta',
-                () {
-                  _showAccountSettings();
-                },
-              ),
-              SizedBox(width: isMobile ? 4 : 8),
-              _buildIconButtonWithLabel(
-                Icons.leaderboard,
-                Colors.purple,
-                'Ranking',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RankingPage(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
     final isMobile = GameConstants.isMobile(context);
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withAlpha(150),
-        borderRadius: BorderRadius.circular(isMobile ? 20 : 25),
+        borderRadius: BorderRadius.circular(isMobile ? 10 : 10),
         border: Border.all(color: color.withAlpha(100)),
       ),
       child: IconButton(
         iconSize: isMobile ? 20 : 24,
         icon: Icon(icon, color: color),
         onPressed: onPressed,
-      ),
-    );
-  }
-
-  Widget _buildVolumeControl() {
-    final isMobile = GameConstants.isMobile(context);
-    final currentVolume = ref.watch(audioVolumeProvider);
-    if (isMobile) {
-      return Transform.rotate(
-          angle: -pi / 2,
-          child: Container(
-            margin: const EdgeInsets.only(top: 100),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Slider(
-              value: currentVolume,
-              min: 0.01,
-              max: 1.0,
-              activeColor: Colors.orange,
-              inactiveColor: Colors.grey.withAlpha(100),
-              onChanged: (value) {
-                ref.read(audioVolumeProvider.notifier).setVolume(value);
-                ref.read(audioStateProvider.notifier).setVolume(value);
-              },
-            ),
-          ));
-    }
-    return Container(
-      margin: EdgeInsets.only(top: isMobile ? 4 : 8),
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 8 : 5,
-        vertical: isMobile ? 4 : 6,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.black.withAlpha(150),
-        borderRadius: BorderRadius.circular(isMobile ? 15 : 20),
-        border: Border.all(color: Colors.orange.withAlpha(100)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: isMobile ? 60 : 100,
-            child: Slider(
-              value: currentVolume,
-              min: 0.01,
-              max: 1.0,
-              activeColor: Colors.orange,
-              inactiveColor: Colors.grey.withAlpha(100),
-              onChanged: (value) {
-                ref.read(audioVolumeProvider.notifier).setVolume(value);
-                ref.read(audioStateProvider.notifier).setVolume(value);
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1269,20 +1269,24 @@ class _HomePageState extends ConsumerState<HomePage>
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Colors.purple, Colors.deepPurple, Colors.indigo],
+                colors: [
+                  Color.fromARGB(255, 240, 132, 10),
+                  Color.fromARGB(255, 219, 111, 9),
+                  Color.fromARGB(255, 181, 96, 63)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.purple.withAlpha(100),
+                  color: const Color.fromARGB(255, 207, 53, 6).withAlpha(100),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),
               ],
             ),
-            child: const Icon(Icons.favorite, color: Colors.white, size: 28),
+            child: const Icon(Icons.favorite, color: Colors.white, size: 20),
           )
               .animate(
                 autoPlay: true,
@@ -1293,12 +1297,12 @@ class _HomePageState extends ConsumerState<HomePage>
                 duration: 5.seconds,
                 color: Colors.white.withAlpha(100),
               ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 4),
           const Text(
             'Fubádor',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -1631,7 +1635,10 @@ class _HomePageState extends ConsumerState<HomePage>
                         //   }
                         // }
                       },
-                      icon: const Icon(Icons.confirmation_num),
+                      icon: const Icon(
+                        Icons.confirmation_num,
+                        color: Colors.white,
+                      ),
                     );
                   },
                 ),

@@ -1,4 +1,4 @@
-import 'package:big_decimal/big_decimal.dart';
+import '../core/utils/efficient_number.dart';
 import 'package:hive/hive.dart';
 import 'rebirth_data.dart';
 
@@ -7,7 +7,7 @@ part 'game_save_data.g.dart';
 @HiveType(typeId: 0)
 class GameSaveData {
   @HiveField(0)
-  final BigDecimal fuba;
+  final EfficientNumber fuba;
 
   @HiveField(1)
   final List<int> generators;
@@ -56,7 +56,7 @@ class GameSaveData {
 
   factory GameSaveData.fromJson(Map<String, dynamic> json) {
     return GameSaveData(
-      fuba: BigDecimal.parse(json['fuba']),
+      fuba: EfficientNumber.parse(json['fuba']),
       generators: List<int>.from(json['generators'] ?? []),
       inventory: Map<String, int>.from(json['inventory'] ?? {}),
       equipped: List<String>.from(json['equipped'] ?? []),

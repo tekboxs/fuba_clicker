@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
+import '../core/utils/efficient_number.dart';
 import 'package:fuba_clicker/app/modules/achievements/components/achievement_popup.dart';
 import '../models/achievement.dart';
  
@@ -392,15 +392,16 @@ class AchievementNotifier {
     checkAchievements(context);
   }
 
-  BigDecimal getTotalMultiplierFromAchievements() {
+  EfficientNumber getTotalMultiplierFromAchievements() {
     final unlocked = ref.read(unlockedAchievementsProvider);
-    BigDecimal multiplier = BigDecimal.one;
+    EfficientNumber multiplier = EfficientNumber.one();
 
     for (final achievementId in unlocked) {
       final achievement =
           allAchievements.firstWhere((a) => a.id == achievementId);
       if (achievement.reward.type == AchievementRewardType.multiplier) {
-        multiplier *= BigDecimal.parse(achievement.reward.value.toString());
+        multiplier *= EfficientNumber.fromValues(
+            achievement.reward.value, 0);
       }
     }
 
@@ -412,15 +413,16 @@ final achievementNotifierProvider = Provider<AchievementNotifier>((ref) {
   return AchievementNotifier(ref);
 });
 
-final achievementMultiplierProvider = Provider<BigDecimal>((ref) {
+final achievementMultiplierProvider = Provider<EfficientNumber>((ref) {
   final unlocked = ref.watch(unlockedAchievementsProvider);
-  BigDecimal multiplier = BigDecimal.one;
+  EfficientNumber multiplier = EfficientNumber.one();
 
   for (final achievementId in unlocked) {
     final achievement =
         allAchievements.firstWhere((a) => a.id == achievementId);
     if (achievement.reward.type == AchievementRewardType.multiplier) {
-      multiplier *= BigDecimal.parse(achievement.reward.value.toString());
+      multiplier *= EfficientNumber.fromValues(
+          achievement.reward.value, 0);
     }
   }
 

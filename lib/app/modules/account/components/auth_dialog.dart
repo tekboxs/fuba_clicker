@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fuba_clicker/app/modules/home/home_page.dart';
 import 'package:fuba_clicker/app/providers/auth_provider.dart';
 
 class AuthDialog extends ConsumerStatefulWidget {

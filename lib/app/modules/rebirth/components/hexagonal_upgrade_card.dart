@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
+import '../../../core/utils/efficient_number.dart';
 import 'package:fuba_clicker/app/models/rebirth_upgrade.dart';
 import 'package:fuba_clicker/app/providers/rebirth_upgrade_provider.dart';
 import 'package:fuba_clicker/app/core/utils/difficulty_barriers.dart';
@@ -10,7 +10,7 @@ class HexagonalUpgradeCard extends ConsumerWidget {
   final dynamic rebirthData;
   final bool isBarrierLocked;
   final DifficultyBarrier? barrier;
-  final BigDecimal fuba;
+  final EfficientNumber fuba;
   final List<int> generatorsOwned;
 
   const HexagonalUpgradeCard({

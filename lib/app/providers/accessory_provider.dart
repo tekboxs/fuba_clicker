@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:big_decimal/big_decimal.dart';
+import '../core/utils/efficient_number.dart';
 import '../models/cake_accessory.dart';
 import '../models/rebirth_upgrade.dart';
 import 'rebirth_upgrade_provider.dart';
@@ -92,14 +92,15 @@ class AccessoryNotifier {
         .length;
   }
 
-  BigDecimal getTotalProductionMultiplier() {
+  EfficientNumber getTotalProductionMultiplier() {
     final equipped = ref.read(equippedAccessoriesProvider);
-    if (equipped.isEmpty) return BigDecimal.one;
+    if (equipped.isEmpty) return EfficientNumber.one();
 
-    BigDecimal totalMultiplier = BigDecimal.one;
+    EfficientNumber totalMultiplier = EfficientNumber.one();
     for (final id in equipped) {
       final accessory = allAccessories.firstWhere((acc) => acc.id == id);
-      totalMultiplier *= BigDecimal.parse(accessory.productionMultiplier.toString());
+      totalMultiplier *= EfficientNumber.fromValues(
+          accessory.productionMultiplier, 0);
     }
     return totalMultiplier;
   }
@@ -173,14 +174,15 @@ final accessoryNotifierProvider = Provider<AccessoryNotifier>((ref) {
   return AccessoryNotifier(ref);
 });
 
-final accessoryMultiplierProvider = Provider<BigDecimal>((ref) {
+final accessoryMultiplierProvider = Provider<EfficientNumber>((ref) {
   final equipped = ref.watch(equippedAccessoriesProvider);
-  if (equipped.isEmpty) return BigDecimal.one;
+  if (equipped.isEmpty) return EfficientNumber.one();
 
-  BigDecimal totalMultiplier = BigDecimal.one;
+  EfficientNumber totalMultiplier = EfficientNumber.one();
   for (final id in equipped) {
     final accessory = allAccessories.firstWhere((acc) => acc.id == id);
-    totalMultiplier *= BigDecimal.parse(accessory.productionMultiplier.toString());
+    totalMultiplier *= EfficientNumber.fromValues(
+        accessory.productionMultiplier, 0);
   }
   return totalMultiplier;
 });

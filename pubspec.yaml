@@ -27,6 +27,7 @@ dependencies:
   hive_flutter: ^1.1.0
   sentry_flutter: ^9.0.0
   dio: ^5.4.0
+  flutter_sprite: ^4.0.2
 
 dev_dependencies:
   flutter_test:

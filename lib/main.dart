@@ -10,6 +10,7 @@ import 'app/providers/auth_provider.dart';
 import 'app/services/save_service.dart';
 import 'app/services/sync_service.dart';
 import 'app/modules/home/home_page.dart';
+import 'app/theme/app_theme.dart';
 import 'app/modules/account/components/welcome_popup.dart';
 import 'app/global_widgets/sync_conflict_dialog.dart';
 import 'app/providers/sync_notifier.dart';
@@ -131,6 +132,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   showWelcomePopup() {
     if (_showWelcomePopup) {
       Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
         showDialog(
           context: context,
           builder: (context) => const WelcomePopup(),
@@ -176,8 +178,11 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
       });
 
       Future.delayed(const Duration(milliseconds: 500), () {
+        if (!mounted) return;
+        final ctx = kGlobalNavigationKey.currentContext;
+        if (ctx == null) return;
         showDialog(
-          context: kGlobalNavigationKey.currentContext!,
+          context: ctx,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             backgroundColor: Colors.black.withAlpha(240),
@@ -266,6 +271,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       try {
         ref.read(appContextProvider.notifier).state = context;
       } catch (error, stackTrace) {
@@ -278,6 +284,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
     if (authState.isAuthenticated && _showWelcomePopup) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         setState(() {
           _showWelcomePopup = false;
         });
@@ -286,8 +293,11 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
     if (syncConflict == SyncConflictType.needsConfirmation) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final ctx = kGlobalNavigationKey.currentContext;
+        if (ctx == null) return;
         showDialog(
-          context: kGlobalNavigationKey.currentContext!,
+          context: ctx,
           barrierDismissible: false,
           builder: (context) => const SyncConflictDialog(),
         );
@@ -380,31 +390,48 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
       navigatorKey: kGlobalNavigationKey,
       title: 'Fuba Clicker',
       home: _isLoading ? _buildLoadingScreen() : const HomePage(),
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.deepOrange,
-        useMaterial3: false,
-      ),
+      theme: AppTheme.getDark(),
+      darkTheme: AppTheme.getDark(),
+      themeMode: ThemeMode.dark,
       debugShowCheckedModeBanner: false,
     );
   }
 
   Widget _buildLoadingScreen() {
-    return const Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('🌽', style: TextStyle(fontSize: 80)),
-            SizedBox(height: 24),
-            CircularProgressIndicator(color: Colors.orange),
-            SizedBox(height: 16),
-            Text(
-              'Carregando...',
-              style: TextStyle(fontSize: 20, color: Colors.orange),
-            ),
-          ],
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1E0E3E), Color(0xFF3B0764), Color(0xFF581C87)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('🌽', style: TextStyle(fontSize: 80)),
+              SizedBox(height: 32),
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: CircularProgressIndicator(
+                  color: Color(0xFF9333EA),
+                  strokeWidth: 4,
+                ),
+              ),
+              SizedBox(height: 24),
+              Text(
+                'Carregando...',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Color(0xFFA78BFA),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

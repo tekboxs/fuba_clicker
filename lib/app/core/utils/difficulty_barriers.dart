@@ -1,9 +1,9 @@
-import 'package:big_decimal/big_decimal.dart';
+import 'efficient_number.dart';
 
 class DifficultyBarrier {
   final String name;
   final String description;
-  final BigDecimal requiredFuba;
+  final EfficientNumber requiredFuba;
   final int requiredGeneratorTier;
   final int requiredGeneratorCount;
   final String unlockMessage;
@@ -19,20 +19,20 @@ class DifficultyBarrier {
     required this.emoji,
   });
 
-  bool isUnlocked(BigDecimal currentFuba, List<int> generatorsOwned) {
+  bool isUnlocked(EfficientNumber currentFuba, List<int> generatorsOwned) {
     if (currentFuba.compareTo(requiredFuba) < 0) return false;
     if (requiredGeneratorTier >= generatorsOwned.length) return false;
     return generatorsOwned[requiredGeneratorTier] >= requiredGeneratorCount;
   }
 
-  double getProgress(BigDecimal currentFuba, List<int> generatorsOwned) {
-    // Otimização: evita divisões BigDecimal custosas para grandes números
+  double getProgress(EfficientNumber currentFuba, List<int> generatorsOwned) {
+    // Otimização: evita divisões EfficientNumber custosas para grandes números
     double fubaProgress;
     
     if (currentFuba.compareTo(requiredFuba) >= 0) {
       fubaProgress = 1.0;
     } else {
-      // Otimização adicional: compara strings para evitar operações BigDecimal custosas
+      // Otimização adicional: compara strings para evitar operações EfficientNumber custosas
       final currentStr = currentFuba.toString();
       final requiredStr = requiredFuba.toString();
       
@@ -40,16 +40,21 @@ class DifficultyBarrier {
       if (currentStr.length < requiredStr.length - 2) {
         fubaProgress = 0.0;
       } else {
-        // Usa comparação de magnitude para evitar divisões custosas
-        final currentMagnitude = currentFuba.scale;
-        final requiredMagnitude = requiredFuba.scale;
+        // Usa comparação de magnitude (exponent) para evitar divisões custosas
+        final currentMagnitude = currentFuba.exponent;
+        final requiredMagnitude = requiredFuba.exponent;
         
         if (currentMagnitude - requiredMagnitude > 10) {
           // Se a diferença de magnitude é muito grande, usa aproximação
           fubaProgress = 0.0;
         } else {
           // Só faz divisão se os números são comparáveis
-          fubaProgress = currentFuba.divide(requiredFuba, scale: 4, roundingMode: RoundingMode.HALF_UP).toDouble().clamp(0.0, 1.0);
+          try {
+            final result = currentFuba / requiredFuba;
+            fubaProgress = result.toDouble().clamp(0.0, 1.0);
+          } catch (e) {
+            fubaProgress = 0.0;
+          }
         }
       }
     }
@@ -66,7 +71,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Primeira Caixa',
       description: 'Desbloqueie a primeira caixa de acessórios',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 3,
       requiredGeneratorCount: 2,
       unlockMessage: 'Você desbloqueou a primeira caixa de acessórios!',
@@ -75,7 +80,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Raras',
       description: 'Desbloqueie caixas de qualidade rara',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 7,
       requiredGeneratorCount: 5,
       unlockMessage: 'Caixas raras desbloqueadas!',
@@ -84,7 +89,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Épicas',
       description: 'Desbloqueie caixas de qualidade épica',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 12,
       requiredGeneratorCount: 8,
       unlockMessage: 'Caixas épicas desbloqueadas!',
@@ -93,7 +98,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Lendárias',
       description: 'Desbloqueie caixas de qualidade lendária',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 18,
       requiredGeneratorCount: 12,
       unlockMessage: 'Caixas lendárias desbloqueadas!',
@@ -102,7 +107,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Míticas',
       description: 'Desbloqueie caixas de qualidade mítica',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 22,
       requiredGeneratorCount: 15,
       unlockMessage: 'Caixas míticas desbloqueadas!',
@@ -111,7 +116,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Divinas',
       description: 'Desbloqueie caixas de qualidade divina',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 26,
       requiredGeneratorCount: 20,
       unlockMessage: 'Caixas divinas desbloqueadas!',
@@ -120,7 +125,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Transcendentes',
       description: 'Desbloqueie caixas de qualidade transcendente',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 28,
       requiredGeneratorCount: 25,
       unlockMessage: 'Caixas transcendentais desbloqueadas!',
@@ -129,7 +134,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Primordiais',
       description: 'Desbloqueie caixas de qualidade primordial',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 25,
       requiredGeneratorCount: 100,
       unlockMessage: 'Caixas primordiais desbloqueadas!',
@@ -138,7 +143,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Cósmicas',
       description: 'Desbloqueie caixas de qualidade cósmica',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 30,
       requiredGeneratorCount: 150,
       unlockMessage: 'Caixas cósmicas desbloqueadas!',
@@ -147,7 +152,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Infinitas',
       description: 'Desbloqueie caixas de qualidade infinita',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 35,
       requiredGeneratorCount: 200,
       unlockMessage: 'Caixas infinitas desbloqueadas!',
@@ -156,7 +161,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas da Realidade',
       description: 'Desbloqueie caixas da própria realidade',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 40,
       requiredGeneratorCount: 300,
       unlockMessage: 'Caixas da realidade desbloqueadas!',
@@ -165,7 +170,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Omniversais',
       description: 'Desbloqueie caixas de todos os universos',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 45,
       requiredGeneratorCount: 400,
       unlockMessage: 'Caixas omniversais desbloqueadas!',
@@ -174,7 +179,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Tek',
       description: 'Desbloqueie caixas de tecnologia avançada',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 50,
       requiredGeneratorCount: 500,
       unlockMessage: 'Caixas Tek desbloqueadas!',
@@ -183,7 +188,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Caixas Absolutas',
       description: 'Desbloqueie caixas de poder absoluto',
-      requiredFuba: BigDecimal.zero,
+      requiredFuba: EfficientNumber.zero(),
       requiredGeneratorTier: 55,
       requiredGeneratorCount: 600,
       unlockMessage: 'Caixas absolutas desbloqueadas!',
@@ -195,7 +200,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Primeiro Rebirth',
       description: 'Desbloqueie o sistema de rebirth',
-      requiredFuba: BigDecimal.parse('100000'),
+      requiredFuba: EfficientNumber.parse('100000'),
       requiredGeneratorTier: 6,
       requiredGeneratorCount: 1,
       unlockMessage: 'Sistema de rebirth desbloqueado!',
@@ -204,7 +209,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Ascensão',
       description: 'Desbloqueie o sistema de ascensão',
-      requiredFuba: BigDecimal.parse('10000000'),
+      requiredFuba: EfficientNumber.parse('10000000'),
       requiredGeneratorTier: 15,
       requiredGeneratorCount: 3,
       unlockMessage: 'Sistema de ascensão desbloqueado!',
@@ -213,7 +218,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Transcendência',
       description: 'Desbloqueie o sistema de transcendência',
-      requiredFuba: BigDecimal.parse('1000000000'),
+      requiredFuba: EfficientNumber.parse('1000000000'),
       requiredGeneratorTier: 25,
       requiredGeneratorCount: 5,
       unlockMessage: 'Sistema de transcendência desbloqueado!',
@@ -225,7 +230,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Upgrades Básicos',
       description: 'Desbloqueie upgrades básicos',
-      requiredFuba: BigDecimal.parse('50000'),
+      requiredFuba: EfficientNumber.parse('50000'),
       requiredGeneratorTier: 4,
       requiredGeneratorCount: 2,
       unlockMessage: 'Upgrades básicos desbloqueados!',
@@ -234,7 +239,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Upgrades Avançados',
       description: 'Desbloqueie upgrades avançados',
-      requiredFuba: BigDecimal.parse('1000000'),
+      requiredFuba: EfficientNumber.parse('1000000'),
       requiredGeneratorTier: 10,
       requiredGeneratorCount: 3,
       unlockMessage: 'Upgrades avançados desbloqueados!',
@@ -243,7 +248,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Upgrades Divinos',
       description: 'Desbloqueie upgrades divinos',
-      requiredFuba: BigDecimal.parse('100000000'),
+      requiredFuba: EfficientNumber.parse('100000000'),
       requiredGeneratorTier: 20,
       requiredGeneratorCount: 5,
       unlockMessage: 'Upgrades divinos desbloqueados!',
@@ -255,7 +260,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Conquistas Básicas',
       description: 'Desbloqueie conquistas básicas',
-      requiredFuba: BigDecimal.parse('10000'),
+      requiredFuba: EfficientNumber.parse('10000'),
       requiredGeneratorTier: 3,
       requiredGeneratorCount: 1,
       unlockMessage: 'Conquistas básicas desbloqueadas!',
@@ -264,7 +269,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Conquistas Avançadas',
       description: 'Desbloqueie conquistas avançadas',
-      requiredFuba: BigDecimal.parse('1000000'),
+      requiredFuba: EfficientNumber.parse('1000000'),
       requiredGeneratorTier: 8,
       requiredGeneratorCount: 2,
       unlockMessage: 'Conquistas avançadas desbloqueadas!',
@@ -273,7 +278,7 @@ class DifficultyBarrierManager {
     DifficultyBarrier(
       name: 'Conquistas Épicas',
       description: 'Desbloqueie conquistas épicas',
-      requiredFuba: BigDecimal.parse('100000000'),
+      requiredFuba: EfficientNumber.parse('100000000'),
       requiredGeneratorTier: 15,
       requiredGeneratorCount: 4,
       unlockMessage: 'Conquistas épicas desbloqueadas!',
@@ -296,7 +301,7 @@ class DifficultyBarrierManager {
     }
   }
 
-  static DifficultyBarrier? getNextBarrier(String category, BigDecimal currentFuba, List<int> generatorsOwned) {
+  static DifficultyBarrier? getNextBarrier(String category, EfficientNumber currentFuba, List<int> generatorsOwned) {
     final barriers = getBarriersForCategory(category);
     for (final barrier in barriers) {
       if (!barrier.isUnlocked(currentFuba, generatorsOwned)) {
@@ -306,12 +311,12 @@ class DifficultyBarrierManager {
     return null;
   }
 
-  static List<DifficultyBarrier> getUnlockedBarriers(String category, BigDecimal currentFuba, List<int> generatorsOwned) {
+  static List<DifficultyBarrier> getUnlockedBarriers(String category, EfficientNumber currentFuba, List<int> generatorsOwned) {
     final barriers = getBarriersForCategory(category);
     return barriers.where((barrier) => barrier.isUnlocked(currentFuba, generatorsOwned)).toList();
   }
 
-  static List<DifficultyBarrier> getLockedBarriers(String category, BigDecimal currentFuba, List<int> generatorsOwned) {
+  static List<DifficultyBarrier> getLockedBarriers(String category, EfficientNumber currentFuba, List<int> generatorsOwned) {
     final barriers = getBarriersForCategory(category);
     return barriers.where((barrier) => !barrier.isUnlocked(currentFuba, generatorsOwned)).toList();
   }

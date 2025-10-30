@@ -1,6 +1,6 @@
 import 'dart:math';
-import 'package:big_decimal/big_decimal.dart';
 import 'package:hive/hive.dart';
+import '../core/utils/efficient_number.dart';
 
 part 'rebirth_data.g.dart';
 
@@ -153,27 +153,29 @@ class RebirthData {
     );
   }
 
-  BigDecimal getTotalMultiplier() {
-    BigDecimal multiplier = BigDecimal.one;
+  EfficientNumber getTotalMultiplier() {
+    EfficientNumber multiplier = EfficientNumber.one();
 
     // Rebirth multiplier
     if (rebirthCount > 0) {
-      final rebirthGain = BigDecimal.parse(RebirthTier.rebirth.getMultiplierGain(0).toString());
-      final rebirthMultiplier = BigDecimal.one + (rebirthGain * BigDecimal.parse(rebirthCount.toString()));
+      final rebirthGain = EfficientNumber.fromValues(
+          RebirthTier.rebirth.getMultiplierGain(0), 0);
+      final rebirthMultiplier = EfficientNumber.one() + 
+          (rebirthGain * EfficientNumber.fromValues(rebirthCount.toDouble(), 0));
       multiplier *= rebirthMultiplier;
     }
 
     // Ascension multiplier
     if (ascensionCount > 0) {
-      final ascensionGain = BigDecimal.parse(RebirthTier.ascension.getMultiplierGain(0).toString());
-      final ascensionMultiplier = ascensionGain.pow(ascensionCount);
+      final gainValue = RebirthTier.ascension.getMultiplierGain(0);
+      final ascensionMultiplier = EfficientNumber.fromPower(gainValue, ascensionCount.toDouble());
       multiplier *= ascensionMultiplier;
     }
 
     // Transcendence multiplier
     if (transcendenceCount > 0) {
-      final transcendenceGain = BigDecimal.parse(RebirthTier.transcendence.getMultiplierGain(0).toString());
-      final transcendenceMultiplier = transcendenceGain.pow(transcendenceCount);
+      final gainValue = RebirthTier.transcendence.getMultiplierGain(0);
+      final transcendenceMultiplier = EfficientNumber.fromPower(gainValue, transcendenceCount.toDouble());
       multiplier *= transcendenceMultiplier;
     }
 
