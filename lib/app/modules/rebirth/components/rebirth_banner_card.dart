@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fuba_clicker/app/theme/components.dart';
+import 'package:fuba_clicker/gen/assets.gen.dart';
 
 class RebirthBannerCard extends StatelessWidget {
   final String title;
@@ -13,6 +14,7 @@ class RebirthBannerCard extends StatelessWidget {
   final String? rewardTokenText;
   final VoidCallback? onTap;
   final List<Color> colors;
+  final List<Widget>? actions;
 
   const RebirthBannerCard({
     super.key,
@@ -27,7 +29,21 @@ class RebirthBannerCard extends StatelessWidget {
     this.lockedReason,
     this.onTap,
     required this.colors,
+    this.actions,
   });
+
+  _getRebirthImage() {
+    switch (title) {
+      case 'Rebirth':
+        return Assets.images.rebirth.image(width: 600, height: 600);
+      case 'Ascensão':
+        return Assets.images.ascension.image(width: 600, height: 600);
+      case 'Transcendência':
+        return Assets.images.transcendence.image(width: 600, height: 600);
+      default:
+        return Assets.images.rebirth.image(width: 600, height: 600);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,14 +72,11 @@ class RebirthBannerCard extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              right: -6,
-              top: -12,
-              child: Opacity(
-                opacity: 0.15,
-                child: Text(
-                  emoji,
-                  style: const TextStyle(fontSize: 160),
-                ),
+              right: -140,
+              top: -200,
+              child: Transform.rotate(
+                angle: -0.70,
+                child: _getRebirthImage(),
               ),
             ),
             Padding(
@@ -110,10 +123,17 @@ class RebirthBannerCard extends StatelessWidget {
                           _chip(rewardTokenText!, Icons.star, Colors.cyan),
                         ],
                         const Spacer(),
-                        AppButton.primary(
-                          onPressed: isLocked || !canActivate ? null : onTap,
-                          child: const Text('Activate'),
-                        ),
+                        if (actions != null && actions!.isNotEmpty)
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: actions!,
+                          )
+                        else
+                          AppButton.primary(
+                            onPressed: isLocked || !canActivate ? null : onTap,
+                            child: const Text('Activate'),
+                          ),
                       ],
                     ),
                   ],

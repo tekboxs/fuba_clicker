@@ -13,10 +13,15 @@ import 'package:flutter/widgets.dart';
 
 class $AssetsImagesGen {
   const $AssetsImagesGen();
- 
+
   /// File path: assets/images/cake.png
+  AssetGenImage get ascension =>
+      const AssetGenImage('assets/images/ascencion.png');
   AssetGenImage get cake => const AssetGenImage('assets/images/cake.png');
- 
+  AssetGenImage get transcendence =>
+      const AssetGenImage('assets/images/trans.png');
+  AssetGenImage get rebirth => const AssetGenImage('assets/images/rebirth.png');
+
   AssetGenImage get crown => const AssetGenImage('assets/images/crown.png');
 
   /// File path: assets/images/icon.png

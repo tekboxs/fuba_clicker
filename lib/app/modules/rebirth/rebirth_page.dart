@@ -7,6 +7,7 @@ import 'package:fuba_clicker/app/providers/rebirth_provider.dart';
 import 'package:fuba_clicker/app/providers/game_providers.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/core/utils/difficulty_barriers.dart';
+import 'package:fuba_clicker/app/models/fuba_generator.dart';
 import 'components/rebirth_banner_card.dart';
 
 class RebirthPage extends ConsumerWidget {
@@ -93,74 +94,80 @@ class RebirthPage extends ConsumerWidget {
     final rebirthData = ref.watch(rebirthDataProvider);
     final multiplier = rebirthData.getTotalMultiplier();
 
-    return Card(
-      color: Colors.black.withAlpha(150),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Text(
-              'Multiplicador Total',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'x${GameConstants.formatNumber(multiplier)}',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.amber.shade400,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatChip('🔄 ${rebirthData.rebirthCount}', 'Rebirths'),
-                _buildStatChip('✨ ${rebirthData.ascensionCount}', 'Ascensões'),
-                _buildStatChip(
-                  '🌟 ${rebirthData.transcendenceCount}',
-                  'Transcendências',
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.cyan.withAlpha(50),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.cyan.withAlpha(100)),
-              ),
-              child: Text(
-                '💎 ${rebirthData.celestialTokens} Tokens Celestiais',
+    return _NeonPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _GlowText(
+            text: 'Multiplicador Total',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            glowColor: Colors.cyan,
+          ),
+          const SizedBox(height: 8),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 1400),
+            curve: Curves.easeInOut,
+            builder: (context, t, _) {
+              final glow = 0.3 + 0.3 * (1.0 - (t - 0.5).abs() * 2);
+              return _GlowText(
+                text: 'x${GameConstants.formatNumber(multiplier)}',
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.cyan,
+                  color: Colors.white,
+                ),
+                glowColor: Colors.amber,
+                glowOpacity: glow,
+              );
+            },
+            onEnd: () {},
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: _NeonChip(
+                  leading: '🔄',
+                  value: '${rebirthData.rebirthCount}',
+                  label: 'Rebirths',
+                  color: Colors.blueAccent,
                 ),
               ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _NeonChip(
+                  leading: '✨',
+                  value: '${rebirthData.ascensionCount}',
+                  label: 'Ascensões',
+                  color: Colors.purpleAccent,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _NeonChip(
+                  leading: '🌟',
+                  value: '${rebirthData.transcendenceCount}',
+                  label: 'Transcendências',
+                  color: Colors.orangeAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.center,
+            child: _TokenPill(
+              text: '💎 ${rebirthData.celestialTokens} Tokens Celestiais',
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStatChip(String value, String label) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
-        ),
-      ],
-    );
-  }
+  
 
   Widget _buildRebirthCard(
     BuildContext context,
@@ -196,8 +203,11 @@ class RebirthPage extends ConsumerWidget {
     if (requirement > 1e50) {
       // Para requisitos astronômicos, usa comparação de SuffixNumber
       final fubaSuffix = SuffixNumber.fromEfficientNumber(fuba);
-      final requirementSuffix =
-          SuffixNumber.fromEfficientNumber(EfficientNumber.parse(requirement.toString()));
+
+      final requirementSuffix = SuffixNumber.fromEfficientNumber(
+        EfficientNumber.parse(requirement.toString()),
+      );
+
       progress = fubaSuffix.isGreaterOrEqual(requirementSuffix) ? 1.0 : 0.0;
     } else {
       try {
@@ -214,36 +224,69 @@ class RebirthPage extends ConsumerWidget {
     }
 
     final barrier = _getBarrierForTier(tier);
-    final isLocked = !isUnlocked;
+    final barrierLocked = !isUnlocked;
 
     final title = tier.displayName;
     final requirementText = GameConstants.formatNumber(
       EfficientNumber.fromDouble(requirement),
     );
     String subtitle;
-    if (isLocked && barrier != null) {
+    if (barrierLocked && barrier != null) {
       final neededGen = barrier.requiredGeneratorCount;
       final tierIdx = barrier.requiredGeneratorTier + 1;
       final ownedGen = tierIdx - 1 < generatorsOwned.length
           ? generatorsOwned[tierIdx - 1]
           : 0;
-      subtitle = '🔒 ${barrier.description}\nReq: $requirementText fubá • G$tierIdx: $ownedGen/$neededGen';
+      final genName = barrier.requiredGeneratorTier < availableGenerators.length
+          ? availableGenerators[barrier.requiredGeneratorTier].name
+          : 'G$tierIdx';
+      subtitle =
+          '🔒 ${barrier.description}\nReq: $requirementText fubá • $genName: $ownedGen/$neededGen';
     } else {
       subtitle = '${tier.description} • Req: $requirementText fubá';
     }
     final tokenText = tokenReward > 0 ? '+$tokenReward 💎' : null;
+    final maxCount = calculateMaxOperations(tier, fuba, rebirthData);
+
+    final effectiveLocked = barrierLocked || !canRebirth;
+
     return RebirthBannerCard(
       title: title,
       subtitle: subtitle,
       emoji: tier.emoji,
       progress: progress,
-      isLocked: isLocked,
+      isLocked: effectiveLocked,
       canActivate: canRebirth,
-      lockedReason: isLocked && barrier != null ? 'Requisitos' : null,
+      lockedReason: effectiveLocked && barrier != null ? 'Requisitos' : null,
       rewardMultiplierText: 'x${multiplierGain.toStringAsFixed(1)}',
       rewardTokenText: tokenText,
-      onTap: () => _showRebirthSelector(context, ref, tier),
+      onTap: null,
       colors: _getTierGradient(tier),
+      actions: effectiveLocked
+          ? null
+          : [
+              _qtyButton(
+                context,
+                ref,
+                tier,
+                1,
+                maxCount: barrierLocked ? 0 : maxCount,
+              ),
+              _qtyButton(
+                context,
+                ref,
+                tier,
+                5,
+                maxCount: barrierLocked ? 0 : maxCount,
+              ),
+              _qtyButton(
+                context,
+                ref,
+                tier,
+                10,
+                maxCount: barrierLocked ? 0 : maxCount,
+              ),
+            ],
     );
   }
 
@@ -261,11 +304,20 @@ class RebirthPage extends ConsumerWidget {
   List<Color> _getTierGradient(RebirthTier tier) {
     switch (tier) {
       case RebirthTier.rebirth:
-        return [const Color(0xFF1E3A8A), const Color(0xFF2563EB)];
+        return [
+          const Color.fromARGB(255, 94, 0, 245),
+          const Color.fromARGB(255, 0, 0, 0)
+        ];
       case RebirthTier.ascension:
-        return [const Color(0xFF4C1D95), const Color(0xFF7C3AED)];
+        return [
+          const Color.fromARGB(255, 255, 77, 7),
+          const Color.fromARGB(255, 255, 217, 0)
+        ];
       case RebirthTier.transcendence:
-        return [const Color(0xFF92400E), const Color(0xFFF59E0B)];
+        return [
+          const Color.fromARGB(255, 255, 0, 0),
+          const Color.fromARGB(255, 255, 123, 0)
+        ];
     }
   }
 
@@ -371,88 +423,9 @@ class RebirthPage extends ConsumerWidget {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: _getTierColor(tier),
+              foregroundColor: Colors.white,
             ),
             child: Text('Confirmar x$count'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRebirthSelector(
-    BuildContext context,
-    WidgetRef ref,
-    RebirthTier tier,
-  ) {
-    final rebirthData = ref.read(rebirthDataProvider);
-    final fuba = ref.read(fubaProvider);
-    final maxCount = calculateMaxOperations(tier, fuba, rebirthData);
-    final int currentCount;
-    switch (tier) {
-      case RebirthTier.rebirth:
-        currentCount = rebirthData.rebirthCount;
-        break;
-      case RebirthTier.ascension:
-        currentCount = rebirthData.ascensionCount;
-        break;
-      case RebirthTier.transcendence:
-        currentCount = rebirthData.transcendenceCount;
-        break;
-    }
-    final requirement = tier.getRequirement(currentCount);
-    final requirementText = GameConstants.formatNumber(
-      EfficientNumber.fromDouble(requirement),
-    );
-    final barrier = _getBarrierForTier(tier);
-    final generatorsOwned = ref.read(generatorsProvider);
-    String? genReqText;
-    if (barrier != null) {
-      final neededGen = barrier.requiredGeneratorCount;
-      final tierIdx = barrier.requiredGeneratorTier + 1;
-      final ownedGen = tierIdx - 1 < generatorsOwned.length
-          ? generatorsOwned[tierIdx - 1]
-          : 0;
-      genReqText = 'G$tierIdx: $ownedGen/$neededGen';
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey.shade900,
-        title: Row(
-          children: [
-            Text(tier.emoji),
-            const SizedBox(width: 8),
-            Text(tier.displayName),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Requisito atual: $requirementText fubá'),
-            if (genReqText != null) ...[
-              const SizedBox(height: 6),
-              Text('Geradores: $genReqText'),
-            ],
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _qtyButton(context, ref, tier, 1),
-                _qtyButton(context, ref, tier, 5, maxCount: maxCount),
-                _qtyButton(context, ref, tier, 10, maxCount: maxCount),
-                _qtyButton(context, ref, tier, maxCount.clamp(1, 9999),
-                    label: 'Max'),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
           ),
         ],
       ),
@@ -467,19 +440,22 @@ class RebirthPage extends ConsumerWidget {
     int? maxCount,
     String? label,
   }) {
-    final effective = maxCount == null ? count : (count > maxCount ? maxCount : count);
-    final disabled = effective <= 0;
+    final effective =
+        maxCount == null ? count : (count > maxCount ? maxCount : count);
+    final disabled = effective <= 0 || effective < count;
     return ElevatedButton(
       onPressed: disabled
           ? null
           : () {
-              Navigator.pop(context);
               _showRebirthConfirmation(context, ref, tier, effective);
             },
       style: ElevatedButton.styleFrom(
         backgroundColor: _getTierColor(tier),
       ),
-      child: Text(label ?? 'x$effective'),
+      child: Text(
+        label ?? 'x$count',
+        style: const TextStyle(fontSize: 16, color: Colors.white),
+      ),
     );
   }
 
@@ -601,6 +577,179 @@ class RebirthPage extends ConsumerWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _NeonPanel extends StatelessWidget {
+  final Widget child;
+  const _NeonPanel({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.deepPurple.withOpacity(0.18),
+            Colors.black.withOpacity(0.85),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purpleAccent.withOpacity(0.12),
+            blurRadius: 16,
+            spreadRadius: 1,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.purpleAccent.withOpacity(0.2),
+          width: 1.0,
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.white.withOpacity(0.01),
+              Colors.white.withOpacity(0.00),
+            ],
+          ),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _GlowText extends StatelessWidget {
+  final String text;
+  final TextStyle style;
+  final Color glowColor;
+  final double glowOpacity;
+  const _GlowText({
+    required this.text,
+    required this.style,
+    required this.glowColor,
+    this.glowOpacity = 0.7,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final base = glowColor.withOpacity(0.45 * glowOpacity);
+    return Text(
+      text,
+      style: style.copyWith(
+        shadows: [
+          Shadow(color: base, blurRadius: 8),
+          Shadow(color: glowColor.withOpacity(0.25 * glowOpacity), blurRadius: 20),
+        ],
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+}
+
+class _NeonChip extends StatelessWidget {
+  final String leading;
+  final String value;
+  final String label;
+  final Color color;
+  const _NeonChip({
+    required this.leading,
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withOpacity(0.06),
+            Colors.black.withOpacity(0.30),
+          ],
+        ),
+        border: Border.all(color: color.withOpacity(0.25), width: 1),
+        boxShadow: [
+          BoxShadow(color: color.withOpacity(0.08), blurRadius: 10),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            leading.isEmpty ? value : '$leading $value',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.white.withOpacity(0.6),
+              letterSpacing: 0.2,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TokenPill extends StatelessWidget {
+  final String text;
+  const _TokenPill({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            const Color(0xFF00E5FF).withOpacity(0.6),
+            const Color(0xFF7C4DFF).withOpacity(0.6),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00E5FF).withOpacity(0.18),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
     );
   }
 }

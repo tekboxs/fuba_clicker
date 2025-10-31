@@ -51,9 +51,9 @@ class _AchievementPopupState extends State<AchievementPopup>
     );
 
     _slideAnimation =
-        Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
-          CurvedAnimation(parent: _slideController, curve: Curves.elasticOut),
-        );
+        Tween<Offset>(begin: const Offset(0.0, 1.0), end: Offset.zero).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.elasticOut),
+    );
 
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
@@ -128,18 +128,21 @@ class _AchievementPopupState extends State<AchievementPopup>
             ),
           ),
           Positioned(
-            top: GameConstants.isMobile(context) ? null : 16,
-            bottom: GameConstants.isMobile(context) ? 16 : null,
-            right: 16,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: IgnorePointer(
-                    ignoring: true,
-                    child: _buildPopupCard(),
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: IgnorePointer(
+                      ignoring: true,
+                      child: _buildPopupCard(),
+                    ),
                   ),
                 ),
               ),
@@ -155,14 +158,15 @@ class _AchievementPopupState extends State<AchievementPopup>
     final isMobile = GameConstants.isMobile(context);
 
     return Container(
-      width: isMobile ? 300 : 360,
+      width: isMobile ? MediaQuery.of(context).size.width * 0.9 : 400,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [difficultyColor.withAlpha(150), Colors.black.withAlpha(250)],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: difficultyColor.withAlpha(180), width: 2),
         boxShadow: [
           BoxShadow(
@@ -172,114 +176,76 @@ class _AchievementPopupState extends State<AchievementPopup>
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: _closePopup,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withAlpha(100),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.close,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: difficultyColor.withAlpha(100),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: difficultyColor.withAlpha(150),
-                        ),
-                      ),
-                      child: Text(
-                        _getDifficultyLabel(widget.achievement.difficulty),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: difficultyColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                HexagonalAchievementBadge(
-                  difficulty: widget.achievement.difficulty,
-                  emoji: widget.achievement.emoji,
-                  isUnlocked: true,
-                  size: isMobile ? 70 : 80,
-                  enableAnimations: true,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Conquista Desbloqueada!',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: difficultyColor,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.achievement.name,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            HexagonalAchievementBadge(
+              difficulty: widget.achievement.difficulty,
+              emoji: widget.achievement.emoji,
+              isUnlocked: true,
+              size: 48,
+              enableAnimations: true,
             ),
-          ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.black.withAlpha(120),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Conquista!',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: difficultyColor,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: difficultyColor.withAlpha(100),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: difficultyColor.withAlpha(150),
+                          ),
+                        ),
+                        child: Text(
+                          _getDifficultyLabel(widget.achievement.difficulty),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: difficultyColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.achievement.name,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  _buildRewardChip(widget.achievement.reward),
+                ],
               ),
             ),
-            child: Column(
-              children: [
-                Text(
-                  widget.achievement.description,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.7),
-                    height: 1.3,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                _buildRewardChip(widget.achievement.reward),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -298,8 +264,8 @@ class _AchievementPopupState extends State<AchievementPopup>
         color = Colors.orange;
         break;
       case AchievementRewardType.tokens:
-        final value = reward.value.isFinite && !reward.value.isNaN 
-            ? reward.value.clamp(0, 1e6).toInt() 
+        final value = reward.value.isFinite && !reward.value.isNaN
+            ? reward.value.clamp(0, 1e6).toInt()
             : 0;
         text = '$value Tokens Celestiais 💎';
         color = Colors.cyan;
@@ -308,20 +274,19 @@ class _AchievementPopupState extends State<AchievementPopup>
         text = 'Segredo Desbloqueado!';
         color = Colors.purple;
         break;
-     
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withAlpha(50),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withAlpha(150)),
       ),
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: FontWeight.bold,
           color: color,
         ),

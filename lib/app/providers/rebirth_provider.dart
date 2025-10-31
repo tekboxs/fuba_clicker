@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/efficient_number.dart';
-import 'package:fuba_clicker/app/core/utils/constants.dart';
 import '../models/rebirth_data.dart';
 import '../models/fuba_generator.dart';
 import 'game_providers.dart';
@@ -42,11 +41,10 @@ final canRebirthProvider = Provider.family<bool, RebirthTier>((ref, tier) {
       break;
   }
 
-  final requirementString = requirement.toString();
-  if (requirementString == 'Infinity' || requirementString == 'NaN') {
+  if (!requirement.isFinite) {
     return false;
   }
-  return fuba.compareTo(EfficientNumber.parse(requirementString)) >= 0;
+  return fuba.compareTo(EfficientNumber.fromDouble(requirement)) >= 0;
 });
 
 class RebirthNotifier {
@@ -269,24 +267,23 @@ int calculateMaxOperations(RebirthTier tier, EfficientNumber fuba, RebirthData r
       break;
   }
   
-  // Limita o loop para evitar travamentos
-  final maxIterations = maxAllowed;
+  // Rebirth e Transcendence resetam fubá; bulk deve ser no máximo 1
+  // if (tier == RebirthTier.rebirth || tier == RebirthTier.transcendence) {
+  //   final requirement = tier.getRequirement(currentCount);
+  //   if (!requirement.isFinite || requirement <= 0) return 0;
+  //   final requirementEff = EfficientNumber.fromDouble(requirement);
+  //   return fuba.compareTo(requirementEff) >= 0 ? 1 : 0;
+  // }
 
-  // Converte fuba para SuffixNumber para comparações eficientes
-  final fubaSuffix = SuffixNumber.fromEfficientNumber(fuba);
-  
+  // Ascension: pode usar a verificação incremental padrão
+  final maxIterations = maxAllowed;
   for (int i = 0; i < maxIterations; i++) {
     final requirement = tier.getRequirement(currentCount + count);
-    
-    // Verifica se o requisito é válido
     if (requirement.isInfinite || requirement.isNaN || requirement <= 0) {
       break;
     }
-    
-    // Para números muito grandes, usa comparação de SuffixNumber
-    final requirementEff = EfficientNumber.parse(requirement.toString());
-    final requirementSuffix = SuffixNumber.fromEfficientNumber(requirementEff);
-    if (fubaSuffix.isGreaterOrEqual(requirementSuffix)) {
+    final requirementEff = EfficientNumber.fromDouble(requirement);
+    if (fuba.compareTo(requirementEff) >= 0) {
       count++;
     } else {
       break;
