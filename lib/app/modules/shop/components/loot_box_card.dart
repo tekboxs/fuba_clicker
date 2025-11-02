@@ -6,6 +6,7 @@ import 'package:fuba_clicker/app/models/loot_box.dart';
 import 'package:fuba_clicker/app/core/utils/difficulty_barriers.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
+import 'package:fuba_clicker/app/models/fuba_generator.dart';
 
 class LootBoxCard extends StatelessWidget {
   final LootBoxTier tier;
@@ -33,6 +34,23 @@ class LootBoxCard extends StatelessWidget {
     }
 
     return barriers[tier.value - 1].isUnlocked(fuba, generatorsOwned);
+  }
+
+  String _getLockedCondition() {
+    if (tier == LootBoxTier.basic) {
+      return '';
+    }
+    
+    final barriers = DifficultyBarrierManager.getBarriersForCategory('lootbox');
+    final barrier = barriers[tier.value - 1];
+    
+    final generatorTier = barrier.requiredGeneratorTier;
+    if (generatorTier >= availableGenerators.length) {
+      return 'Gerador nível ${generatorTier + 1}: ${barrier.requiredGeneratorCount}';
+    }
+    
+    final generator = availableGenerators[generatorTier];
+    return '${generator.emoji} ${generator.name}: ${barrier.requiredGeneratorCount}';
   }
 
   String _raritySummary(LootBoxTier t) {
@@ -201,7 +219,7 @@ class LootBoxCard extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        'BLOQUEADO',
+                        _getLockedCondition(),
                         style: TextStyle(
                           color: Colors.grey,
                           fontWeight: FontWeight.bold,
