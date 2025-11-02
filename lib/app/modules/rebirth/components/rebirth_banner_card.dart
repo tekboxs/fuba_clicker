@@ -35,11 +35,18 @@ class RebirthBannerCard extends StatelessWidget {
   _getRebirthImage() {
     switch (title) {
       case 'Rebirth':
-        return Assets.images.rebirth.image(width: 600, height: 600);
+        return Assets.images.rebirth.image(width: 300, height: 300);
       case 'Ascensão':
-        return Assets.images.ascension.image(width: 600, height: 600);
+        return Assets.images.ascension.image(width: 300, height: 300);
       case 'Transcendência':
-        return Assets.images.transcendence.image(width: 600, height: 600);
+        return Assets.images.transcendence.image(width: 300, height: 300);
+      case 'Furuborus':
+        return Assets.images.furuborus.image(
+          width: 200, 
+          height: 200,
+          errorBuilder: (context, error, stackTrace) => 
+            Assets.images.rebirth.image(width: 600, height: 600),
+        );
       default:
         return Assets.images.rebirth.image(width: 600, height: 600);
     }
@@ -58,6 +65,7 @@ class RebirthBannerCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(28),
       child: Container(
         height: 200,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           gradient: gradient,
           borderRadius: BorderRadius.circular(28),
@@ -72,11 +80,14 @@ class RebirthBannerCard extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              right: -140,
-              top: -200,
-              child: Transform.rotate(
-                angle: -0.70,
-                child: _getRebirthImage(),
+              right: -70,
+              top: -90,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Transform.rotate(
+                  angle: -0.40,
+                  child: _getRebirthImage(),
+                ),
               ),
             ),
             Padding(

@@ -10,6 +10,8 @@ enum UpgradeType {
   animationSpeed,
   accessoryCapacity,
   keepItems,
+  keepGenerators,
+  tokenMultiplier,
 }
 
 class RebirthUpgrade {
@@ -37,6 +39,7 @@ class RebirthUpgrade {
     return baseTokenCost + (currentLevel * baseTokenCost ~/ 2);
   }
 
+
   double getEffectValue(int level) {
     switch (type) {
       case UpgradeType.autoClicker:
@@ -61,6 +64,10 @@ class RebirthUpgrade {
         return 3.0 + (level * 1.0);
       case UpgradeType.keepItems:
         return level >= 1 ? 1.0 : 0.0;
+      case UpgradeType.keepGenerators:
+        return level * 0.1;
+      case UpgradeType.tokenMultiplier:
+        return 1.0 + (level * 1.0);
     }
   }
 
@@ -88,6 +95,10 @@ class RebirthUpgrade {
         return '${getEffectValue(level).toInt()} slots de acessórios';
       case UpgradeType.keepItems:
         return level >= 1 ? 'Mantém itens ao ascender' : 'Não mantém itens';
+      case UpgradeType.keepGenerators:
+        return '+${(getEffectValue(level) * 100).toStringAsFixed(0)}% geradores mantidos';
+      case UpgradeType.tokenMultiplier:
+        return 'x${getEffectValue(level).toStringAsFixed(1)} tokens celestiais';
     }
   }
 }
@@ -198,6 +209,26 @@ const List<RebirthUpgrade> allUpgrades = [
     baseTokenCost: 100,
     maxLevel: 1,
     ascensionRequirement: 10,
+  ),
+  RebirthUpgrade(
+    id: 'token_multiplier',
+    name: 'Múltiplos Aspectos',
+    emoji: '⭐',
+    description: 'Ganha 2x tokens celestiais em todas as resets por nível',
+    type: UpgradeType.tokenMultiplier,
+    baseTokenCost: 3000,
+    maxLevel: 5,
+    ascensionRequirement: 40,
+  ),
+  RebirthUpgrade(
+    id: 'keep_generators',
+    name: 'Herança Eterna',
+    emoji: '👑',
+    description: 'Mantém 10% dos geradores ao ascender/transcender por nível',
+    type: UpgradeType.keepGenerators,
+    baseTokenCost: 1000,
+    maxLevel: 10,
+    ascensionRequirement: 70,
   ),
 ];
 

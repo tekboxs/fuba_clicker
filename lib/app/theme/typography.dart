@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-@immutable
+ 
 class AppTypography {
   static const String fontFamily = 'Roboto';
 

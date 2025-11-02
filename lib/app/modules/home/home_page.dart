@@ -501,7 +501,9 @@ class _HomePageState extends ConsumerState<HomePage>
       ],
     );
   }
+
   final ScrollController _scrollController = ScrollController();
+
   /// Layout para desktop (row)
   Widget _buildDesktopLayout() {
     return Row(
@@ -514,31 +516,57 @@ class _HomePageState extends ConsumerState<HomePage>
             controller: _scrollController,
             trackVisibility: true,
             thumbVisibility: true,
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // const Spacer(),
-                  _buildTitle(),
-                  const SizedBox(height: 16),
-                  _buildCounter(),
-                  const SizedBox(height: 8),
-                  Text(
-                    '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+            child: LayoutBuilder(builder: (context, constraints) {
+              if (constraints.maxHeight > 600) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Spacer(),
+                    _buildTitle(),
+                    const SizedBox(height: 16),
+                    _buildCounter(),
+                    const SizedBox(height: 8),
+                    Text(
+                      '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  _buildDetailedMultipliers(ref),
-                  // const Spacer(),
-                  _buildCakeButton(),
-                  // const Spacer(),
-                  _buildAccessToolbarOverlay(),
-                ],
-              ),
-            ),
+                    _buildDetailedMultipliers(ref),
+                    const Spacer(),
+                    _buildCakeButton(),
+                    const Spacer(),
+                    _buildAccessToolbarOverlay(),
+                  ],
+                );
+              }
+              return SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40),
+                    _buildTitle(),
+                    const SizedBox(height: 16),
+                    _buildCounter(),
+                    const SizedBox(height: 8),
+                    Text(
+                      '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    _buildDetailedMultipliers(ref),
+                    const SizedBox(height: 20),
+                    _buildCakeButton(),
+                    const SizedBox(height: 20),
+                    _buildAccessToolbarOverlay(),
+                  ],
+                ),
+              );
+            }),
           ),
         ),
         const SizedBox(width: 20),

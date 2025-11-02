@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'tokens.dart';
 import 'typography.dart';
 
-@immutable
+ 
 class AppTheme {
   static bool useNewTheme = true;
 

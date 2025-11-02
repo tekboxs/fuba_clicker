@@ -154,12 +154,10 @@ class RankingCardDesktop extends StatelessWidget {
                           // 'asdasdsadasdsadasd33333333333333333333333',
                           entry.username,
                           maxLines: 3,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                  ),
                         ),
                       ],
                     ),
@@ -223,8 +221,9 @@ class RankingCardDesktop extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(width: 10),
-                                      Padding(
-                                      padding: const EdgeInsets.only(bottom: 12),
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 12),
                                       child: Column(
                                         children: [
                                           const Icon(
@@ -239,8 +238,8 @@ class RankingCardDesktop extends StatelessWidget {
                                                 .textTheme
                                                 .bodySmall
                                                 ?.copyWith(
-                                              color: Colors.white,
-                                            ),
+                                                  color: Colors.white,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -286,12 +285,6 @@ class RankingCardDesktop extends StatelessWidget {
                     label: 'Conquistas',
                     value: entry.achievementCount.toString(),
                     color: const Color(0xFFFF9800),
-                  ),
-                  _buildStatBadge(
-                    icon: Icons.cake,
-                    label: 'Fubá',
-                    value: GameConstants.formatNumber(entry.fuba),
-                    color: const Color(0xFF9C27B0),
                   ),
                 ],
               ),

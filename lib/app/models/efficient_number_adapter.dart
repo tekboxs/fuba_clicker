@@ -19,3 +19,5 @@ class EfficientNumberAdapter extends TypeAdapter<EfficientNumber> {
 
 
 
+
+

@@ -128,13 +128,11 @@ class _DesktopInventoryGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isMobile = GameConstants.isMobile(context);
     return GridView.builder(
       padding: const EdgeInsets.all(20),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: _getInventoryAspectRatio(screenHeight, isMobile),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 460,
+        mainAxisExtent: 140,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
@@ -574,8 +572,8 @@ class _EquippedSlotsHeader extends ConsumerWidget {
                 Expanded(
                   child: GridView(
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 400,
                       childAspectRatio: 3,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,

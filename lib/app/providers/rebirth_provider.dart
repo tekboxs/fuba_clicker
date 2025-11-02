@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/efficient_number.dart';
 import '../models/rebirth_data.dart';
@@ -25,6 +26,14 @@ final oneTimeMultiplierProvider = Provider<EfficientNumber>((ref) {
 });
 
 final canRebirthProvider = Provider.family<bool, RebirthTier>((ref, tier) {
+  if (tier == RebirthTier.furuborus) {
+    if (!kDebugMode) {
+      return false;
+    }
+    final rebirthData = ref.watch(rebirthDataProvider);
+    return rebirthData.transcendenceCount >= 100;
+  }
+
   final fuba = ref.watch(fubaProvider);
   final rebirthData = ref.watch(rebirthDataProvider);
 
@@ -39,6 +48,8 @@ final canRebirthProvider = Provider.family<bool, RebirthTier>((ref, tier) {
     case RebirthTier.transcendence:
       requirement = tier.getRequirement(rebirthData.transcendenceCount);
       break;
+    case RebirthTier.furuborus:
+      return false;
   }
 
   if (!requirement.isFinite) {
@@ -68,7 +79,14 @@ class RebirthNotifier {
       case RebirthTier.transcendence:
         tokenReward = tier.getTokenReward(currentData.transcendenceCount);
         break;
+      case RebirthTier.furuborus:
+        tokenReward = 0.0;
+        break;
     }
+
+    final upgradeNotifier = ref.read(upgradeNotifierProvider);
+    final tokenMultiplier = upgradeNotifier.getTokenMultiplier();
+    final finalTokenReward = tokenReward * tokenMultiplier;
 
     _resetProgress(tier);
 
@@ -76,31 +94,52 @@ class RebirthNotifier {
       case RebirthTier.rebirth:
         ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           rebirthCount: currentData.rebirthCount + 1,
-          celestialTokens: currentData.celestialTokens + tokenReward,
+          celestialTokens: currentData.celestialTokens + finalTokenReward,
         );
         break;
       case RebirthTier.ascension:
         ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           ascensionCount: currentData.ascensionCount + 1,
-          celestialTokens: currentData.celestialTokens + tokenReward,
+          celestialTokens: currentData.celestialTokens + finalTokenReward,
         );
         break;
       case RebirthTier.transcendence:
         ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           transcendenceCount: currentData.transcendenceCount + 1,
-          celestialTokens: currentData.celestialTokens + tokenReward,
+          celestialTokens: currentData.celestialTokens + finalTokenReward,
         );
+        break;
+      case RebirthTier.furuborus:
+        if (currentData.transcendenceCount >= 100) {
+          ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+            rebirthCount: 0,
+            ascensionCount: 0,
+            transcendenceCount: currentData.transcendenceCount - 100,
+            furuborusCount: currentData.furuborusCount + 1,
+            forus: currentData.forus + 1.0,
+          );
+        }
         break;
     }
   }
 
   void _resetProgress(RebirthTier tier) {
     ref.read(fubaProvider.notifier).state = const EfficientNumber.zero();
-    ref.read(generatorsProvider.notifier).state =
-        List.filled(availableGenerators.length, 0);
-
+    
     final upgradeNotifier = ref.read(upgradeNotifierProvider);
     final shouldKeepItems = upgradeNotifier.shouldKeepItems();
+    final keepGeneratorsPercent = upgradeNotifier.getKeepGeneratorsPercent();
+
+    final currentGenerators = ref.read(generatorsProvider);
+    if (keepGeneratorsPercent > 0) {
+      final keptGenerators = currentGenerators.map((count) => 
+        (count * keepGeneratorsPercent).floor()
+      ).toList();
+      ref.read(generatorsProvider.notifier).state = keptGenerators;
+    } else {
+      ref.read(generatorsProvider.notifier).state =
+          List.filled(availableGenerators.length, 0);
+    }
 
     switch (tier) {
       case RebirthTier.rebirth:
@@ -116,6 +155,13 @@ class RebirthNotifier {
           ref.read(inventoryProvider.notifier).state = {};
           ref.read(equippedAccessoriesProvider.notifier).state = [];
         }
+        break;
+      case RebirthTier.furuborus:
+        if (!shouldKeepItems) {
+          ref.read(inventoryProvider.notifier).state = {};
+          ref.read(equippedAccessoriesProvider.notifier).state = [];
+        }
+        ref.read(upgradesLevelProvider.notifier).state = {};
         break;
     }
     
@@ -150,6 +196,11 @@ class RebirthNotifier {
           transcendenceCount: currentData.transcendenceCount + amount,
         );
         break;
+      case RebirthTier.furuborus:
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+          furuborusCount: currentData.furuborusCount + amount,
+        );
+        break;
     }
 
     ref.read(saveNotifierProvider.notifier).saveImmediate();
@@ -173,6 +224,20 @@ class RebirthNotifier {
       case RebirthTier.transcendence:
         currentTierCount = currentData.transcendenceCount;
         break;
+      case RebirthTier.furuborus:
+        final maxByTranscendence = currentData.transcendenceCount ~/ 100;
+        final actualCount = count.clamp(0, maxByTranscendence.clamp(0, 5));
+        if (actualCount <= 0) return;
+        
+        ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+          rebirthCount: 0,
+          ascensionCount: 0,
+          transcendenceCount: currentData.transcendenceCount - (actualCount * 100),
+          furuborusCount: currentData.furuborusCount + actualCount,
+          forus: currentData.forus + actualCount.toDouble(),
+        );
+        _resetProgress(tier);
+        return;
     }
 
     // Limites máximos por operação
@@ -191,6 +256,9 @@ class RebirthNotifier {
       case RebirthTier.transcendence:
         maxAllowed = maxTranscendences;
         break;
+      case RebirthTier.furuborus:
+        maxAllowed = 0;
+        break;
     }
 
     final int maxByResources = calculateMaxOperations(tier, fuba, currentData);
@@ -203,26 +271,32 @@ class RebirthNotifier {
       totalTokenReward += tier.getTokenReward(currentTierCount + i);
     }
 
+    final upgradeNotifier = ref.read(upgradeNotifierProvider);
+    final tokenMultiplier = upgradeNotifier.getTokenMultiplier();
+    final finalTotalTokenReward = totalTokenReward * tokenMultiplier;
+
     _resetProgress(tier);
 
     switch (tier) {
       case RebirthTier.rebirth:
         ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           rebirthCount: currentData.rebirthCount + actualCount,
-          celestialTokens: currentData.celestialTokens + totalTokenReward,
+          celestialTokens: currentData.celestialTokens + finalTotalTokenReward,
         );
         break;
       case RebirthTier.ascension:
         ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           ascensionCount: currentData.ascensionCount + actualCount,
-          celestialTokens: currentData.celestialTokens + totalTokenReward,
+          celestialTokens: currentData.celestialTokens + finalTotalTokenReward,
         );
         break;
       case RebirthTier.transcendence:
         ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           transcendenceCount: currentData.transcendenceCount + actualCount,
-          celestialTokens: currentData.celestialTokens + totalTokenReward,
+          celestialTokens: currentData.celestialTokens + finalTotalTokenReward,
         );
+        break;
+      case RebirthTier.furuborus:
         break;
     }
   }
@@ -246,6 +320,8 @@ int calculateMaxOperations(RebirthTier tier, EfficientNumber fuba, RebirthData r
     case RebirthTier.transcendence:
       currentCount = rebirthData.transcendenceCount;
       break;
+    case RebirthTier.furuborus:
+      return rebirthData.transcendenceCount ~/ 100;
   }
   
   // Limites máximos seguros para evitar travamentos
@@ -264,6 +340,9 @@ int calculateMaxOperations(RebirthTier tier, EfficientNumber fuba, RebirthData r
       break;
     case RebirthTier.transcendence:
       maxAllowed = maxTranscendences;
+      break;
+    case RebirthTier.furuborus:
+      maxAllowed = 5;
       break;
   }
   

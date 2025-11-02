@@ -25,7 +25,6 @@ class UpgradeNotifier {
     final currentLevel = getUpgradeLevel(upgrade.id);
     final rebirthData = ref.read(rebirthDataProvider);
     
-    // Verifica se o cache ainda é válido
     final cacheKey = '${upgrade.id}_${currentLevel}_${rebirthData.celestialTokens}';
     if (_canPurchaseCache.containsKey(cacheKey)) {
       return _canPurchaseCache[cacheKey]!;
@@ -65,9 +64,9 @@ class UpgradeNotifier {
     newLevels[upgrade.id] = currentLevel + 1;
     ref.read(upgradesLevelProvider.notifier).state = newLevels;
     
-    // Limpa o cache após uma compra
     _clearCache();
   }
+  
 
   int getUpgradeLevel(String upgradeId) {
     return ref.read(upgradeLevelsProvider)[upgradeId] ?? 0;
@@ -80,7 +79,7 @@ class UpgradeNotifier {
   }
 
   EfficientNumber getTotalProductionMultiplier() {
-    EfficientNumber multiplier = EfficientNumber.one();
+    EfficientNumber multiplier = const EfficientNumber.one();
     multiplier *= EfficientNumber.fromValues(
         getUpgradeEffect(UpgradeType.idleBoost), 0);
     multiplier *= EfficientNumber.fromValues(
@@ -111,6 +110,14 @@ class UpgradeNotifier {
 
   bool shouldKeepItems() {
     return getUpgradeEffect(UpgradeType.keepItems) >= 1.0;
+  }
+
+  double getKeepGeneratorsPercent() {
+    return getUpgradeEffect(UpgradeType.keepGenerators);
+  }
+
+  double getTokenMultiplier() {
+    return getUpgradeEffect(UpgradeType.tokenMultiplier);
   }
 }
 

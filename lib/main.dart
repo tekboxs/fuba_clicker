@@ -132,7 +132,6 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   showWelcomePopup() {
     if (_showWelcomePopup) {
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (!mounted) return;
         showDialog(
           context: context,
           builder: (context) => const WelcomePopup(),
@@ -178,11 +177,8 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
       });
 
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (!mounted) return;
-        final ctx = kGlobalNavigationKey.currentContext;
-        if (ctx == null) return;
         showDialog(
-          context: ctx,
+          context: kGlobalNavigationKey.currentContext!,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
             backgroundColor: Colors.black.withAlpha(240),
@@ -271,7 +267,6 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
       try {
         ref.read(appContextProvider.notifier).state = context;
       } catch (error, stackTrace) {
@@ -284,7 +279,6 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
     if (authState.isAuthenticated && _showWelcomePopup) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
         setState(() {
           _showWelcomePopup = false;
         });
@@ -293,11 +287,8 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
     if (syncConflict == SyncConflictType.needsConfirmation) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final ctx = kGlobalNavigationKey.currentContext;
-        if (ctx == null) return;
         showDialog(
-          context: ctx,
+          context: kGlobalNavigationKey.currentContext!,
           barrierDismissible: false,
           builder: (context) => const SyncConflictDialog(),
         );

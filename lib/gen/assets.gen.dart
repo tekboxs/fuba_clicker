@@ -30,6 +30,12 @@ class $AssetsImagesGen {
   /// File path: assets/images/qrcode.png
   AssetGenImage get qrcode => const AssetGenImage('assets/images/qrcode.png');
 
+  /// File path: assets/images/furuborus.png
+  AssetGenImage get furuborus => const AssetGenImage('assets/images/furuborus.png');
+
+  /// File path: assets/images/forus.png
+  AssetGenImage get forus => const AssetGenImage('assets/images/forus.png');
+
   /// List of all assets
   List<AssetGenImage> get values => [cake, icon, qrcode];
 }

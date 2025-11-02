@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' show lerpDouble;
 
-@immutable
+ 
 class AppColors {
   static const Color background = Color(0xFF0F0720);
   static const Color foreground = Color(0xFFFBFBFC);
@@ -66,7 +66,7 @@ class AppColors {
   static const Color red800 = Color(0xFF991B1B);
 }
 
-@immutable
+ 
 class AppSpacing {
   static const double unit = 4;
   static const double xxs = unit;
@@ -78,7 +78,7 @@ class AppSpacing {
   static const double xxl = unit * 12;
 }
 
-@immutable
+ 
 class AppRadii {
   static const double sm = 8;
   static const double md = 12;
@@ -87,7 +87,7 @@ class AppRadii {
   static const double xxl = 24;
 }
 
-@immutable
+ 
 class AppElevations {
   static const double level0 = 0;
   static const double level1 = 1;
@@ -95,21 +95,21 @@ class AppElevations {
   static const double level3 = 6;
 }
 
-@immutable
+ 
 class AppDurations {
   static const Duration fast = Duration(milliseconds: 120);
   static const Duration normal = Duration(milliseconds: 180);
   static const Duration slow = Duration(milliseconds: 240);
 }
 
-@immutable
+ 
 class AppCurves {
   static const Curve emphasized = Curves.easeOutCubic;
   static const Curve standard = Curves.easeInOut;
   static const Curve emphasizedDecel = Curves.easeOutQuart;
 }
 
-@immutable
+ 
 class AppShadows {
   static const List<BoxShadow> level1 = [
     BoxShadow(
@@ -176,7 +176,7 @@ class AppShadows {
   ];
 }
 
-@immutable
+ 
 class AppGradients {
   static const LinearGradient purpleFuchsia = LinearGradient(
     colors: [AppColors.purple600, AppColors.fuchsia600],
@@ -238,7 +238,7 @@ class AppGradients {
   );
 }
 
-@immutable
+ 
 class AppTokens extends ThemeExtension<AppTokens> {
   final double radiusSm;
   final double radiusMd;

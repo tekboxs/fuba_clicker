@@ -186,13 +186,13 @@ class RebirthUpgradesPage extends ConsumerWidget {
     final upgradeNotifier = ref.read(upgradeNotifierProvider);
     final rebirthData = ref.read(rebirthDataProvider);
 
-    // Adiciona tokens suficientes para comprar todos os upgrades
+    final maxAscensionRequirement = allUpgrades.map((u) => u.ascensionRequirement).reduce((a, b) => a > b ? a : b);
+
     ref.read(rebirthDataProvider.notifier).state = rebirthData.copyWith(
-      celestialTokens: 999999.0,
-      ascensionCount: 10, // Garante que todos os upgrades estejam desbloqueados
+      celestialTokens: 9999999.0,
+      ascensionCount: maxAscensionRequirement,
     );
 
-    // Compra todos os upgrades até o nível máximo
     for (final upgrade in allUpgrades) {
       final currentLevel = upgradeNotifier.getUpgradeLevel(upgrade.id);
       for (int level = currentLevel; level < upgrade.maxLevel; level++) {

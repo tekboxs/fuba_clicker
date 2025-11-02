@@ -20,16 +20,18 @@ class RebirthDataAdapter extends TypeAdapter<RebirthData> {
       rebirthCount: fields[0] as int,
       ascensionCount: fields[1] as int,
       transcendenceCount: fields[2] as int,
-      celestialTokens: fields[3] as double,
-      hasUsedOneTimeMultiplier: fields[4] as bool,
-      usedCoupons: (fields[5] as List).cast<String>(),
+      furuborusCount: fields[3] as int,
+      celestialTokens: fields[4] as double,
+      hasUsedOneTimeMultiplier: fields[5] as bool,
+      usedCoupons: (fields[6] as List).cast<String>(),
+      forus: fields[7] as double,
     );
   }
 
   @override
   void write(BinaryWriter writer, RebirthData obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.rebirthCount)
       ..writeByte(1)
@@ -37,11 +39,15 @@ class RebirthDataAdapter extends TypeAdapter<RebirthData> {
       ..writeByte(2)
       ..write(obj.transcendenceCount)
       ..writeByte(3)
-      ..write(obj.celestialTokens)
+      ..write(obj.furuborusCount)
       ..writeByte(4)
-      ..write(obj.hasUsedOneTimeMultiplier)
+      ..write(obj.celestialTokens)
       ..writeByte(5)
-      ..write(obj.usedCoupons);
+      ..write(obj.hasUsedOneTimeMultiplier)
+      ..writeByte(6)
+      ..write(obj.usedCoupons)
+      ..writeByte(7)
+      ..write(obj.forus);
   }
 
   @override
