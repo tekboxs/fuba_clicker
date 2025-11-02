@@ -331,7 +331,6 @@ class RebirthPage extends ConsumerWidget {
         : calculateMaxOperations(tier, fuba, rebirthData);
 
     final effectiveLocked = barrierLocked || !canRebirth;
-    final isFuruborusLocked = tier == RebirthTier.furuborus && !kDebugMode;
 
     if (tier == RebirthTier.furuborus) {
       return _FuruborusCard(
@@ -339,11 +338,11 @@ class RebirthPage extends ConsumerWidget {
         subtitle: subtitle,
         emoji: tier.emoji,
         progress: progress,
-        isLocked: effectiveLocked || isFuruborusLocked,
-        canActivate: canRebirth && !isFuruborusLocked,
+        isLocked: effectiveLocked,
+        canActivate: canRebirth,
         rewardText: tokenText ?? '',
-        isComingSoon: isFuruborusLocked,
-        actions: (effectiveLocked || isFuruborusLocked)
+        isComingSoon: false,
+        actions: effectiveLocked
             ? null
             : [
                 _qtyButton(
