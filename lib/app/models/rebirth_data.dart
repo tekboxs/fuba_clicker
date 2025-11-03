@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:hive/hive.dart';
 import '../core/utils/efficient_number.dart';
+import '../core/utils/safe_convert.dart';
 
 part 'rebirth_data.g.dart';
 

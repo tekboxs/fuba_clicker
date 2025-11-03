@@ -98,13 +98,30 @@ class SaveService {
   Future<GameSaveData> loadGame() async {
     if (_box == null) return _getDefaultSaveData();
 
+    GameSaveData? compressedBackup;
     try {
-      final saveData = _box!.get(_saveKey);
-      if (saveData != null) return saveData;
+      compressedBackup = await _loadCompressedData();
     } catch (e) {
-      return await _loadCompressedData();
     }
 
+    try {
+      final saveData = _box!.get(_saveKey);
+      if (saveData != null) {
+        return saveData;
+      }
+    } catch (e, stackTrace) {
+      print('[SaveService] Erro ao ler dados do Hive: $e');
+      print(stackTrace);
+      if (compressedBackup != null) {
+        print('[SaveService] Usando backup comprimido como fallback');
+        return compressedBackup;
+      }
+      return _getDefaultSaveData();
+    }
+
+    if (compressedBackup != null) {
+      return compressedBackup;
+    }
     return await _loadCompressedData();
   }
 

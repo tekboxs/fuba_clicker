@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,14 +18,133 @@ import 'app/providers/sync_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  _setupGlobalErrorHandling();
+
   await SaveService().init();
 
   final container = ProviderContainer();
 
-  runApp(ProviderScope(
-    parent: container,
-    child: const FubaClickerApp(),
-  ));
+  runZonedGuarded(
+    () {
+      runApp(ProviderScope(
+        parent: container,
+        child: const FubaClickerApp(),
+      ));
+    },
+    (error, stackTrace) {
+      _handleGlobalError(error, stackTrace);
+    },
+  );
+}
+
+void _setupGlobalErrorHandling() {
+  FlutterError.onError = (FlutterErrorDetails details) {
+    _handleFlutterError(details);
+  };
+
+  PlatformDispatcher.instance.onError = (error, stackTrace) {
+    _handleGlobalError(error, stackTrace);
+    return true;
+  };
+}
+
+void _handleFlutterError(FlutterErrorDetails details) {
+  final exceptionString = details.exception.toString();
+  final stackString = details.stack?.toString() ?? 'No stack trace';
+
+  if (_isInfinityToIntError(exceptionString)) {
+    _logInfinityError(
+      exception: exceptionString,
+      stackTrace: stackString,
+      context: details.context?.toString(),
+      library: details.library,
+      informationCollector: details.informationCollector,
+    );
+  } else {
+    developer.log(
+      'Flutter Error: ${details.exception}',
+      name: 'FlutterError',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+    FlutterError.presentError(details);
+  }
+}
+
+void _handleGlobalError(Object error, StackTrace stackTrace) {
+  final errorString = error.toString();
+  final stackString = stackTrace.toString();
+
+  if (_isInfinityToIntError(errorString)) {
+    _logInfinityError(
+      exception: errorString,
+      stackTrace: stackString,
+      context: 'Global Error Handler',
+    );
+  } else {
+    developer.log(
+      'Uncaught Error: $error',
+      name: 'GlobalError',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    print('Uncaught Error: $error\n$stackTrace');
+  }
+}
+
+bool _isInfinityToIntError(String errorMessage) {
+  final lowerMessage = errorMessage.toLowerCase();
+  return lowerMessage.contains('infinity.toint()') ||
+      (lowerMessage.contains('unsupported operation') && lowerMessage.contains('infinity')) ||
+      (lowerMessage.contains('infinity') && lowerMessage.contains('toint'));
+}
+
+void _logInfinityError({
+  required String exception,
+  required String stackTrace,
+  String? context,
+  String? library,
+  Iterable<DiagnosticsNode> Function()? informationCollector,
+}) {
+  final timestamp = DateTime.now().toIso8601String();
+  
+  print('=' * 80);
+  print('[INFINITY_TO_INT_ERROR] $timestamp');
+  print('=' * 80);
+  print('Erro: $exception');
+  print('');
+  print('Stack Trace:');
+  print(stackTrace);
+  print('');
+  
+  if (context != null) {
+    print('Context: $context');
+    print('');
+  }
+  
+  if (library != null) {
+    print('Library: $library');
+    print('');
+  }
+  
+  if (informationCollector != null) {
+    print('Additional Information:');
+    for (final info in informationCollector()) {
+      print('  ${info.toStringDeep()}');
+    }
+    print('');
+  }
+  
+  print('=' * 80);
+  print('');
+
+  developer.log(
+    '❌ [INFINITY_TO_INT_ERROR] $exception',
+    name: 'InfinityToIntError',
+    error: exception,
+    stackTrace: StackTrace.fromString(stackTrace),
+  );
 }
 
 ///Save simple data like primitives types

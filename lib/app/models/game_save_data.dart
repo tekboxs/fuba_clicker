@@ -1,4 +1,5 @@
 import '../core/utils/efficient_number.dart';
+import '../core/utils/safe_convert.dart';
 import 'package:hive/hive.dart';
 import 'rebirth_data.dart';
 
