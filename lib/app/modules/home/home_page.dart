@@ -10,6 +10,7 @@ import '../../providers/accessory_provider.dart';
 import '../../providers/achievement_provider.dart';
 import '../../providers/rebirth_upgrade_provider.dart';
 import '../../providers/rebirth_provider.dart';
+import '../../providers/forus_upgrade_provider.dart';
 import '../../providers/visual_settings_provider.dart';
 import '../../services/save_service.dart';
 import '../../models/achievement.dart';
@@ -21,6 +22,8 @@ import '../../core/utils/efficient_number.dart';
 import 'components/generator_section.dart';
 import '../../theme/components.dart';
 import '../shop/loot_box_shop.dart';
+import '../shop/forus_shop.dart';
+import '../shop/craft_page.dart';
 import 'components/floating_accessories.dart';
 import 'components/cake_display.dart';
 import '../rebirth/rebirth_page.dart';
@@ -278,6 +281,9 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   Widget _buildAccessBarInner(bool isMobile, bool isAudioPlaying) {
+    final ownedUpgrades = ref.watch(forusUpgradesOwnedProvider);
+    final hasMergeUpgrade = ownedUpgrades.contains('merge_items');
+    
     return Column(
       children: [
         Container(
@@ -308,6 +314,31 @@ class _HomePageState extends ConsumerState<HomePage>
                   );
                 },
               ),
+              _buildIconButtonWithLabel(
+                Icons.diamond,
+                Colors.cyan,
+                'Forus',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ForusShopPage(),
+                    ),
+                  );
+                },
+              ),
+              if (hasMergeUpgrade)
+                _buildIconButtonWithLabel(
+                  Icons.merge,
+                  Colors.purple,
+                  'Fundir',
+                  () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const CraftPage(),
+                      ),
+                    );
+                  },
+                ),
               _buildIconButtonWithLabel(
                 Icons.auto_awesome,
                 const Color.fromARGB(255, 141, 157, 248),
@@ -468,36 +499,45 @@ class _HomePageState extends ConsumerState<HomePage>
   /// Layout para mobile (coluna)
   Widget _buildMobileLayout() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(height: 35),
-        const SizedBox(height: 4),
-        _buildTitle(),
-        const SizedBox(height: 2),
-        _buildCounter(),
-        const SizedBox(height: 2),
-        Text(
-          '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
-          style: TextStyle(
-            fontSize: GameConstants.isMobile(context) ? 12 : 16,
-            fontWeight: FontWeight.bold,
+        Expanded(
+          flex: 3,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                _buildTitle(),
+                const SizedBox(height: 4),
+                _buildCounter(),
+                const SizedBox(height: 4),
+                Text(
+                  '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
+                  style: TextStyle(
+                    fontSize: GameConstants.isMobile(context) ? 12 : 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                _buildDetailedMultipliers(ref),
+                const SizedBox(height: 8),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    _buildCakeButton(),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: _buildSupporterButton(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         ),
-        _buildDetailedMultipliers(ref),
-        const SizedBox(height: 4),
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            _buildCakeButton(),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: _buildSupporterButton(),
-            ),
-          ],
+        const Expanded(
+          flex: 5,
+          child: GeneratorSection(),
         ),
-        const SizedBox(height: 8),
-        const Expanded(child: GeneratorSection()),
       ],
     );
   }
@@ -1057,185 +1097,6 @@ class _HomePageState extends ConsumerState<HomePage>
           ),
         );
       }).toList(),
-    );
-  }
-
-  int counter = 0;
-
-  void _handleAudioToggle() async {
-    final audioNotifier = ref.read(audioStateProvider.notifier);
-    final isAudioPlaying = ref.read(audioStateProvider);
-    final rebirthData = ref.read(rebirthDataProvider);
-
-    if (isAudioPlaying) {
-      counter++;
-      if (counter == 0 || counter == 4) {
-        await audioNotifier.toggleAudio();
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          duration: const Duration(seconds: 1),
-          content: Text(
-            counter > 1
-                ? counter > 2
-                    ? counter > 3
-                        ? 'Agora fica sem musica tmb infeliz >:('
-                        : 'Aproveita a obra de arte'
-                    : 'Tem certeza que vai perder a obra de arte?'
-                : 'Escute a musica do bolo de fuba ;-;',
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } else {
-      if (audioNotifier.isMuted) {
-        if (rebirthData.celestialTokens >= 5.0) {
-          _showAudioReactivationDialog();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  '💎 Você precisa de 5 Tokens Celestiais para reativar a música!'),
-              backgroundColor: Colors.purple,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      } else {
-        await audioNotifier.toggleAudio();
-      }
-    }
-  }
-
-  void _showAudioReactivationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.black.withAlpha(240),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.purple.withAlpha(150), width: 2),
-        ),
-        title: const Row(
-          children: [
-            Icon(Icons.volume_up, color: Colors.purple, size: 28),
-            SizedBox(width: 8),
-            Text(
-              'Reativar Música',
-              style: TextStyle(
-                color: Colors.purple,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Para reativar a música, você precisa pagar:',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.purple.withAlpha(30),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.purple.withAlpha(100),
-                  width: 1,
-                ),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.diamond, color: Colors.purple, size: 24),
-                  SizedBox(width: 12),
-                  Text(
-                    '5 Tokens Celestiais',
-                    style: TextStyle(
-                      color: Colors.purple,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Consumer(
-              builder: (context, ref, child) {
-                final rebirthData = ref.watch(rebirthDataProvider);
-                return Text(
-                  'Você possui: ${rebirthData.celestialTokens.toStringAsFixed(1)} Tokens Celestiais',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(
-                color: Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Consumer(
-            builder: (context, ref, child) {
-              final rebirthData = ref.watch(rebirthDataProvider);
-              final canAfford = rebirthData.celestialTokens >= 5.0;
-
-              return ElevatedButton(
-                onPressed: canAfford
-                    ? () async {
-                        ref.read(rebirthDataProvider.notifier).state =
-                            rebirthData.copyWith(
-                          celestialTokens: rebirthData.celestialTokens - 5.0,
-                        );
-
-                        await ref
-                            .read(audioStateProvider.notifier)
-                            .reactivateAudioWithPayment();
-
-                        ref.read(saveNotifierProvider.notifier).saveImmediate();
-
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  '🎵 Música reativada! Custo: 5 Tokens Celestiais'),
-                              backgroundColor: Colors.purple,
-                              duration: Duration(seconds: 3),
-                            ),
-                          );
-                        }
-                      }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: canAfford ? Colors.purple : Colors.grey,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(
-                    canAfford ? 'Pagar e Reativar' : 'Tokens Insuficientes'),
-              );
-            },
-          ),
-        ],
-      ),
     );
   }
 

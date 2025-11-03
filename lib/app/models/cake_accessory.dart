@@ -31,7 +31,8 @@ enum AccessoryRarity {
   omniversal(12),
   reality(13),
   tek(14),
-  absolute(15);
+  absolute(15),
+  perfected(16);
 
   final int value;
   const AccessoryRarity(this.value);
@@ -68,6 +69,8 @@ enum AccessoryRarity {
         return Colors.lime;
       case AccessoryRarity.absolute:
         return Colors.red;
+      case AccessoryRarity.perfected:
+        return Colors.white;
     }
   }
 
@@ -103,6 +106,8 @@ enum AccessoryRarity {
         return 'Tek';
       case AccessoryRarity.absolute:
         return 'Absoluto';
+      case AccessoryRarity.perfected:
+        return 'Perfeito';
     }
   }
 
@@ -138,6 +143,8 @@ enum AccessoryRarity {
         return 0.000005;
       case AccessoryRarity.absolute:
         return 0.000001;
+      case AccessoryRarity.perfected:
+        return 0.0;
     }
   }
 
@@ -173,6 +180,8 @@ enum AccessoryRarity {
         return 250.0;
       case AccessoryRarity.absolute:
         return 500.0;
+      case AccessoryRarity.perfected:
+        return 750.0;
     }
   }
 
@@ -207,6 +216,8 @@ enum AccessoryRarity {
       case AccessoryRarity.tek:
         return AccessoryShape.octagon;
       case AccessoryRarity.absolute:
+        return AccessoryShape.octagon;
+      case AccessoryRarity.perfected:
         return AccessoryShape.octagon;
     }
   }
@@ -870,5 +881,40 @@ const List<CakeAccessory> allAccessories = [
     visualEffect: VisualEffect.rainbow,
     specialAbility: SpecialAbility.criticalClick,
   ),
-  //
+  CakeAccessory(
+    id: 'fruit_salad_item',
+    name: 'Salada de Frutas',
+    emoji: '🥗',
+    rarity: AccessoryRarity.perfected,
+    description: 'Uma deliciosa mistura de frutas tropicais',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.luckyBox,
+  ),
+  CakeAccessory(
+    id: 'corvo_calcinha_item',
+    name: 'Covro de Calcinha',
+    emoji: '🩲🐦‍⬛',
+    rarity: AccessoryRarity.perfected,
+    description: 'Um corvo estiloso com calcinha',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.criticalClick,
+  ),
+  CakeAccessory(
+    id: 'quasar_item',
+    name: 'Quasar',
+    emoji: '⚡',
+    rarity: AccessoryRarity.perfected,
+    description: 'O núcleo energético de uma galáxia ativa',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.autoClicker,
+  ),
+  CakeAccessory(
+    id: 'kotoamatsukami_item',
+    name: 'Kotoamatsukami',
+    emoji: '🌀',
+    rarity: AccessoryRarity.perfected,
+    description: 'A ilusão dos deuses que manipula a realidade',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.timeWarp,
+  ),
 ];

@@ -16,9 +16,9 @@ class AccountSettings extends ConsumerWidget {
     final user = authState.user;
 
     return Card(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(8),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

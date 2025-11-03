@@ -98,7 +98,7 @@ extension RebirthTierExtension on RebirthTier {
       case RebirthTier.ascension:
         return 10.0; // 10x por ascensão
       case RebirthTier.transcendence:
-        return 100.0; // 100x por transcendência
+        return 10.0; // 10x por transcendência
       case RebirthTier.furuborus:
         return 1.0; // Sem multiplicador, apenas forus
     }

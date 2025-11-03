@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/efficient_number.dart';
 import '../models/rebirth_data.dart';
@@ -27,9 +26,6 @@ final oneTimeMultiplierProvider = Provider<EfficientNumber>((ref) {
 
 final canRebirthProvider = Provider.family<bool, RebirthTier>((ref, tier) {
   if (tier == RebirthTier.furuborus) {
-    if (!kDebugMode) {
-      return false;
-    }
     final rebirthData = ref.watch(rebirthDataProvider);
     return rebirthData.transcendenceCount >= 100;
   }

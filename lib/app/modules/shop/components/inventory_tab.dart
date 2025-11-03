@@ -99,8 +99,14 @@ class _MobileInventoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ListView.builder(
+    return GridView.builder(
       padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 400,
+        mainAxisExtent: 140,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final entry = items[index];
@@ -111,7 +117,7 @@ class _MobileInventoryList extends ConsumerWidget {
         final equipped = ref.watch(equippedAccessoriesProvider);
         final isEquipped = equipped.contains(accessory.id);
         final equippedCount = equipped.where((id) => id == accessory.id).length;
-        return _InventoryTile(
+        return _DesktopInventoryItem(
           accessory: accessory,
           count: count,
           isEquipped: isEquipped,
@@ -153,207 +159,6 @@ class _DesktopInventoryGrid extends ConsumerWidget {
           equippedCount: equippedCount,
         );
       },
-    );
-  }
-
-  double _getInventoryAspectRatio(double h, bool isMobile) {
-    if (h < 500) return isMobile ? 3.5 : 4.0;
-    if (h < 600) return isMobile ? 3.0 : 3.5;
-    if (h < 700) return isMobile ? 2.8 : 3.2;
-    if (h < 800) return isMobile ? 2.6 : 3.0;
-    return isMobile ? 2.4 : 2.8;
-  }
-}
-
-class _InventoryTile extends ConsumerWidget {
-  final CakeAccessory accessory;
-  final int count;
-  final bool isEquipped;
-  final int equippedCount;
-
-  const _InventoryTile({
-    required this.accessory,
-    required this.count,
-    required this.isEquipped,
-    required this.equippedCount,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final canEquip =
-        ref.watch(accessoryNotifierProvider).canEquip(accessory.id);
-    final maxCapacity = ref.watch(accessoryCapacityProvider);
-    final equipped = ref.watch(equippedAccessoriesProvider);
-
-    const bg = Color(0xFF0F1115);
-    const border = Colors.white10;
-    final rarity = accessory.rarity.color;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: border),
-        boxShadow: [
-          BoxShadow(color: rarity.withOpacity(0.15), blurRadius: 20),
-        ],
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            bg,
-            rarity.withOpacity(0.08),
-          ],
-        ),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 54,
-          height: 54,
-          decoration: const BoxDecoration(),
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-            ),
-            child: Center(
-              child:
-                  Text(accessory.emoji, style: const TextStyle(fontSize: 30)),
-            ),
-          ),
-        ),
-        title: Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'asdads',
-                // accessory.name,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (isEquipped)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: rarity.withOpacity(0.25),
-                  borderRadius: BorderRadius.circular(100),
-                  border: Border.all(color: rarity.withOpacity(0.6)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.auto_awesome, size: 12, color: Colors.white),
-                    SizedBox(width: 6),
-                    Text('Equipado', style: TextStyle(fontSize: 11)),
-                  ],
-                ),
-              ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: 0.8,
-                      minHeight: 6,
-                      backgroundColor: Colors.white10,
-                      valueColor: AlwaysStoppedAnimation<Color>(rarity),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  accessory.rarity.displayName,
-                  style: TextStyle(fontSize: 11, color: rarity),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Text('Inventário: $count',
-                    style:
-                        const TextStyle(fontSize: 12, color: Colors.white70)),
-                const SizedBox(width: 12),
-                Text('Slots: ${equipped.length}/$maxCapacity',
-                    style:
-                        TextStyle(fontSize: 11, color: Colors.blue.shade300)),
-              ],
-            ),
-            if (equippedCount > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text('Equipados: $equippedCount',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    )),
-              ),
-          ],
-        ),
-        trailing: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (equippedCount > 0)
-              InkResponse(
-                onTap: () {
-                  final n = ref.read(accessoryNotifierProvider);
-                  n.unequipAccessory(accessory.id);
-                  final newEquipped = ref.read(equippedAccessoriesProvider);
-                  ref.read(achievementNotifierProvider).updateStat(
-                        'equipped_count',
-                        newEquipped.length.toDouble(),
-                        context,
-                      );
-                  ref.read(saveNotifierProvider.notifier).saveImmediate();
-                },
-                child: const Icon(Icons.close, color: Colors.red),
-              ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: canEquip
-                  ? () {
-                      final n = ref.read(accessoryNotifierProvider);
-                      n.equipAccessory(accessory.id);
-                      final newEquipped = ref.read(equippedAccessoriesProvider);
-                      ref.read(achievementNotifierProvider).updateStat(
-                            'equipped_count',
-                            newEquipped.length.toDouble(),
-                            context,
-                          );
-                      ref.read(saveNotifierProvider.notifier).saveImmediate();
-                    }
-                  : null,
-              borderRadius: BorderRadius.circular(100),
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: canEquip ? rarity : Colors.grey,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

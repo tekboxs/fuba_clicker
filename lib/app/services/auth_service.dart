@@ -9,6 +9,8 @@ class AuthService {
   static const String _jwtKey = 'auth_jwt';
   static const String _rtKey = 'auth_rt';
   static const String _userDataKey = 'user_data';
+  static const String _emailKey = 'auth_email';
+  static const String _passwordKey = 'auth_password';
 
   final ApiService _apiService = ApiService();
   Box? _authBox;
@@ -59,6 +61,7 @@ class AuthService {
     try {
       final response = await _apiService.login(email, password);
 
+      await _saveCredentials(email, password);
       await _saveAuthData(response.jwt, response.rt, null);
 
       await TokenService().writeMethod('jwt', response.jwt);
@@ -72,6 +75,7 @@ class AuthService {
   Future<void> register(String email, String username, String password) async {
     try {
       await _apiService.register(email, username, password);
+      await _saveCredentials(email, password);
     } catch (e) {
       debugPrint('[]>> register error: $e');
 
@@ -95,6 +99,42 @@ class AuthService {
     }
     _apiService.setJwt(null);
     _apiService.setRefreshToken(null);
+  }
+
+  Future<void> _saveCredentials(String email, String password) async {
+    if (_authBox == null) return;
+    await _authBox!.put(_emailKey, email);
+    await _authBox!.put(_passwordKey, password);
+  }
+
+  Future<String?> getSavedEmail() async {
+    if (_authBox == null) return null;
+    return _authBox!.get(_emailKey);
+  }
+
+  Future<String?> getSavedPassword() async {
+    if (_authBox == null) return null;
+    return _authBox!.get(_passwordKey);
+  }
+
+  Future<bool> autoRelogin() async {
+    try {
+      final email = await getSavedEmail();
+      final password = await getSavedPassword();
+
+      if (email == null || password == null) {
+        return false;
+      }
+
+      final response = await _apiService.login(email, password);
+      await _saveAuthData(response.jwt, response.rt, null);
+      await TokenService().writeMethod('jwt', response.jwt);
+
+      return true;
+    } catch (e) {
+      debugPrint('[]>> autoRelogin error: $e');
+      return false;
+    }
   }
 
   Future<void> _saveAuthData(String jwt, String? rt, UserData? userData) async {

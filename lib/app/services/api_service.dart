@@ -9,6 +9,7 @@ import '../models/user_data.dart';
 import '../models/auth_response.dart';
 import '../models/ranking_entry.dart';
 import '../core/utils/obfuscation.dart';
+import 'auth_service.dart';
 
 class ApiService {
   static const String baseUrl =
@@ -18,6 +19,7 @@ class ApiService {
 
   late final Dio _dio;
   String? _jwt;
+  bool _isRelogging = false;
 
   ApiService() {
     _dio = Dio(BaseOptions(
@@ -68,9 +70,38 @@ class ApiService {
 
         handler.next(response);
       },
-      onError: (error, handler) {
-        if (error.response?.statusCode == 401) {
+      onError: (error, handler) async {
+        if (error.response?.statusCode == 401 && !_isRelogging) {
           _jwt = null;
+          
+          try {
+            _isRelogging = true;
+            final authService = AuthService();
+            await authService.init();
+            final reloginSuccess = await authService.autoRelogin();
+            
+            if (reloginSuccess) {
+              final jwt = await TokenService().readMethod('jwt');
+              _jwt = jwt;
+              
+              final requestOptions = error.requestOptions;
+              requestOptions.headers['Authorization'] = 'Bearer $_jwt';
+              
+              try {
+                final response = await _dio.fetch(requestOptions);
+                handler.resolve(response);
+                _isRelogging = false;
+                return;
+              } catch (e) {
+                _isRelogging = false;
+              }
+            } else {
+              _isRelogging = false;
+            }
+          } catch (e) {
+            debugPrint('[]>> Erro ao tentar relogin automático: $e');
+            _isRelogging = false;
+          }
         }
         handler.next(error);
       },

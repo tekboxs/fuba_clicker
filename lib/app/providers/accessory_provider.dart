@@ -94,9 +94,9 @@ class AccessoryNotifier {
 
   EfficientNumber getTotalProductionMultiplier() {
     final equipped = ref.read(equippedAccessoriesProvider);
-    if (equipped.isEmpty) return EfficientNumber.one();
+    if (equipped.isEmpty) return const EfficientNumber.one();
 
-    EfficientNumber totalMultiplier = EfficientNumber.one();
+    EfficientNumber totalMultiplier = const EfficientNumber.one();
     for (final id in equipped) {
       final accessory = allAccessories.firstWhere((acc) => acc.id == id);
       totalMultiplier *= EfficientNumber.fromValues(
@@ -176,9 +176,9 @@ final accessoryNotifierProvider = Provider<AccessoryNotifier>((ref) {
 
 final accessoryMultiplierProvider = Provider<EfficientNumber>((ref) {
   final equipped = ref.watch(equippedAccessoriesProvider);
-  if (equipped.isEmpty) return EfficientNumber.one();
+  if (equipped.isEmpty) return const EfficientNumber.one();
 
-  EfficientNumber totalMultiplier = EfficientNumber.one();
+  EfficientNumber totalMultiplier = const EfficientNumber.one();
   for (final id in equipped) {
     final accessory = allAccessories.firstWhere((acc) => acc.id == id);
     totalMultiplier *= EfficientNumber.fromValues(

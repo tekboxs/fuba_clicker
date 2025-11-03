@@ -8,6 +8,7 @@ import 'accessory_provider.dart';
 import 'rebirth_provider.dart';
 import 'achievement_provider.dart';
 import 'rebirth_upgrade_provider.dart';
+import 'forus_upgrade_provider.dart';
 import 'visual_settings_provider.dart';
 import 'sync_notifier.dart';
 
@@ -51,6 +52,11 @@ class SaveNotifier extends StateNotifier<bool> {
       final achievements = ref.read(unlockedAchievementsProvider);
       final achievementStats = ref.read(achievementStatsProvider);
       final upgrades = ref.read(upgradesLevelProvider);
+      final forusUpgrades = ref.read(forusUpgradesOwnedProvider);
+      final upgradesWithForus = Map<String, int>.from(upgrades);
+      forusUpgrades.forEach((upgradeId) {
+        upgradesWithForus['forus_$upgradeId'] = 1;
+      });
 
       await _saveService.saveGame(
         fuba: fuba,
@@ -60,7 +66,7 @@ class SaveNotifier extends StateNotifier<bool> {
         rebirthData: rebirthData,
         achievements: achievements,
         achievementStats: achievementStats,
-        upgrades: upgrades,
+        upgrades: upgradesWithForus,
       );
 
       await _optimizeStorageIfNeeded();
@@ -123,7 +129,20 @@ class SaveNotifier extends StateNotifier<bool> {
       
       final mergedStats = {...defaultStats, ...data.achievementStats};
       ref.read(achievementStatsProvider.notifier).state = Map<String, double>.from(mergedStats);
-      ref.read(upgradesLevelProvider.notifier).state = data.upgrades;
+      
+      final rebirthUpgrades = <String, int>{};
+      final forusUpgradesOwned = <String>{};
+      
+      data.upgrades.forEach((key, value) {
+        if (key.startsWith('forus_')) {
+          forusUpgradesOwned.add(key.substring(6));
+        } else {
+          rebirthUpgrades[key] = value;
+        }
+      });
+      
+      ref.read(upgradesLevelProvider.notifier).state = rebirthUpgrades;
+      ref.read(forusUpgradesOwnedProvider.notifier).state = forusUpgradesOwned;
 
       // Carregar configurações visuais
       final visualSettings = await _saveService.loadVisualSettings();
