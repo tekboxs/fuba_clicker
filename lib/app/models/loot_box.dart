@@ -125,6 +125,38 @@ enum LootBoxTier {
     return 0.0;
   }
 
+  bool usesGenerators() {
+    return this == LootBoxTier.reality ||
+        this == LootBoxTier.omniversal ||
+        this == LootBoxTier.tek;
+  }
+
+  int getGeneratorIndex() {
+    switch (this) {
+      case LootBoxTier.reality:
+        return 9;
+      case LootBoxTier.omniversal:
+        return 22;
+      case LootBoxTier.tek:
+        return 34;
+      default:
+        return -1;
+    }
+  }
+
+  int getGeneratorCost() {
+    switch (this) {
+      case LootBoxTier.reality:
+        return 200;
+      case LootBoxTier.omniversal:
+        return 400;
+      case LootBoxTier.tek:
+        return 800;
+      default:
+        return 0;
+    }
+  }
+
   EfficientNumber getCost([EfficientNumber? currentFuba]) {
     switch (this) {
       case LootBoxTier.basic:
@@ -140,58 +172,16 @@ enum LootBoxTier {
       case LootBoxTier.transcendent:
         return EfficientNumber.parse('50000000000');
       case LootBoxTier.primordial:
-        if (currentFuba != null) {
-          final baseCost = EfficientNumber.parse('1e80');
-          if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba / EfficientNumber.parse('30');
-          }
-          return baseCost;
-        }
         return EfficientNumber.parse('1e80');
       case LootBoxTier.cosmic:
-        if (currentFuba != null) {
-          final baseCost = EfficientNumber.parse('1e120');
-          if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba / EfficientNumber.parse('50');
-          }
-          return baseCost;
-        }
         return EfficientNumber.parse('1e120');
       case LootBoxTier.infinite:
-        if (currentFuba != null) {
-          final baseCost = EfficientNumber.parse('1e200');
-          if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba / EfficientNumber.parse('100');
-          }
-          return baseCost;
-        }
         return EfficientNumber.parse('1e200');
       case LootBoxTier.reality:
-        if (currentFuba != null) {
-          final baseCost = EfficientNumber.parse('1e300');
-          if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba / EfficientNumber.parse('200');
-          }
-          return baseCost;
-        }
         return EfficientNumber.parse('1e300');
       case LootBoxTier.omniversal:
-        if (currentFuba != null) {
-          final baseCost = EfficientNumber.parse('1e400');
-          if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba / EfficientNumber.parse('500');
-          }
-          return baseCost;
-        }
         return EfficientNumber.parse('1e400');
       case LootBoxTier.tek:
-        if (currentFuba != null) {
-          final baseCost = EfficientNumber.parse('1e500');
-          if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba / EfficientNumber.parse('1000');
-          }
-          return baseCost;
-        }
         return EfficientNumber.parse('1e500');
       case LootBoxTier.absolute:
         return EfficientNumber.zero();
@@ -327,7 +317,13 @@ class LootBox {
 
   CakeAccessory openBox() {
     final weights = tier.rarityWeights;
-    final random = _random.nextDouble();
+    
+    final totalWeight = weights.values.fold(0.0, (sum, weight) => sum + weight);
+    if (totalWeight == 0.0) {
+      return allAccessories.first;
+    }
+
+    final random = _random.nextDouble() * totalWeight;
 
     double cumulativeWeight = 0.0;
     AccessoryRarity? selectedRarity;
@@ -340,7 +336,10 @@ class LootBox {
       }
     }
 
-    selectedRarity ??= AccessoryRarity.common;
+    if (selectedRarity == null) {
+      final lastEntry = weights.entries.last;
+      selectedRarity = lastEntry.key;
+    }
 
     final accessoriesOfRarity = allAccessories
         .where((accessory) => accessory.rarity == selectedRarity)

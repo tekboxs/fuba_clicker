@@ -73,7 +73,9 @@ class _HomePageState extends ConsumerState<HomePage>
   /// Inicializa o áudio do jogo
   void _initializeAudio() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(audioStateProvider.notifier);
+      if (mounted) {
+        ref.read(audioStateProvider.notifier);
+      }
     });
   }
 
@@ -283,7 +285,7 @@ class _HomePageState extends ConsumerState<HomePage>
   Widget _buildAccessBarInner(bool isMobile, bool isAudioPlaying) {
     final ownedUpgrades = ref.watch(forusUpgradesOwnedProvider);
     final hasMergeUpgrade = ownedUpgrades.contains('merge_items');
-    
+
     return Column(
       children: [
         Container(
@@ -894,16 +896,6 @@ class _HomePageState extends ConsumerState<HomePage>
         ),
         if (kDebugMode) ...[
           ElevatedButton(
-            onPressed: () {
-              _showTestAchievementPopup();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Test Achievement Popup'),
-          ),
-          ElevatedButton(
             onPressed: () async {
               // Mostrar diálogo de confirmação
               final confirmed = await showDialog<bool>(
@@ -987,22 +979,6 @@ class _HomePageState extends ConsumerState<HomePage>
                   EfficientNumber.parse('1e90');
             },
             child: const Text('mult'),
-          ),
-          Text(
-            'Debug Manual: x${manualTotal.toDouble().toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontSize: 10,
-              color: Colors.red,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            'Acessórios: x${accessoryMultiplier.toDouble().toStringAsFixed(2)} | Rebirth: x${rebirthMultiplier.toDouble().toStringAsFixed(2)} | Upgrade: x${upgradeMultiplier.toDouble().toStringAsFixed(2)} | Conquistas: x${achievementMultiplier.toDouble().toStringAsFixed(2)} | Único: x${oneTimeMultiplier.toDouble().toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 8, color: Colors.grey),
-          ),
-          Text(
-            'IDs Equipados: ${equippedIds.join(", ")}',
-            style: const TextStyle(fontSize: 8, color: Colors.yellow),
           ),
         ],
         const SizedBox(height: 5),

@@ -172,6 +172,21 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
       ref.read(rebirthDataProvider.notifier).state = rebirthData.copyWith(
         celestialTokens: rebirthData.celestialTokens - tokensCost,
       );
+    } else if (tier.usesGenerators()) {
+      final generators = ref.read(generatorsProvider);
+      final generatorIndex = tier.getGeneratorIndex();
+      final generatorCost = tier.getGeneratorCost();
+      
+      if (generatorIndex < 0 || 
+          generatorIndex >= generators.length || 
+          generators[generatorIndex] < generatorCost) return;
+
+      final newGenerators = List<int>.from(generators);
+      while (newGenerators.length <= generatorIndex) {
+        newGenerators.add(0);
+      }
+      newGenerators[generatorIndex] -= generatorCost;
+      ref.read(generatorsProvider.notifier).state = newGenerators;
     } else {
       final fuba = ref.read(fubaProvider);
       final tierCost = tier.getCost(fuba);
@@ -235,6 +250,21 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
       ref.read(rebirthDataProvider.notifier).state = rebirthData.copyWith(
         celestialTokens: rebirthData.celestialTokens - tokensCost,
       );
+    } else if (tier.usesGenerators()) {
+      final generators = ref.read(generatorsProvider);
+      final generatorIndex = tier.getGeneratorIndex();
+      final generatorCost = tier.getGeneratorCost() * quantity;
+      
+      if (generatorIndex < 0 || 
+          generatorIndex >= generators.length || 
+          generators[generatorIndex] < generatorCost) return;
+
+      final newGenerators = List<int>.from(generators);
+      while (newGenerators.length <= generatorIndex) {
+        newGenerators.add(0);
+      }
+      newGenerators[generatorIndex] -= generatorCost;
+      ref.read(generatorsProvider.notifier).state = newGenerators;
     } else {
       final fuba = ref.read(fubaProvider);
       final tierCost = tier.getCost(fuba);

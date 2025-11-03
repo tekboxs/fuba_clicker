@@ -6,6 +6,7 @@ import 'game_providers.dart';
 import 'accessory_provider.dart';
 import 'save_provider.dart';
 import 'rebirth_upgrade_provider.dart';
+import 'forus_upgrade_provider.dart';
  
 final rebirthDataProvider = StateProvider<RebirthData>((ref) {
   return const RebirthData();
@@ -157,7 +158,9 @@ class RebirthNotifier {
           ref.read(inventoryProvider.notifier).state = {};
           ref.read(equippedAccessoriesProvider.notifier).state = [];
         }
+        final forusUpgrades = ref.read(forusUpgradesOwnedProvider);
         ref.read(upgradesLevelProvider.notifier).state = {};
+        ref.read(forusUpgradesOwnedProvider.notifier).state = forusUpgrades;
         break;
     }
     

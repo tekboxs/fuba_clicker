@@ -8,6 +8,7 @@ class DifficultyBarrier {
   final int requiredGeneratorCount;
   final String unlockMessage;
   final String emoji;
+  final String? asset;
 
   const DifficultyBarrier({
     required this.name,
@@ -17,6 +18,7 @@ class DifficultyBarrier {
     required this.requiredGeneratorCount,
     required this.unlockMessage,
     required this.emoji,
+    this.asset,
   });
 
   bool isUnlocked(EfficientNumber currentFuba, List<int> generatorsOwned) {
@@ -68,129 +70,131 @@ class DifficultyBarrier {
 
 class DifficultyBarrierManager {
   static final List<DifficultyBarrier> lootBoxBarriers = [
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Primeira Caixa',
       description: 'Desbloqueie a primeira caixa de acessórios',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 3,
-      requiredGeneratorCount: 2,
+      requiredGeneratorTier: 4,
+      requiredGeneratorCount: 3,
       unlockMessage: 'Você desbloqueou a primeira caixa de acessórios!',
       emoji: '📦',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Raras',
       description: 'Desbloqueie caixas de qualidade rara',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 7,
-      requiredGeneratorCount: 5,
+      requiredGeneratorTier: 8,
+      requiredGeneratorCount: 6,
       unlockMessage: 'Caixas raras desbloqueadas!',
       emoji: '💎',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Épicas',
       description: 'Desbloqueie caixas de qualidade épica',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 12,
-      requiredGeneratorCount: 8,
+      requiredGeneratorTier: 13,
+      requiredGeneratorCount: 10,
       unlockMessage: 'Caixas épicas desbloqueadas!',
       emoji: '✨',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Lendárias',
       description: 'Desbloqueie caixas de qualidade lendária',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 18,
-      requiredGeneratorCount: 12,
+      requiredGeneratorTier: 19,
+      requiredGeneratorCount: 15,
       unlockMessage: 'Caixas lendárias desbloqueadas!',
       emoji: '👑',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Míticas',
       description: 'Desbloqueie caixas de qualidade mítica',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 22,
-      requiredGeneratorCount: 15,
+      requiredGeneratorTier: 24,
+      requiredGeneratorCount: 20,
       unlockMessage: 'Caixas míticas desbloqueadas!',
       emoji: '🌟',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Divinas',
       description: 'Desbloqueie caixas de qualidade divina',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 26,
-      requiredGeneratorCount: 20,
+      requiredGeneratorTier: 28,
+      requiredGeneratorCount: 30,
       unlockMessage: 'Caixas divinas desbloqueadas!',
       emoji: '💎',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Transcendentes',
       description: 'Desbloqueie caixas de qualidade transcendente',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 28,
-      requiredGeneratorCount: 25,
+      requiredGeneratorTier: 32,
+      requiredGeneratorCount: 40,
       unlockMessage: 'Caixas transcendentais desbloqueadas!',
       emoji: '🌟',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Primordiais',
       description: 'Desbloqueie caixas de qualidade primordial',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 25,
-      requiredGeneratorCount: 100,
+      requiredGeneratorTier: 36,
+      requiredGeneratorCount: 60,
       unlockMessage: 'Caixas primordiais desbloqueadas!',
       emoji: '🌌',
+      asset: 'assets/images/cosmic_crate.png',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Cósmicas',
       description: 'Desbloqueie caixas de qualidade cósmica',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 30,
-      requiredGeneratorCount: 150,
+      requiredGeneratorTier: 38,
+      requiredGeneratorCount: 100,
       unlockMessage: 'Caixas cósmicas desbloqueadas!',
       emoji: '🌠',
+      asset: 'assets/images/cosmic_crate.png',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Infinitas',
       description: 'Desbloqueie caixas de qualidade infinita',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 35,
-      requiredGeneratorCount: 200,
+      requiredGeneratorTier: 41,
+      requiredGeneratorCount: 150,
       unlockMessage: 'Caixas infinitas desbloqueadas!',
       emoji: '♾️',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas da Realidade',
       description: 'Desbloqueie caixas da própria realidade',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 40,
-      requiredGeneratorCount: 300,
+      requiredGeneratorTier: 43,
+      requiredGeneratorCount: 250,
       unlockMessage: 'Caixas da realidade desbloqueadas!',
       emoji: '🔮',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Omniversais',
       description: 'Desbloqueie caixas de todos os universos',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 45,
+      requiredGeneratorTier: 46,
       requiredGeneratorCount: 400,
       unlockMessage: 'Caixas omniversais desbloqueadas!',
       emoji: '🌐',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Tek',
       description: 'Desbloqueie caixas de tecnologia avançada',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 50,
-      requiredGeneratorCount: 500,
+      requiredGeneratorTier: 52,
+      requiredGeneratorCount: 600,
       unlockMessage: 'Caixas Tek desbloqueadas!',
       emoji: '💻',
     ),
-    DifficultyBarrier(
+    const DifficultyBarrier(
       name: 'Caixas Absolutas',
       description: 'Desbloqueie caixas de poder absoluto',
       requiredFuba: EfficientNumber.zero(),
-      requiredGeneratorTier: 55,
-      requiredGeneratorCount: 600,
+      requiredGeneratorTier: 58,
+      requiredGeneratorCount: 800,
       unlockMessage: 'Caixas absolutas desbloqueadas!',
       emoji: '👑',
     ),

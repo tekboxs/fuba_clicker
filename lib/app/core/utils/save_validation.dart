@@ -5,7 +5,10 @@ import '../../models/user_data.dart';
 class SaveValidation {
   static bool isLocalSaveSmaller(GameSaveData localSave, UserData cloudSave) {
     final cloudRebirthData = RebirthData.fromJson(cloudSave.rebirthData ?? {});
-
+    if (cloudRebirthData.furuborusCount <
+        localSave.rebirthData.furuborusCount) {
+      return false;
+    }
     if (cloudRebirthData.rebirthCount > localSave.rebirthData.rebirthCount) {
       return true;
     }
@@ -17,6 +20,11 @@ class SaveValidation {
 
     if (cloudRebirthData.transcendenceCount >
         localSave.rebirthData.transcendenceCount) {
+      return true;
+    }
+
+    if (cloudRebirthData.furuborusCount >
+        localSave.rebirthData.furuborusCount) {
       return true;
     }
 

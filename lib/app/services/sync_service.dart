@@ -76,10 +76,15 @@ class SyncService extends StateNotifier<bool> {
           localData,
           _cloudSaveData!.userData,
         );
-
+ 
         if (isLocalSmaller) {
+          final dialogContext = kGlobalKeyNavigator.currentContext;
+          if (dialogContext == null || !dialogContext.mounted) {
+            return false;
+          }
+          
           final result = await Future(() async => await showDialog(
-                    context: kGlobalKeyNavigator.currentContext!,
+                    context: dialogContext,
                     builder: (context) => AlertDialog(
                       title: const Text('Erro ao sincronizar para nuvem'),
                       content: const Text(
@@ -296,13 +301,16 @@ class SyncService extends StateNotifier<bool> {
 
       _ref.read(syncNotifierProvider.notifier).notifyDataLoaded();
     } catch (e) {
-      showDialog(
-        context: kGlobalKeyNavigator.currentContext!,
-        builder: (context) => AlertDialog(
-          title: const Text('Erro ao aplicar dados da nuvem'),
-          content: Text(e.toString()),
-        ),
-      );
+      final dialogContext = kGlobalKeyNavigator.currentContext;
+      if (dialogContext != null && dialogContext.mounted) {
+        showDialog(
+          context: dialogContext,
+          builder: (context) => AlertDialog(
+            title: const Text('Erro ao aplicar dados da nuvem'),
+            content: Text(e.toString()),
+          ),
+        );
+      }
     }
   }
 

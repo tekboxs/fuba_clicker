@@ -132,10 +132,12 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   showWelcomePopup() {
     if (_showWelcomePopup) {
       Future.delayed(const Duration(milliseconds: 500), () {
-        showDialog(
-          context: context,
-          builder: (context) => const WelcomePopup(),
-        );
+        if (mounted && context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => const WelcomePopup(),
+          );
+        }
       });
     }
   }
@@ -152,101 +154,119 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
     try {
       await Future.delayed(const Duration(milliseconds: 100));
 
+      if (!mounted) return;
+
       await _requestAudioPermission();
+
+      if (!mounted) return;
 
       final saveNotifier = ref.read(saveNotifierProvider.notifier);
       await saveNotifier.loadGame();
 
+      if (!mounted) return;
+
       final authState = ref.read(authStateProvider);
       if (!authState.isAuthenticated) {
-        setState(() {
-          _showWelcomePopup = true;
-        });
+        if (mounted) {
+          setState(() {
+            _showWelcomePopup = true;
+          });
+        }
       }
 
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } catch (error, stackTrace) {
       await Sentry.captureException(error, stackTrace: stackTrace);
 
       print('Erro ao carregar dados: $error\n$stackTrace');
 
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
 
       Future.delayed(const Duration(milliseconds: 500), () {
-        showDialog(
-          context: kGlobalNavigationKey.currentContext!,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            backgroundColor: Colors.black.withAlpha(240),
-            title: const Text(
-              '❌ Erro ao Carregar o Jogo',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Houve um erro ao carregar os dados do jogo.',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    error.toString(),
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                  if (kDebugMode) ...[
-                    const SizedBox(height: 16),
+        final context = kGlobalNavigationKey.currentContext;
+        if (context != null && context.mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (dialogContext) => AlertDialog(
+              backgroundColor: Colors.black.withAlpha(240),
+              title: const Text(
+                '❌ Erro ao Carregar o Jogo',
+                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     const Text(
-                      'Stack Trace:',
-                      style: TextStyle(
-                        color: Colors.orange,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      'Houve um erro ao carregar os dados do jogo.',
+                      style: TextStyle(color: Colors.white70),
                     ),
-                    const SizedBox(height: 8),
-                    SelectableText(
-                      stackTrace.toString(),
+                    const SizedBox(height: 16),
+                    Text(
+                      error.toString(),
                       style: const TextStyle(
                         color: Colors.white54,
-                        fontSize: 10,
+                        fontSize: 12,
                         fontFamily: 'monospace',
                       ),
                     ),
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Stack Trace:',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SelectableText(
+                        stackTrace.toString(),
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  _loadGameData();
-                },
-                child: const Text('Tentar Novamente'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
                 ),
-                child: const Text('Continuar Mesmo Assim'),
               ),
-            ],
-          ),
-        );
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    if (mounted) {
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      _loadGameData();
+                    }
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text('Tentar Novamente'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Continuar Mesmo Assim'),
+                ),
+              ],
+            ),
+          );
+        }
       });
     }
   }
@@ -267,6 +287,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       try {
         ref.read(appContextProvider.notifier).state = context;
       } catch (error, stackTrace) {
@@ -279,19 +300,24 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
 
     if (authState.isAuthenticated && _showWelcomePopup) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          _showWelcomePopup = false;
-        });
+        if (mounted) {
+          setState(() {
+            _showWelcomePopup = false;
+          });
+        }
       });
     }
 
     if (syncConflict == SyncConflictType.needsConfirmation) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog(
-          context: kGlobalNavigationKey.currentContext!,
-          barrierDismissible: false,
-          builder: (context) => const SyncConflictDialog(),
-        );
+        final dialogContext = kGlobalNavigationKey.currentContext;
+        if (dialogContext != null && dialogContext.mounted) {
+          showDialog(
+            context: dialogContext,
+            barrierDismissible: false,
+            builder: (context) => const SyncConflictDialog(),
+          );
+        }
       });
     }
 

@@ -39,6 +39,10 @@ class LootBoxCard extends ConsumerWidget {
     return barriers[tier.value - 1].isUnlocked(fuba, generatorsOwned);
   }
 
+  bool _isTierUnlockedWithRebirth(WidgetRef ref) {
+    return _isTierUnlocked();
+  }
+
   String _getLockedCondition() {
     if (tier == LootBoxTier.basic) {
       return '';
@@ -56,6 +60,18 @@ class LootBoxCard extends ConsumerWidget {
     return '${generator.emoji} ${generator.name}: ${barrier.requiredGeneratorCount}';
   }
 
+  DifficultyBarrier? _getBarrierForTier() {
+    if (tier == LootBoxTier.basic) {
+      return null;
+    }
+    
+    final barriers = DifficultyBarrierManager.getBarriersForCategory('lootbox');
+    if (tier.value - 1 < barriers.length) {
+      return barriers[tier.value - 1];
+    }
+    return null;
+  }
+
   String _raritySummary(LootBoxTier t) {
     final entries = t.rarityWeights.entries.where((e) => e.value > 0).toList()
       ..sort((a, b) => b.value.compareTo(a.value));
@@ -69,35 +85,41 @@ class LootBoxCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isUnlocked = _isTierUnlocked();
+    final isUnlocked = _isTierUnlockedWithRebirth(ref);
     final rebirthData = ref.watch(rebirthDataProvider);
     
     bool canAfford;
-    bool canAfford5;
     bool canAfford10;
     bool canAfford50;
     
     if (tier.usesCelestialTokens()) {
       final tokensCost = tier.getCelestialTokensCost();
       canAfford = isUnlocked && rebirthData.celestialTokens >= tokensCost;
-      canAfford5 = isUnlocked && rebirthData.celestialTokens >= tokensCost * 5;
       canAfford10 = isUnlocked && rebirthData.celestialTokens >= tokensCost * 10;
       canAfford50 = isUnlocked && rebirthData.celestialTokens >= tokensCost * 50;
+    } else if (tier.usesGenerators()) {
+      final generatorIndex = tier.getGeneratorIndex();
+      final generatorCost = tier.getGeneratorCost();
+      
+      if (generatorIndex < 0) {
+        canAfford = false;
+        canAfford10 = false;
+        canAfford50 = false;
+      } else {
+        final ownedCount = generatorIndex < generatorsOwned.length 
+            ? generatorsOwned[generatorIndex] 
+            : 0;
+        canAfford = isUnlocked && ownedCount >= generatorCost;
+        canAfford10 = isUnlocked && ownedCount >= (generatorCost * 10);
+        canAfford50 = isUnlocked && ownedCount >= (generatorCost * 50);
+      }
     } else {
       final tierCost = tier.getCost(fuba);
       canAfford = isUnlocked && fuba.compareTo(tierCost) >= 0;
-      canAfford5 = isUnlocked &&
-          fuba.compareTo(tierCost * EfficientNumber.parse('5')) >= 0;
       canAfford10 = isUnlocked &&
           fuba.compareTo(tierCost * EfficientNumber.parse('10')) >= 0;
       canAfford50 = isUnlocked &&
           fuba.compareTo(tierCost * EfficientNumber.parse('50')) >= 0;
-
-      EfficientNumber basePrimordial = EfficientNumber.parse('1e80');
-
-      if (tier == LootBoxTier.primordial && fuba.compareTo(basePrimordial) > 0) {
-        canAfford50 = true;
-      }
     }
 
     final isLocked = !isUnlocked;
@@ -151,9 +173,35 @@ class LootBoxCard extends ConsumerWidget {
                           shape: BoxShape.circle,
                         ),
                       ),
-                    Text(
-                      isLocked ? '🔒' : tier.emoji,
-                      style: TextStyle(fontSize: isMobile ? 50 : 70),
+                    Builder(
+                      builder: (context) {
+                        if (isLocked) {
+                          return Text(
+                            '🔒',
+                            style: TextStyle(fontSize: isMobile ? 50 : 70),
+                          );
+                        }
+                        
+                        final barrier = _getBarrierForTier();
+                        if (barrier?.asset != null) {
+                          return Image.asset(
+                            barrier!.asset!,
+                            width: isMobile ? 50 : 130,
+                            height: isMobile ? 50 : 130,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Text(
+                                tier.emoji,
+                                style: TextStyle(fontSize: isMobile ? 50 : 70),
+                              );
+                            },
+                          );
+                        }
+                        
+                        return Text(
+                          tier.emoji,
+                          style: TextStyle(fontSize: isMobile ? 50 : 70),
+                        );
+                      },
                     )
                   ],
                 )
@@ -252,7 +300,7 @@ class LootBoxCard extends ConsumerWidget {
                     fuba: fuba,
                     rebirthData: rebirthData,
                     canAfford: canAfford,
-                    canAfford1: canAfford5,
+                    canAfford1: canAfford,
                     canAfford10: canAfford10,
                     canAfford50: canAfford50,
                     isMobile: isMobile,
@@ -362,15 +410,20 @@ class _BulkPurchaseButton extends StatelessWidget {
     if (tier.usesCelestialTokens()) {
       final tokensCost = tier.getCelestialTokensCost() * quantity;
       costText = '${tokensCost.toStringAsFixed(0)} 💎';
+    } else if (tier.usesGenerators()) {
+      final generatorIndex = tier.getGeneratorIndex();
+      final generatorCost = tier.getGeneratorCost() * quantity;
+      
+      if (generatorIndex >= 0 && generatorIndex < availableGenerators.length) {
+        final generator = availableGenerators[generatorIndex];
+        costText = '$generatorCost ${generator.emoji}';
+      } else {
+        costText = '$generatorCost';
+      }
     } else {
       final tierCost = tier.getCost(fuba);
       EfficientNumber totalCost =
           tierCost * EfficientNumber.parse(quantity.toString());
-      if (tier == LootBoxTier.primordial && quantity == 30) {
-        if (fuba.compareTo(EfficientNumber.parse('1e80')) > 0) {
-          totalCost = fuba;
-        }
-      }
 
       const discount = 0;
       final discountedCost =

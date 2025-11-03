@@ -178,13 +178,13 @@ class RebirthData {
   }
 
   EfficientNumber getTotalMultiplier() {
-    EfficientNumber multiplier = EfficientNumber.one();
+    EfficientNumber multiplier = const EfficientNumber.one();
 
     // Rebirth multiplier
     if (rebirthCount > 0) {
       final rebirthGain = EfficientNumber.fromValues(
           RebirthTier.rebirth.getMultiplierGain(0), 0);
-      final rebirthMultiplier = EfficientNumber.one() + 
+      final rebirthMultiplier = const EfficientNumber.one() + 
           (rebirthGain * EfficientNumber.fromValues(rebirthCount.toDouble(), 0));
       multiplier *= rebirthMultiplier;
     }
