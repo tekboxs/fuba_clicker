@@ -200,7 +200,7 @@ class RankingCardDesktop extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        entry.transcendenceCount.toString(),
+                                        entry.furuborusCount.toString(),
                                         style: Theme.of(context)
                                             .textTheme
                                             .headlineMedium
@@ -226,14 +226,11 @@ class RankingCardDesktop extends StatelessWidget {
                                           const EdgeInsets.only(bottom: 12),
                                       child: Column(
                                         children: [
-                                          const Icon(
-                                            Icons.auto_awesome,
-                                            size: 32,
-                                            color: Colors.white,
-                                          ),
+                                          Assets.images.forus
+                                              .image(width: 60, height: 60),
                                           const SizedBox(height: 10),
                                           Text(
-                                            'Transcendência',
+                                            'Forus',
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodySmall
@@ -262,6 +259,12 @@ class RankingCardDesktop extends StatelessWidget {
                 spacing: 6,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  _buildStatBadge(
+                    icon: Icons.adb,
+                    label: 'Ascensão',
+                    value: entry.transcendenceCount.toString(),
+                    color: Colors.deepOrange,
+                  ),
                   _buildStatBadge(
                     icon: Icons.star,
                     label: 'Ascensão',

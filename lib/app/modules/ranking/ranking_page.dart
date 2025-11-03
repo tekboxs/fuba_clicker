@@ -119,11 +119,11 @@ class _RankingPageState extends ConsumerState<RankingPage> {
 
     List<RankingEntry> ranking = _ranking;
 
-    ranking.sort((a, b) {
-      final scoreA = RankingUtils.calculateMockFuba(a);
-      final scoreB = RankingUtils.calculateMockFuba(b);
-      return scoreB.compareTo(scoreA);
-    });
+    // ranking.sort((a, b) {
+    //   final scoreA = RankingUtils.calculateMockFuba(a);
+    //   final scoreB = RankingUtils.calculateMockFuba(b);
+    //   return scoreB.compareTo(scoreA);
+    // });
     //  _ranking;
 
     return LayoutBuilder(

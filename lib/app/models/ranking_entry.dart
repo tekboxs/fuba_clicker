@@ -34,6 +34,7 @@ class RankingEntry {
   int get rebirthCount => rebirthData.rebirthCount;
   int get ascensionCount => rebirthData.ascensionCount;
   int get transcendenceCount => rebirthData.transcendenceCount;
+  int get furuborusCount => rebirthData.furuborusCount;
   int get achievementCount => achievements.length;
   double get celestialTokens => rebirthData.celestialTokens;
 }
