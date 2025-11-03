@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app/providers/achievement_provider.dart';
 import 'app/providers/save_provider.dart';
 import 'app/providers/auth_provider.dart';
@@ -17,31 +16,14 @@ import 'app/providers/sync_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SaveService().init();
 
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    Sentry.captureException(details.exception, stackTrace: details.stack);
-  };
+  final container = ProviderContainer();
 
-  await SentryFlutter.init(
-    (options) {
-      options.dsn =
-          'https://5969c28b8a0ac66f6465f1dd6485290c@o1402848.ingest.us.sentry.io/4510245636734976';
-      options.tracesSampleRate = kIsWeb ? 0.0 : 1.0;
-      options.debug = kDebugMode;
-    },
-    appRunner: () async {
-      WidgetsFlutterBinding.ensureInitialized();
-      await SaveService().init();
-
-      final container = ProviderContainer();
-
-      runApp(ProviderScope(
-        parent: container,
-        child: const FubaClickerApp(),
-      ));
-    },
-  );
+  runApp(ProviderScope(
+    parent: container,
+    child: const FubaClickerApp(),
+  ));
 }
 
 ///Save simple data like primitives types
@@ -180,8 +162,6 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
         });
       }
     } catch (error, stackTrace) {
-      await Sentry.captureException(error, stackTrace: stackTrace);
-
       print('Erro ao carregar dados: $error\n$stackTrace');
 
       if (mounted) {
@@ -280,7 +260,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
         await Permission.audio.request();
       }
     } catch (error, stackTrace) {
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      print('Erro ao solicitar permissão de áudio: $error\n$stackTrace');
     }
   }
 
@@ -291,7 +271,7 @@ class _FubaClickerAppState extends ConsumerState<FubaClickerApp> {
       try {
         ref.read(appContextProvider.notifier).state = context;
       } catch (error, stackTrace) {
-        Sentry.captureException(error, stackTrace: stackTrace);
+        print('Erro ao definir contexto: $error\n$stackTrace');
       }
     });
 

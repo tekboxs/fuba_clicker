@@ -172,6 +172,7 @@ class _HomePageState extends ConsumerState<HomePage>
     _consolidatedAchievementTimer?.cancel();
     _animationController.dispose();
     _parallaxController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -554,36 +555,36 @@ class _HomePageState extends ConsumerState<HomePage>
         // Lado esquerdo - Fubá e bolo
         Expanded(
           flex: 2,
-          child: Scrollbar(
-            controller: _scrollController,
-            trackVisibility: true,
-            thumbVisibility: true,
-            child: LayoutBuilder(builder: (context, constraints) {
-              if (constraints.maxHeight > 600) {
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Spacer(),
-                    _buildTitle(),
-                    const SizedBox(height: 16),
-                    _buildCounter(),
-                    const SizedBox(height: 8),
-                    Text(
-                      '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+          child: LayoutBuilder(builder: (context, constraints) {
+            if (constraints.maxHeight > 600) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Spacer(),
+                  _buildTitle(),
+                  const SizedBox(height: 16),
+                  _buildCounter(),
+                  const SizedBox(height: 8),
+                  Text(
+                    '🌽 ${GameConstants.formatNumber(ref.watch(autoProductionProvider))}/s',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                    _buildDetailedMultipliers(ref),
-                    const Spacer(),
-                    _buildCakeButton(),
-                    const Spacer(),
-                    _buildAccessToolbarOverlay(),
-                  ],
-                );
-              }
-              return SingleChildScrollView(
+                  ),
+                  _buildDetailedMultipliers(ref),
+                  const Spacer(),
+                  _buildCakeButton(),
+                  const Spacer(),
+                  _buildAccessToolbarOverlay(),
+                ],
+              );
+            }
+            return Scrollbar(
+              controller: _scrollController,
+              trackVisibility: true,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
                 controller: _scrollController,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -607,9 +608,9 @@ class _HomePageState extends ConsumerState<HomePage>
                     _buildAccessToolbarOverlay(),
                   ],
                 ),
-              );
-            }),
-          ),
+              ),
+            );
+          }),
         ),
         const SizedBox(width: 20),
         // Lado direito - Geradores

@@ -25,7 +25,6 @@ dependencies:
   crypto: ^3.0.3
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  sentry_flutter: ^9.0.0
   dio: ^5.4.0
   flutter_sprite: ^4.0.2
 
