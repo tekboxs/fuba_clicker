@@ -17,6 +17,10 @@ class EfficientNumber {
   static EfficientNumber fromValues(double m, int e) {
     if (m == 0) return const EfficientNumber.zero();
 
+    if (m.isNaN || m.isInfinite) {
+      return const EfficientNumber.zero();
+    }
+
     while (m.abs() >= 10) {
       m /= 10;
       e += 1;
@@ -24,6 +28,10 @@ class EfficientNumber {
     while (m.abs() < 1 && m != 0) {
       m *= 10;
       e -= 1;
+    }
+
+    if (m.isNaN || m.isInfinite) {
+      return const EfficientNumber.zero();
     }
 
     return EfficientNumber._(m, e);
@@ -67,16 +75,45 @@ class EfficientNumber {
     if (value.isEmpty || value == '0') return const EfficientNumber.zero();
 
     final String v = value.trim();
+    
+    if (v.toLowerCase() == 'infinity' || 
+        v.toLowerCase() == '-infinity' || 
+        v.toLowerCase() == 'inf' || 
+        v.toLowerCase() == '-inf' ||
+        v.toLowerCase() == 'nan') {
+      return const EfficientNumber.zero();
+    }
+
     final bool hasE = v.contains('e') || v.contains('E');
     if (hasE) {
       final int eIndex = v.toLowerCase().lastIndexOf('e');
-      final double m = double.parse(v.substring(0, eIndex));
-      final int e = int.parse(v.substring(eIndex + 1));
+      if (eIndex <= 0 || eIndex >= v.length - 1) {
+        return const EfficientNumber.zero();
+      }
+      
+      try {
+        final double m = double.parse(v.substring(0, eIndex));
+        final int e = int.parse(v.substring(eIndex + 1));
 
-      return EfficientNumber.fromValues(m, e);
+        if (m.isNaN || m.isInfinite) {
+          return const EfficientNumber.zero();
+        }
+
+        return EfficientNumber.fromValues(m, e);
+      } catch (e) {
+        return const EfficientNumber.zero();
+      }
     }
 
-    return EfficientNumber.fromDouble(double.parse(v));
+    try {
+      final double parsed = double.parse(v);
+      if (parsed.isNaN || parsed.isInfinite) {
+        return const EfficientNumber.zero();
+      }
+      return EfficientNumber.fromDouble(parsed);
+    } catch (e) {
+      return const EfficientNumber.zero();
+    }
   }
 
   EfficientNumber operator +(EfficientNumber other) {
@@ -221,10 +258,31 @@ class EfficientNumber {
   }
 
   factory EfficientNumber.fromJson(Map<String, dynamic> json) {
-    return EfficientNumber.fromValues(
-      (json['mantissa'] as num).toDouble(),
-      (json['exponent'] as num).toInt(),
-    );
+    num? mantissaValue = json['mantissa'];
+    num? exponentValue = json['exponent'];
+
+    if (mantissaValue == null || exponentValue == null) {
+      return const EfficientNumber.zero();
+    }
+
+    double mantissa = mantissaValue.toDouble();
+    if (mantissa.isNaN || mantissa.isInfinite) {
+      return const EfficientNumber.zero();
+    }
+
+    int exponent;
+    try {
+      final exponentDouble = exponentValue.toDouble();
+      if (exponentDouble.isNaN || exponentDouble.isInfinite) {
+        exponent = 0;
+      } else {
+        exponent = exponentDouble.toInt();
+      }
+    } catch (e) {
+      exponent = 0;
+    }
+
+    return EfficientNumber.fromValues(mantissa, exponent);
   }
 }
 

@@ -105,6 +105,8 @@ class DifficultyBarrierManager {
       requiredGeneratorCount: 15,
       unlockMessage: 'Caixas lendárias desbloqueadas!',
       emoji: '👑',
+      asset: 'assets/images/supreme_crate.png',
+
     ),
     const DifficultyBarrier(
       name: 'Caixas Míticas',
@@ -123,6 +125,8 @@ class DifficultyBarrierManager {
       requiredGeneratorCount: 30,
       unlockMessage: 'Caixas divinas desbloqueadas!',
       emoji: '💎',
+      asset: 'assets/images/cosmic_crate.png',
+
     ),
     const DifficultyBarrier(
       name: 'Caixas Transcendentes',
@@ -151,7 +155,7 @@ class DifficultyBarrierManager {
       requiredGeneratorCount: 100,
       unlockMessage: 'Caixas cósmicas desbloqueadas!',
       emoji: '🌠',
-      asset: 'assets/images/cosmic_crate.png',
+      // asset: 'assets/images/cosmic_crate.png',
     ),
     const DifficultyBarrier(
       name: 'Caixas Infinitas',

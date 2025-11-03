@@ -848,8 +848,9 @@ class _HomePageState extends ConsumerState<HomePage>
       }
     }
 
-    final safeIntClickRate =
-        safeClickRate > 0 ? safeClickRate.clamp(0, 1e6).toInt() : 0;
+    final safeIntClickRate = (safeClickRate > 0 && safeClickRate.isFinite)
+        ? safeClickRate.clamp(0, 1e6).toInt()
+        : 0;
     _currentStreak += safeIntClickRate;
     _lastStreakTime = DateTime.now();
 
@@ -980,6 +981,29 @@ class _HomePageState extends ConsumerState<HomePage>
                   EfficientNumber.parse('1e90');
             },
             child: const Text('mult'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              final newGenerators = List.generate(
+                availableGenerators.length,
+                (index) => 1000,
+              );
+              ref.read(generatorsProvider.notifier).state = newGenerators;
+              ref.read(saveNotifierProvider.notifier).saveImmediate();
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('+1000 de todos os geradores adicionados'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            icon: const Icon(Icons.add_circle),
+            label: const Text('Dar 1000 de todos os geradores'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
         const SizedBox(height: 5),

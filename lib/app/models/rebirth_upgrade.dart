@@ -92,7 +92,11 @@ class RebirthUpgrade {
       case UpgradeType.animationSpeed:
         return 'x${getEffectValue(level).toStringAsFixed(1)} velocidade animação';
       case UpgradeType.accessoryCapacity:
-        return '${getEffectValue(level).toInt()} slots de acessórios';
+        final effectValue = getEffectValue(level);
+        final safeValue = effectValue.isFinite && !effectValue.isNaN
+            ? effectValue.clamp(0, 1e6).toInt()
+            : 0;
+        return '$safeValue slots de acessórios';
       case UpgradeType.keepItems:
         return level >= 1 ? 'Mantém itens ao ascender' : 'Não mantém itens';
       case UpgradeType.keepGenerators:

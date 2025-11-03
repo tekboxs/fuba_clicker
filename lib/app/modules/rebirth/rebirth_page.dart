@@ -10,7 +10,6 @@ import 'package:fuba_clicker/app/core/utils/difficulty_barriers.dart';
 import 'package:fuba_clicker/app/models/fuba_generator.dart';
 import 'package:fuba_clicker/gen/assets.gen.dart';
 import 'components/rebirth_banner_card.dart';
-import 'package:fuba_clicker/app/providers/save_provider.dart';
 
 class RebirthPage extends ConsumerWidget {
   const RebirthPage({super.key});
@@ -706,39 +705,6 @@ class RebirthPage extends ConsumerWidget {
                 ref,
                 'Transcendência',
                 RebirthTier.transcendence,
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'GERADORES',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  final newGenerators = List.generate(
-                    availableGenerators.length,
-                    (index) => 1000,
-                  );
-                  ref.read(generatorsProvider.notifier).state = newGenerators;
-                  ref.read(saveNotifierProvider.notifier).saveImmediate();
-                  
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('+1000 de todos os geradores adicionados'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.add_circle),
-                label: const Text('Dar 1000 de todos os geradores'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
               ),
             ],
           ),

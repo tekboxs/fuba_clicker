@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuba_clicker/app/core/utils/efficient_number.dart';
@@ -175,6 +176,19 @@ class LootBoxCard extends ConsumerWidget {
                       ),
                     Builder(
                       builder: (context) {
+                        if(kDebugMode && false){
+                          return Image.asset(
+                            "assets/images/supreme_crate.png",
+                            width: isMobile ? 50 : 130,
+                            height: isMobile ? 50 : 130,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Text(
+                                tier.emoji,
+                                style: TextStyle(fontSize: isMobile ? 50 : 70),
+                              );
+                            },
+                          );
+                        }
                         if (isLocked) {
                           return Text(
                             '🔒',
