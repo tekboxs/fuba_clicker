@@ -114,6 +114,17 @@ enum LootBoxTier {
     }
   }
 
+  bool usesCelestialTokens() {
+    return this == LootBoxTier.absolute;
+  }
+
+  double getCelestialTokensCost() {
+    if (this == LootBoxTier.absolute) {
+      return 1000.0;
+    }
+    return 0.0;
+  }
+
   EfficientNumber getCost([EfficientNumber? currentFuba]) {
     switch (this) {
       case LootBoxTier.basic:
@@ -183,14 +194,7 @@ enum LootBoxTier {
         }
         return EfficientNumber.parse('1e500');
       case LootBoxTier.absolute:
-        if (currentFuba != null) {
-          final baseCost = EfficientNumber.parse('1e600');
-          if (currentFuba.compareTo(baseCost) > 0) {
-            return currentFuba / EfficientNumber.parse('2000');
-          }
-          return baseCost;
-        }
-        return EfficientNumber.parse('1e600');
+        return EfficientNumber.zero();
     }
   }
 

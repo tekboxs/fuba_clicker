@@ -9,6 +9,7 @@ import 'package:fuba_clicker/app/providers/game_providers.dart';
 import 'package:fuba_clicker/app/providers/accessory_provider.dart';
 import 'package:fuba_clicker/app/providers/achievement_provider.dart';
 import 'package:fuba_clicker/app/providers/save_provider.dart';
+import 'package:fuba_clicker/app/providers/rebirth_provider.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/modules/shop/components/loot_box_opening.dart';
 import 'package:fuba_clicker/app/modules/shop/components/loot_box_card.dart';
@@ -163,11 +164,21 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   }
 
   void _openLootBox(LootBoxTier tier) {
-    final fuba = ref.read(fubaProvider);
-    final tierCost = tier.getCost(fuba);
-    if (fuba.compareTo(tierCost) < 0) return;
+    if (tier.usesCelestialTokens()) {
+      final rebirthData = ref.read(rebirthDataProvider);
+      final tokensCost = tier.getCelestialTokensCost();
+      if (rebirthData.celestialTokens < tokensCost) return;
 
-    ref.read(fubaProvider.notifier).state -= tierCost;
+      ref.read(rebirthDataProvider.notifier).state = rebirthData.copyWith(
+        celestialTokens: rebirthData.celestialTokens - tokensCost,
+      );
+    } else {
+      final fuba = ref.read(fubaProvider);
+      final tierCost = tier.getCost(fuba);
+      if (fuba.compareTo(tierCost) < 0) return;
+
+      ref.read(fubaProvider.notifier).state -= tierCost;
+    }
 
     final lootBox = LootBox(tier: tier);
     final reward = lootBox.openBox();
@@ -216,16 +227,26 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
   }
 
   void _openMultipleLootBoxes(LootBoxTier tier, int quantity) {
-    final fuba = ref.read(fubaProvider);
-    final tierCost = tier.getCost(fuba);
+    if (tier.usesCelestialTokens()) {
+      final rebirthData = ref.read(rebirthDataProvider);
+      final tokensCost = tier.getCelestialTokensCost() * quantity;
+      if (rebirthData.celestialTokens < tokensCost) return;
 
-    final totalCost = EfficientNumber.parse(
-      (tierCost * EfficientNumber.parse(quantity.toString())).toString(),
-    );
+      ref.read(rebirthDataProvider.notifier).state = rebirthData.copyWith(
+        celestialTokens: rebirthData.celestialTokens - tokensCost,
+      );
+    } else {
+      final fuba = ref.read(fubaProvider);
+      final tierCost = tier.getCost(fuba);
 
-    if (fuba.compareTo(totalCost) < 0) return;
+      final totalCost = EfficientNumber.parse(
+        (tierCost * EfficientNumber.parse(quantity.toString())).toString(),
+      );
 
-    ref.read(fubaProvider.notifier).state -= totalCost;
+      if (fuba.compareTo(totalCost) < 0) return;
+
+      ref.read(fubaProvider.notifier).state -= totalCost;
+    }
 
     final rewards = <CakeAccessory>[];
     for (int i = 0; i < quantity; i++) {

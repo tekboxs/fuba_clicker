@@ -1,14 +1,17 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuba_clicker/app/core/utils/efficient_number.dart';
 import 'package:fuba_clicker/app/models/loot_box.dart';
 import 'package:fuba_clicker/app/core/utils/difficulty_barriers.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/models/fuba_generator.dart';
+import 'package:fuba_clicker/app/providers/rebirth_provider.dart';
+import 'package:fuba_clicker/app/models/rebirth_data.dart';
 
-class LootBoxCard extends StatelessWidget {
+class LootBoxCard extends ConsumerWidget {
   final LootBoxTier tier;
   final EfficientNumber fuba;
   final List<int> generatorsOwned;
@@ -65,21 +68,36 @@ class LootBoxCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isUnlocked = _isTierUnlocked();
-    final tierCost = tier.getCost(fuba);
-    final canAfford = isUnlocked && fuba.compareTo(tierCost) >= 0;
-    final canAfford5 = isUnlocked &&
-        fuba.compareTo(tierCost * EfficientNumber.parse('5')) >= 0;
-    final canAfford10 = isUnlocked &&
-        fuba.compareTo(tierCost * EfficientNumber.parse('10')) >= 0;
-    bool canAfford50 = isUnlocked &&
-        fuba.compareTo(tierCost * EfficientNumber.parse('50')) >= 0;
+    final rebirthData = ref.watch(rebirthDataProvider);
+    
+    bool canAfford;
+    bool canAfford5;
+    bool canAfford10;
+    bool canAfford50;
+    
+    if (tier.usesCelestialTokens()) {
+      final tokensCost = tier.getCelestialTokensCost();
+      canAfford = isUnlocked && rebirthData.celestialTokens >= tokensCost;
+      canAfford5 = isUnlocked && rebirthData.celestialTokens >= tokensCost * 5;
+      canAfford10 = isUnlocked && rebirthData.celestialTokens >= tokensCost * 10;
+      canAfford50 = isUnlocked && rebirthData.celestialTokens >= tokensCost * 50;
+    } else {
+      final tierCost = tier.getCost(fuba);
+      canAfford = isUnlocked && fuba.compareTo(tierCost) >= 0;
+      canAfford5 = isUnlocked &&
+          fuba.compareTo(tierCost * EfficientNumber.parse('5')) >= 0;
+      canAfford10 = isUnlocked &&
+          fuba.compareTo(tierCost * EfficientNumber.parse('10')) >= 0;
+      canAfford50 = isUnlocked &&
+          fuba.compareTo(tierCost * EfficientNumber.parse('50')) >= 0;
 
-    EfficientNumber basePrimordial = EfficientNumber.parse('1e80');
+      EfficientNumber basePrimordial = EfficientNumber.parse('1e80');
 
-    if (tier == LootBoxTier.primordial && fuba.compareTo(basePrimordial) > 0) {
-      canAfford50 = true;
+      if (tier == LootBoxTier.primordial && fuba.compareTo(basePrimordial) > 0) {
+        canAfford50 = true;
+      }
     }
 
     final isLocked = !isUnlocked;
@@ -232,7 +250,7 @@ class LootBoxCard extends StatelessWidget {
                 : _PurchaseButtons(
                     tier: tier,
                     fuba: fuba,
-                    tierCost: tierCost,
+                    rebirthData: rebirthData,
                     canAfford: canAfford,
                     canAfford1: canAfford5,
                     canAfford10: canAfford10,
@@ -252,7 +270,7 @@ class LootBoxCard extends StatelessWidget {
 class _PurchaseButtons extends StatelessWidget {
   final LootBoxTier tier;
   final EfficientNumber fuba;
-  final EfficientNumber tierCost;
+  final RebirthData rebirthData;
   final bool canAfford;
   final bool canAfford1;
   final bool canAfford10;
@@ -264,7 +282,7 @@ class _PurchaseButtons extends StatelessWidget {
   const _PurchaseButtons({
     required this.tier,
     required this.fuba,
-    required this.tierCost,
+    required this.rebirthData,
     required this.canAfford,
     required this.canAfford1,
     required this.canAfford10,
@@ -282,7 +300,7 @@ class _PurchaseButtons extends StatelessWidget {
           child: _BulkPurchaseButton(
             tier: tier,
             quantity: 1,
-            tierCost: tierCost,
+            rebirthData: rebirthData,
             canAfford: canAfford1,
             isMobile: isMobile,
             onTap: () => onOpenMultiple(tier, 1),
@@ -294,7 +312,7 @@ class _PurchaseButtons extends StatelessWidget {
           child: _BulkPurchaseButton(
             tier: tier,
             quantity: 10,
-            tierCost: tierCost,
+            rebirthData: rebirthData,
             canAfford: canAfford10,
             isMobile: isMobile,
             onTap: () => onOpenMultiple(tier, 10),
@@ -306,7 +324,7 @@ class _PurchaseButtons extends StatelessWidget {
           child: _BulkPurchaseButton(
             tier: tier,
             quantity: 50,
-            tierCost: tierCost,
+            rebirthData: rebirthData,
             canAfford: canAfford50,
             isMobile: isMobile,
             onTap: () => onOpenMultiple(tier, 50),
@@ -321,35 +339,44 @@ class _PurchaseButtons extends StatelessWidget {
 class _BulkPurchaseButton extends StatelessWidget {
   final LootBoxTier tier;
   final int quantity;
-  final EfficientNumber tierCost;
   final bool canAfford;
   final bool isMobile;
   final VoidCallback onTap;
   final EfficientNumber fuba;
+  final RebirthData rebirthData;
 
   const _BulkPurchaseButton({
     required this.tier,
     required this.quantity,
-    required this.tierCost,
     required this.canAfford,
     required this.isMobile,
     required this.onTap,
     required this.fuba,
+    required this.rebirthData,
   });
 
   @override
   Widget build(BuildContext context) {
-    EfficientNumber totalCost =
-        tierCost * EfficientNumber.parse(quantity.toString());
-    if (tier == LootBoxTier.primordial && quantity == 30) {
-      if (fuba.compareTo(EfficientNumber.parse('1e80')) > 0) {
-        totalCost = fuba;
+    String costText;
+    
+    if (tier.usesCelestialTokens()) {
+      final tokensCost = tier.getCelestialTokensCost() * quantity;
+      costText = '${tokensCost.toStringAsFixed(0)} 💎';
+    } else {
+      final tierCost = tier.getCost(fuba);
+      EfficientNumber totalCost =
+          tierCost * EfficientNumber.parse(quantity.toString());
+      if (tier == LootBoxTier.primordial && quantity == 30) {
+        if (fuba.compareTo(EfficientNumber.parse('1e80')) > 0) {
+          totalCost = fuba;
+        }
       }
-    }
 
-    const discount = 0;
-    final discountedCost =
-        totalCost * EfficientNumber.parse((1 - discount).toString());
+      const discount = 0;
+      final discountedCost =
+          totalCost * EfficientNumber.parse((1 - discount).toString());
+      costText = GameConstants.formatNumber(discountedCost);
+    }
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -385,7 +412,7 @@ class _BulkPurchaseButton extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  GameConstants.formatNumber(discountedCost),
+                  costText,
                   style: TextStyle(
                     fontSize: isMobile ? 10 : 12,
                     color: canAfford ? Colors.orange : Colors.grey,
