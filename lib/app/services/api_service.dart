@@ -289,4 +289,29 @@ class ApiService {
 
     return response.map((item) => RankingEntry.fromJson(item)).toList();
   }
+
+  Future<List<RankingEntry>> getInscribedRanking() async {
+    final response = await _makeRequest<List<dynamic>>(
+      'GET',
+      '/ranking/inscribed',
+      useObfuscation: false,
+    );
+
+    return response.map((item) => RankingEntry.fromJson(item)).toList();
+  }
+
+  Future<UserData> inscribeUser() async {
+    try {
+      final response = await _makeRequest<Map<String, dynamic>>(
+        'POST',
+        '/inscribe',
+        useObfuscation: true,
+      );
+
+      return UserData.fromJson(response);
+    } catch (e) {
+      debugPrint('[]>> inscribeUser error: $e');
+      rethrow;
+    }
+  }
 }

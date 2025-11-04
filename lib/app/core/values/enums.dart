@@ -5,7 +5,8 @@ enum Kpages {
   rebirthUpgrades('rebirthUpgrades'),
   shop('shop'),
   ranking('ranking'),
-  account('account');
+  account('account'),
+  inscribed('inscribed');
 
   final String name;
   const Kpages(this.name);

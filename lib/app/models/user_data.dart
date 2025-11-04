@@ -10,6 +10,7 @@ class UserData {
   final List<String>? achievements;
   final Map<String, double>? achievementStats;
   final Map<String, int>? upgrades;
+  final bool? isInscribed;
 
   UserData({
     required this.id,
@@ -23,6 +24,7 @@ class UserData {
     this.achievements,
     this.achievementStats,
     this.upgrades,
+    this.isInscribed,
   });
 
   factory UserData.fromJson(Map<String, dynamic> json) {
@@ -51,6 +53,7 @@ class UserData {
       upgrades: json['upgrades'] != null
           ? Map<String, int>.from(json['upgrades'])
           : null,
+      isInscribed: json['inscribed'] as bool?,
     );
   }
   bool get isEmpty {
@@ -77,6 +80,7 @@ class UserData {
       'achievements': achievements,
       'achievementStats': achievementStats,
       'upgrades': upgrades,
+      'inscribed': isInscribed,
     };
   }
 }
