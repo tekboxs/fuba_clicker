@@ -316,7 +316,7 @@ class _InscribedPageState extends ConsumerState<InscribedPage> {
                         const SizedBox(height: 12),
                         _buildInfoItem(
                           '🎁',
-                          'Ganhe cupom de 50% da DevScout para o primeiro lugar no rank até dia 12/04',
+                          'Ganhe cupom de 50% da DevScout para o primeiro lugar no rank até dia 12/11',
                         ),
                         const SizedBox(height: 12),
                         _buildInfoItem(

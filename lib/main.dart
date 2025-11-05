@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'app/providers/achievement_provider.dart';
 import 'app/providers/save_provider.dart';
 import 'app/providers/auth_provider.dart';
@@ -18,6 +19,16 @@ import 'app/providers/sync_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    developer.log(
+      'Arquivo .env não encontrado ou erro ao carregar: $e. '
+      'Usando --dart-define se disponível.',
+      name: 'EnvLoader',
+    );
+  }
 
   _setupGlobalErrorHandling();
 

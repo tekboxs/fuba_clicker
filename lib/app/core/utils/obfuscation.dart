@@ -1,7 +1,24 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ObfuscationUtils {
-  static const String _key = 'fuba_secret_key_2024';
+  static String get _key {
+    const envKeyFromDefine = String.fromEnvironment('FUBA_SECRET_KEY');
+    if (envKeyFromDefine.isNotEmpty) {
+      return envKeyFromDefine;
+    }
+
+    final envKeyFromDotenv = dotenv.env['FUBA_SECRET_KEY'];
+    if (envKeyFromDotenv != null && envKeyFromDotenv.isNotEmpty) {
+      return envKeyFromDotenv;
+    }
+
+    throw Exception(
+      'FUBA_SECRET_KEY não configurada. '
+      'Configure no arquivo .env ou via --dart-define=FUBA_SECRET_KEY=valor',
+    );
+  }
 
   static Map<String, dynamic> _sanitizeMap(Map<String, dynamic> data) {
     final sanitized = <String, dynamic>{};

@@ -23,6 +23,12 @@ flutter pub get
 # dart run build_runner build --delete-conflicting-outputs
 
 # Build the project
-flutter build web --release --base-href /
+if [ -z "$FUBA_SECRET_KEY" ]; then
+  echo "Error: FUBA_SECRET_KEY environment variable is required but not set"
+  echo "Please set FUBA_SECRET_KEY in your Vercel environment variables"
+  exit 1
+fi
+
+flutter build web --release --base-href / --dart-define=FUBA_SECRET_KEY="$FUBA_SECRET_KEY"
 
 echo "Build completed successfully!"

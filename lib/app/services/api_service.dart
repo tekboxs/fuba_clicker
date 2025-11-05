@@ -73,20 +73,20 @@ class ApiService {
       onError: (error, handler) async {
         if (error.response?.statusCode == 401 && !_isRelogging) {
           _jwt = null;
-          
+
           try {
             _isRelogging = true;
             final authService = AuthService();
             await authService.init();
             final reloginSuccess = await authService.autoRelogin();
-            
+
             if (reloginSuccess) {
               final jwt = await TokenService().readMethod('jwt');
               _jwt = jwt;
-              
+
               final requestOptions = error.requestOptions;
               requestOptions.headers['Authorization'] = 'Bearer $_jwt';
-              
+
               try {
                 final response = await _dio.fetch(requestOptions);
                 handler.resolve(response);
@@ -162,18 +162,41 @@ class ApiService {
             responseData = response.data as Map<String, dynamic>;
           } else if (response.data is List) {
             return response.data as T;
+          } else if (response.data is String) {
+            try {
+              final parsedData = jsonDecode(response.data as String);
+              if (parsedData is Map<String, dynamic>) {
+                responseData = parsedData;
+              } else {
+                responseData = {'data': parsedData};
+              }
+            } catch (e) {
+              log('[]>> Erro ao fazer parse da resposta string: $e');
+              log('[]>> Resposta recebida: ${response.data}');
+              responseData = {'data': response.data};
+            }
           } else {
             responseData = {'data': response.data};
           }
 
           if (useObfuscation && responseData.containsKey('data')) {
             try {
-              final deobfuscatedData =
-                  ObfuscationUtils.deobfuscate(responseData['data']);
-              return fromJson != null
-                  ? fromJson(deobfuscatedData)
-                  : deobfuscatedData as T;
+              final dataField = responseData['data'];
+              if (dataField is String && dataField.isNotEmpty) {
+                final deobfuscatedData =
+                    ObfuscationUtils.deobfuscate(dataField);
+                return fromJson != null
+                    ? fromJson(deobfuscatedData)
+                    : deobfuscatedData as T;
+              } else {
+                log('[]>> Campo data não é uma string válida: $dataField');
+                return fromJson != null
+                    ? fromJson(responseData)
+                    : responseData as T;
+              }
             } catch (e) {
+              log('[]>> Erro ao desofuscar resposta: $e');
+              log('[]>> Dados recebidos: ${responseData['data']}');
               return fromJson != null
                   ? fromJson(responseData)
                   : responseData as T;
@@ -202,16 +225,53 @@ class ApiService {
         if (retries >= maxRetries || e is DioException) {
           if (e is DioException) {
             String errorMessage = 'Erro de conexão';
-            if (e.response?.data is Map<String, dynamic>) {
-              final errorData = e.response!.data as Map<String, dynamic>;
-              if (errorData.containsKey('message')) {
-                errorMessage = errorData['message'];
-              } else if (errorData.containsKey('error')) {
-                errorMessage = errorData['error'];
+
+            if (e.type == DioExceptionType.badResponse) {
+              if (e.response?.data != null) {
+                if (e.response!.data is Map<String, dynamic>) {
+                  final errorData = e.response!.data as Map<String, dynamic>;
+                  if (errorData.containsKey('message')) {
+                    errorMessage = errorData['message'];
+                  } else if (errorData.containsKey('error')) {
+                    errorMessage = errorData['error'];
+                  }
+                } else if (e.response!.data is String) {
+                  final responseString = e.response!.data as String;
+                  if (responseString.isNotEmpty) {
+                    try {
+                      final errorData =
+                          jsonDecode(responseString) as Map<String, dynamic>;
+                      if (errorData.containsKey('message')) {
+                        errorMessage = errorData['message'];
+                      } else if (errorData.containsKey('error')) {
+                        errorMessage = errorData['error'];
+                      }
+                    } catch (_) {
+                      errorMessage = 'Resposta inválida do servidor';
+                    }
+                  }
+                }
+              }
+            } else if (e.type == DioExceptionType.unknown) {
+              final originalError = e.error;
+              if (originalError is FormatException) {
+                errorMessage =
+                    'Erro ao processar resposta do servidor: formato inválido';
+                log('[]>> Erro de parse JSON: ${originalError.message}');
+                log('[]>> Resposta recebida: ${e.response?.data}');
+              } else if (e.message != null &&
+                  e.message!.contains('JSON Parse error')) {
+                errorMessage =
+                    'Erro ao processar resposta do servidor: formato inválido';
+                log('[]>> Erro de parse JSON: ${e.message}');
+                log('[]>> Resposta recebida: ${e.response?.data}');
+              } else if (e.message != null) {
+                errorMessage = e.message!;
               }
             } else if (e.message != null) {
               errorMessage = e.message!;
             }
+
             throw Exception(errorMessage);
           }
           rethrow;
@@ -234,7 +294,7 @@ class ApiService {
       // useObfuscation: true,
     );
 
-    final authResponse = AuthResponse.fromJson(jsonDecode(response['data']));
+    final authResponse = AuthResponse.fromJson(response);
 
     if (authResponse.rt != null) {
       setRefreshToken(authResponse.rt);
@@ -287,7 +347,11 @@ class ApiService {
       useObfuscation: false,
     );
 
-    return response.map((item) => RankingEntry.fromJson(item)).toList();
+    return response.map((item) {
+      final data = ObfuscationUtils.deobfuscate(item['data']);
+      data['username'] = item['username'];
+      return RankingEntry.fromJson(data);
+    }).toList();
   }
 
   Future<List<RankingEntry>> getInscribedRanking() async {
@@ -297,7 +361,11 @@ class ApiService {
       useObfuscation: false,
     );
 
-    return response.map((item) => RankingEntry.fromJson(item)).toList();
+    return response.map((item) {
+      final data = ObfuscationUtils.deobfuscate(item['data']);
+      data['username'] = item['username'];
+      return RankingEntry.fromJson(data);
+    }).toList();
   }
 
   Future<UserData> inscribeUser() async {

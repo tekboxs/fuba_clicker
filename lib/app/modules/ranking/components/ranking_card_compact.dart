@@ -141,7 +141,11 @@ class _RankingCardCompactState extends State<RankingCardCompact> {
                       ),
                       child: Center(
                         child: Text(
-                          widget.entry.username.substring(0, 1).toUpperCase(),
+                          widget.entry.username.isNotEmpty
+                              ? widget.entry.username
+                                  .substring(0, 1)
+                                  .toUpperCase()
+                              : '--',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w900,

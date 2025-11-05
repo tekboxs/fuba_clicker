@@ -487,8 +487,6 @@ class RankingCardDesktop extends StatelessWidget {
             painter: _HologramPainter(value),
           );
         },
-      ).animate(
-        onPlay: (controller) => controller.repeat(),
       ),
     );
   }

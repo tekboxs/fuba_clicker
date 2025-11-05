@@ -896,7 +896,7 @@ class _HomePageState extends ConsumerState<HomePage>
             fontWeight: FontWeight.bold,
           ),
         ),
-        if (kDebugMode && false) ...[
+        if (kDebugMode ) ...[
           ElevatedButton(
             onPressed: () async {
               // Mostrar diálogo de confirmação
