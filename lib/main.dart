@@ -20,14 +20,16 @@ import 'app/providers/sync_notifier.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (e) {
-    developer.log(
-      'Arquivo .env não encontrado ou erro ao carregar: $e. '
-      'Usando --dart-define se disponível.',
-      name: 'EnvLoader',
-    );
+  if (!kIsWeb) {
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (e) {
+      developer.log(
+        'Arquivo .env não encontrado ou erro ao carregar: $e. '
+        'Usando --dart-define se disponível.',
+        name: 'EnvLoader',
+      );
+    }
   }
 
   _setupGlobalErrorHandling();

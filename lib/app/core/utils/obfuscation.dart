@@ -9,14 +9,19 @@ class ObfuscationUtils {
       return envKeyFromDefine;
     }
 
-    final envKeyFromDotenv = dotenv.env['FUBA_SECRET_KEY'];
-    if (envKeyFromDotenv != null && envKeyFromDotenv.isNotEmpty) {
-      return envKeyFromDotenv;
+    if (!kIsWeb) {
+      try {
+        final envKeyFromDotenv = dotenv.env['FUBA_SECRET_KEY'];
+        if (envKeyFromDotenv != null && envKeyFromDotenv.isNotEmpty) {
+          return envKeyFromDotenv;
+        }
+      } catch (_) {
+      }
     }
 
     throw Exception(
       'FUBA_SECRET_KEY não configurada. '
-      'Configure no arquivo .env ou via --dart-define=FUBA_SECRET_KEY=valor',
+      'Configure via --dart-define=FUBA_SECRET_KEY=valor',
     );
   }
 
