@@ -17,6 +17,7 @@ import '../providers/accessory_provider.dart';
 import '../providers/rebirth_provider.dart';
 import '../providers/achievement_provider.dart';
 import '../providers/rebirth_upgrade_provider.dart';
+import '../providers/auth_provider.dart';
 import '../core/utils/save_validation.dart';
 import '../models/fuba_generator.dart';
 
@@ -70,6 +71,12 @@ class SyncService extends StateNotifier<bool> {
 
     try {
       final localData = await _getCurrentGameData();
+      final currentUser = await getCurrentUser();
+      final userDataJson = localData.toJson();
+
+      if (currentUser?.profile != null) {
+        userDataJson['profile'] = currentUser!.profile!.toJson();
+      }
 
       if (!forceSync && _cloudSaveData != null) {
         final isLocalSmaller = SaveValidation.isLocalSaveSmaller(
@@ -112,7 +119,7 @@ class SyncService extends StateNotifier<bool> {
         }
       }
 
-      await _authService.updateUserData(localData.toJson());
+      await _authService.updateUserData(userDataJson);
       _lastSyncTime = DateTime.now();
 
       final updatedUserData = await _authService.fetchUserData();
@@ -120,6 +127,9 @@ class SyncService extends StateNotifier<bool> {
         userData: updatedUserData,
         lastSync: _lastSyncTime!,
       );
+
+      _ref.read(authNotifierProvider.notifier).state =
+          AuthState.authenticated(updatedUserData);
 
       return true;
     } catch (e) {
@@ -139,6 +149,9 @@ class SyncService extends StateNotifier<bool> {
         userData: userData,
         lastSync: _lastSyncTime!,
       );
+
+      _ref.read(authNotifierProvider.notifier).state =
+          AuthState.authenticated(userData);
 
       if (!userData.isEmpty) {
         await _applyCloudDataToLocal(userData);
@@ -167,7 +180,14 @@ class SyncService extends StateNotifier<bool> {
 
     try {
       final localData = await _getCurrentGameData();
-      await _authService.updateUserData(localData.toJson());
+      final currentUser = await getCurrentUser();
+      final userDataJson = localData.toJson();
+
+      if (currentUser?.profile != null) {
+        userDataJson['profile'] = currentUser!.profile!.toJson();
+      }
+
+      await _authService.updateUserData(userDataJson);
       _lastSyncTime = DateTime.now();
 
       final updatedUserData = await _authService.fetchUserData();
@@ -175,6 +195,9 @@ class SyncService extends StateNotifier<bool> {
         userData: updatedUserData,
         lastSync: _lastSyncTime!,
       );
+
+      _ref.read(authNotifierProvider.notifier).state =
+          AuthState.authenticated(updatedUserData);
 
       return true;
     } catch (e) {
@@ -194,6 +217,9 @@ class SyncService extends StateNotifier<bool> {
         userData: userData,
         lastSync: _lastSyncTime!,
       );
+
+      _ref.read(authNotifierProvider.notifier).state =
+          AuthState.authenticated(userData);
 
       if (!userData.isEmpty) {
         await _applyCloudDataToLocal(userData);

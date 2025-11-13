@@ -28,11 +28,15 @@ class ObfuscationUtils {
   static Map<String, dynamic> _sanitizeMap(Map<String, dynamic> data) {
     final sanitized = <String, dynamic>{};
     data.forEach((key, value) {
-      if (value is Map<String, dynamic>) {
+      if (value == null) {
+        sanitized[key] = null;
+      } else if (value is Map<String, dynamic>) {
         sanitized[key] = _sanitizeMap(value);
       } else if (value is List) {
         sanitized[key] = value.map((item) {
-          if (item is Map<String, dynamic>) {
+          if (item == null) {
+            return null;
+          } else if (item is Map<String, dynamic>) {
             return _sanitizeMap(item);
           } else if (item is double && (item.isInfinite || item.isNaN)) {
             return 123;
@@ -51,9 +55,10 @@ class ObfuscationUtils {
 
   static String obfuscate(Map<String, dynamic> data) {
     try {
-      if (data['achievementsStats'] != null) {
-        if (data['achievementsStats']['total_click_fuba'] == null) {
-          data['achievementsStats']['total_click_fuba'] = 1;
+      if (data['achievementStats'] != null &&
+          data['achievementStats'] is Map<String, dynamic>) {
+        if (data['achievementStats']['total_click_fuba'] == null) {
+          data['achievementStats']['total_click_fuba'] = 1;
         }
       }
 

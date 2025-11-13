@@ -28,6 +28,7 @@ dependencies:
   dio: ^5.4.0
   flutter_sprite: ^4.0.2
   flutter_dotenv: ^5.1.0
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
@@ -54,4 +55,5 @@ flutter:
     - assets/
     - assets/images/
     - assets/song/
+    - assets/avatars/
     # - assets/fonts/

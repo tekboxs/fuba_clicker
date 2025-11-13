@@ -1,3 +1,5 @@
+import 'profile.dart';
+
 class UserData {
   final int id;
   final String email;
@@ -10,6 +12,7 @@ class UserData {
   final List<String>? achievements;
   final Map<String, double>? achievementStats;
   final Map<String, int>? upgrades;
+  final Profile? profile;
   final bool? isInscribed;
 
   UserData({
@@ -24,6 +27,7 @@ class UserData {
     this.achievements,
     this.achievementStats,
     this.upgrades,
+    this.profile,
     this.isInscribed,
   });
 
@@ -53,6 +57,9 @@ class UserData {
       upgrades: json['upgrades'] != null
           ? Map<String, int>.from(json['upgrades'])
           : null,
+      profile: json['profile'] != null
+          ? Profile.fromJson(json['profile'] as Map<String, dynamic>)
+          : null,
       isInscribed: json['inscribed'] as bool?,
     );
   }
@@ -72,7 +79,7 @@ class UserData {
       'id': id,
       'email': email,
       'username': username,
-      'fuba': fuba,
+      'fuba': fuba.isEmpty ? '0.0' : fuba,
       'generators': generators,
       'inventory': inventory,
       'equipped': equipped,
@@ -80,7 +87,40 @@ class UserData {
       'achievements': achievements,
       'achievementStats': achievementStats,
       'upgrades': upgrades,
+      'profile': profile?.toJson(),
       'inscribed': isInscribed,
     };
+  }
+
+  UserData copyWith({
+    int? id,
+    String? email,
+    String? username,
+    String? fuba,
+    List<int>? generators,
+    Map<String, int>? inventory,
+    List<String>? equipped,
+    Map<String, dynamic>? rebirthData,
+    List<String>? achievements,
+    Map<String, double>? achievementStats,
+    Map<String, int>? upgrades,
+    Profile? profile,
+    bool? isInscribed,
+  }) {
+    return UserData(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      username: username ?? this.username,
+      fuba: fuba ?? this.fuba,
+      generators: generators ?? this.generators,
+      inventory: inventory ?? this.inventory,
+      equipped: equipped ?? this.equipped,
+      rebirthData: rebirthData ?? this.rebirthData,
+      achievements: achievements ?? this.achievements,
+      achievementStats: achievementStats ?? this.achievementStats,
+      upgrades: upgrades ?? this.upgrades,
+      profile: profile ?? this.profile,
+      isInscribed: isInscribed ?? this.isInscribed,
+    );
   }
 }

@@ -157,6 +157,10 @@ class AuthService {
     await _authBox!.put(_userDataKey, userData.toJson());
   }
 
+  Future<void> saveUserData(UserData userData) async {
+    await _saveUserData(userData);
+  }
+
   Future<void> updateUserData(Map<String, dynamic> data) async {
     try {
       await _apiService.updateUserData(data);

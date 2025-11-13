@@ -6,19 +6,31 @@ class RankingEntry {
   final RebirthData rebirthData;
   final List<String> achievements;
   final EfficientNumber fuba;
+  final String profilePicture;
   RankingEntry({
     required this.username,
     required this.rebirthData,
     required this.achievements,
     required this.fuba,
+    required this.profilePicture,
   });
 
   factory RankingEntry.fromJson(Map<String, dynamic> json) {
+    if (json['username'] == 'teste') {
+      return RankingEntry(
+        username: json['username'] ?? '',
+        rebirthData: RebirthData.fromJson(json['rebirthData'] ?? {}),
+        achievements: List<String>.from(json['achievements'] ?? []),
+        fuba: EfficientNumber.parse(json['fuba'] ?? '0'),
+        profilePicture: json['profile']?['profilePicture'] ?? '',
+      );
+    }
     return RankingEntry(
       username: json['username'] ?? '',
       rebirthData: RebirthData.fromJson(json['rebirthData'] ?? {}),
       achievements: List<String>.from(json['achievements'] ?? []),
       fuba: EfficientNumber.parse(json['fuba'] ?? '0'),
+      profilePicture: json['profile']?['profilePicture'] ?? '',
     );
   }
 
@@ -28,6 +40,7 @@ class RankingEntry {
       'rebirthData': rebirthData.toJson(),
       'achievements': achievements,
       'fuba': fuba.toString(),
+      'profilePicture': profilePicture,
     };
   }
 

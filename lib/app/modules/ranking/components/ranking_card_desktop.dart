@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fuba_clicker/app/models/ranking_entry.dart';
+import 'package:fuba_clicker/app/core/utils/avatar_helper.dart';
 import 'package:fuba_clicker/gen/assets.gen.dart';
 
 class RankingCardDesktop extends StatelessWidget {
@@ -200,24 +201,72 @@ class RankingCardDesktop extends StatelessWidget {
                                                   ),
                                                 ],
                                               ),
-                                              child: Stack(
-                                                children: [
-                                                  Center(
-                                                    child: Text(
-                                                      entry.username
-                                                          .substring(0, 1)
-                                                          .toUpperCase(),
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight:
-                                                            FontWeight.w900,
-                                                        fontSize:
-                                                            avatarTextSize,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  _buildShineEffect(),
-                                                ],
+                                              child: ClipOval(
+                                                child: Stack(
+                                                  children: [
+                                                    entry.profilePicture.isEmpty
+                                                        ? Container(
+                                                            decoration: BoxDecoration(
+                                                              gradient: LinearGradient(
+                                                                begin: Alignment.topLeft,
+                                                                end: Alignment.bottomRight,
+                                                                colors: gradient,
+                                                              ),
+                                                            ),
+                                                            child: Center(
+                                                              child: Text(
+                                                                entry.username.isNotEmpty
+                                                                    ? entry.username
+                                                                        .substring(0, 1)
+                                                                        .toUpperCase()
+                                                                    : '--',
+                                                                style: TextStyle(
+                                                                  color: Colors.white,
+                                                                  fontWeight:
+                                                                      FontWeight.w900,
+                                                                  fontSize:
+                                                                      avatarTextSize,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          )
+                                                        : Image.asset(
+                                                            AvatarHelper.getAvatarPath(
+                                                                entry.profilePicture),
+                                                            width: avatarSize,
+                                                            height: avatarSize,
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder: (context, error, stackTrace) {
+                                                              return Container(
+                                                                decoration: BoxDecoration(
+                                                                  gradient: LinearGradient(
+                                                                    begin: Alignment.topLeft,
+                                                                    end: Alignment.bottomRight,
+                                                                    colors: gradient,
+                                                                  ),
+                                                                ),
+                                                                child: Center(
+                                                                  child: Text(
+                                                                    entry.username.isNotEmpty
+                                                                        ? entry.username
+                                                                            .substring(0, 1)
+                                                                            .toUpperCase()
+                                                                        : '--',
+                                                                    style: TextStyle(
+                                                                      color: Colors.white,
+                                                                      fontWeight:
+                                                                          FontWeight.w900,
+                                                                      fontSize:
+                                                                          avatarTextSize,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            },
+                                                          ),
+                                                    _buildShineEffect(),
+                                                  ],
+                                                ),
                                               ),
                                             ),
                                           ],

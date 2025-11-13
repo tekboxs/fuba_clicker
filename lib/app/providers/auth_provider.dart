@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuba_clicker/app/models/user_data.dart';
+import 'package:fuba_clicker/app/models/profile.dart';
 import '../services/auth_service.dart';
 import '../services/sync_service.dart';
 
@@ -92,6 +93,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return await ref
           .read(syncServiceProvider.notifier)
           .downloadCloudToLocal();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> updateProfile(String profilePicture) async {
+    if (!state.isAuthenticated || state.user == null) return false;
+
+    try {
+      final currentUser = state.user!;
+      final updatedProfile = currentUser.profile?.copyWith(
+            profilePicture: profilePicture,
+          ) ??
+          Profile(profilePicture: profilePicture);
+
+      final userJson = currentUser.toJson();
+      userJson['profile'] = updatedProfile.toJson();
+
+      await _authService.updateUserData(userJson);
+
+      final updatedUser = currentUser.copyWith(profile: updatedProfile);
+      await _authService.saveUserData(updatedUser);
+      state = AuthState.authenticated(updatedUser);
+
+      return true;
     } catch (e) {
       return false;
     }

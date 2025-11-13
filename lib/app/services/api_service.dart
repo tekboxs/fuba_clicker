@@ -331,7 +331,13 @@ class ApiService {
   }
 
   Future<void> updateUserData(Map<String, dynamic> data) async {
-    data['fuba'] = data['fuba'].toString();
+    if (data.containsKey('fuba') && data['fuba'] != null) {
+      data['fuba'] = data['fuba'].toString();
+    }
+    if (data.containsKey('achievementStats') &&
+        data['achievementStats'] == null) {
+      data['achievementStats'] = {};
+    }
     await _makeRequest(
       'PUT',
       '/user/',
@@ -350,6 +356,8 @@ class ApiService {
     return response.map((item) {
       final data = ObfuscationUtils.deobfuscate(item['data']);
       data['username'] = item['username'];
+      data['profilePicture'] =
+          item['profilePicture'] ?? data['profilePicture'] ?? '';
       return RankingEntry.fromJson(data);
     }).toList();
   }
@@ -364,6 +372,8 @@ class ApiService {
     return response.map((item) {
       final data = ObfuscationUtils.deobfuscate(item['data']);
       data['username'] = item['username'];
+      data['profilePicture'] =
+          item['profilePicture'] ?? data['profilePicture'] ?? '';
       return RankingEntry.fromJson(data);
     }).toList();
   }
