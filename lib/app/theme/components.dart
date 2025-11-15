@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'tokens.dart';
@@ -345,95 +346,83 @@ class AnimatedGradientBackground extends StatefulWidget {
 }
 
 class _AnimatedGradientBackgroundState
-    extends State<AnimatedGradientBackground>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+    extends State<AnimatedGradientBackground> {
+  Timer? _hourCheckTimer;
+  int _currentHour = DateTime.now().hour;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
+    _currentHour = DateTime.now().hour;
+    _startHourCheckTimer();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _hourCheckTimer?.cancel();
     super.dispose();
+  }
+
+  void _startHourCheckTimer() {
+    _hourCheckTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      final newHour = DateTime.now().hour;
+      if (newHour != _currentHour) {
+        setState(() {
+          _currentHour = newHour;
+        });
+      }
+    });
+  }
+
+  String _getBackgroundAsset() {
+    if (_currentHour >= 6 && _currentHour < 12) {
+      return 'assets/images/background_morning.png';
+    } else if (_currentHour >= 12 && _currentHour < 17) {
+      return 'assets/images/background_afternoon.png';
+    } else if (_currentHour >= 17 && _currentHour < 19) {
+      return 'assets/images/background_late_afternoon.png';
+    } else {
+      return 'assets/images/background_night.png';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: AppGradients.backgroundGradient,
+        Positioned.fill(
+          child: ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+            child: Image.asset(
+              _getBackgroundAsset(),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  decoration: const BoxDecoration(
+                    gradient: AppGradients.backgroundGradient,
+                  ),
+                );
+              },
+            ),
           ),
         ),
         Positioned.fill(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Stack(
-                children: [
-                  Positioned(
-                    top: 80,
-                    left: 80,
-                    child: _buildPulsingOrb(
-                      AppColors.purple500,
-                      400,
-                      _controller.value,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 80,
-                    right: 80,
-                    child: _buildPulsingOrb(
-                      AppColors.cyan500,
-                      320,
-                      (_controller.value + 0.3) % 1.0,
-                    ),
-                  ),
-                  Positioned(
-                    top: MediaQuery.of(context).size.height * 0.5,
-                    left: MediaQuery.of(context).size.width * 0.5,
-                    child: _buildPulsingOrb(
-                      AppColors.fuchsia500,
-                      256,
-                      (_controller.value + 0.6) % 1.0,
-                    ),
-                  ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Colors.black.withOpacity(0.6),
+                  Colors.black.withOpacity(0.3),
+                  Colors.transparent,
                 ],
-              );
-            },
+              ),
+            ),
           ),
         ),
         widget.child,
       ],
-    );
-  }
-
-  Widget _buildPulsingOrb(Color color, double size, double progress) {
-    final scale = 0.8 + (0.2 * (1 - (progress - 0.5).abs() * 2));
-    return Transform.scale(
-      scale: scale,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color.withOpacity(0.2),
-              color.withOpacity(0.05),
-              Colors.transparent,
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

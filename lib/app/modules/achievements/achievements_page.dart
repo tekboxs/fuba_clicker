@@ -3,14 +3,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/efficient_number.dart';
 import 'package:fuba_clicker/app/models/achievement.dart';
 import 'package:fuba_clicker/app/providers/achievement_provider.dart';
+import 'package:fuba_clicker/app/providers/notification_provider.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/modules/achievements/components/hexagonal_achievement_badge.dart';
 
-class AchievementsPage extends ConsumerWidget {
+class AchievementsPage extends ConsumerStatefulWidget {
   const AchievementsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AchievementsPage> createState() => _AchievementsPageState();
+}
+
+class _AchievementsPageState extends ConsumerState<AchievementsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _markAllAchievementsAsViewed();
+    });
+  }
+
+  void _markAllAchievementsAsViewed() {
+    final unlocked = ref.read(unlockedAchievementsProvider);
+    final notificationNotifier = ref.read(notificationNotifierProvider);
+    
+    for (final achievementId in unlocked) {
+      notificationNotifier.markAchievementAsViewed(achievementId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final unlocked = ref.watch(unlockedAchievementsProvider);
     final multiplier = ref.watch(achievementMultiplierProvider);
 

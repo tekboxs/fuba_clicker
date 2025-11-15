@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuba_clicker/app/core/utils/efficient_number.dart';
 import 'package:fuba_clicker/app/models/rebirth_data.dart';
 import 'package:fuba_clicker/app/providers/rebirth_provider.dart';
+import 'package:fuba_clicker/app/providers/notification_provider.dart';
 import 'package:fuba_clicker/app/providers/game_providers.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/core/utils/difficulty_barriers.dart';
@@ -11,8 +12,21 @@ import 'package:fuba_clicker/app/models/fuba_generator.dart';
 import 'package:fuba_clicker/gen/assets.gen.dart';
 import 'components/rebirth_banner_card.dart';
 
-class RebirthPage extends ConsumerWidget {
+class RebirthPage extends ConsumerStatefulWidget {
   const RebirthPage({super.key});
+
+  @override
+  ConsumerState<RebirthPage> createState() => _RebirthPageState();
+}
+
+class _RebirthPageState extends ConsumerState<RebirthPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationNotifierProvider).markNotificationsAsViewed('rebirth');
+    });
+  }
 
   bool _isRebirthTierUnlocked(
     RebirthTier tier,
@@ -49,7 +63,7 @@ class RebirthPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Rebirth'),
@@ -62,7 +76,7 @@ class RebirthPage extends ConsumerWidget {
                     color: Colors.white,
                   ),
                   tooltip: 'Debug Tools',
-                  onPressed: () => _showDebugDialog(context, ref),
+                  onPressed: () => _showDebugDialog(context),
                 ),
               ]
             : null,
@@ -666,7 +680,7 @@ class RebirthPage extends ConsumerWidget {
     );
   }
 
-  void _showDebugDialog(BuildContext context, WidgetRef ref) {
+  void _showDebugDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (dialogContext) => Consumer(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -13,6 +14,9 @@ import '../../providers/rebirth_provider.dart';
 import '../../providers/forus_upgrade_provider.dart';
 import '../../providers/visual_settings_provider.dart';
 import '../../providers/potion_provider.dart';
+import '../../providers/notification_provider.dart';
+import '../../models/potion_color.dart';
+import '../../models/potion_effect.dart';
 import '../../services/save_service.dart';
 import '../../models/achievement.dart';
 import '../../models/cake_accessory.dart';
@@ -35,6 +39,22 @@ import '../achievements/components/achievement_popup.dart';
 import '../account/account_settings.dart';
 import '../ranking/ranking_page.dart';
 
+class _MenuItemData {
+  final IconData icon;
+  final String label;
+  final Gradient gradient;
+  final VoidCallback onTap;
+  final int? badgeCount;
+
+  _MenuItemData({
+    required this.icon,
+    required this.label,
+    required this.gradient,
+    required this.onTap,
+    this.badgeCount,
+  });
+}
+
 /// Página principal do jogo
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -48,7 +68,6 @@ class _HomePageState extends ConsumerState<HomePage>
   late AnimationController _animationController;
   late AnimationController _parallaxController;
   Timer? _autoProductionTimer;
-  bool _isVolumeVisible = false;
 
   // Variáveis para rastreamento de cliques
   DateTime _lastClickTime = DateTime.now();
@@ -289,158 +308,520 @@ class _HomePageState extends ConsumerState<HomePage>
     final ownedUpgrades = ref.watch(forusUpgradesOwnedProvider);
     final hasMergeUpgrade = ownedUpgrades.contains('merge_items');
 
+    final menuItems = [
+      _MenuItemData(
+        icon: Icons.shopping_bag,
+        label: 'Loja',
+        gradient: const LinearGradient(
+          colors: [Color(0xFFA855F7), Color(0xFF3B82F6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        badgeCount: _getShopBadgeCount(),
+        onTap: () {
+          ref.read(notificationNotifierProvider).markNotificationsAsViewed('shop');
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const LootBoxShopPage(),
+            ),
+          );
+        },
+      ),
+      _MenuItemData(
+        icon: Icons.diamond,
+        label: 'Forus',
+        gradient: const LinearGradient(
+          colors: [Color(0xFF06B6D4), Color(0xFF3B82F6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const ForusShopPage(),
+            ),
+          );
+        },
+      ),
+      if (hasMergeUpgrade)
+        _MenuItemData(
+          icon: Icons.merge,
+          label: 'Fundir',
+          gradient: const LinearGradient(
+            colors: [Color(0xFFEC4899), Color(0xFFA855F7)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const CraftPage(),
+              ),
+            );
+          },
+        ),
+      _MenuItemData(
+        icon: Icons.science,
+        label: 'Poções',
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEC4899), Color(0xFFA855F7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CauldronPage(),
+            ),
+          );
+        },
+      ),
+      _MenuItemData(
+        icon: Icons.auto_awesome,
+        label: 'Upgrades',
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEAB308), Color(0xFFF97316)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        badgeCount: _getUpgradesBadgeCount(),
+        onTap: () {
+          ref.read(notificationNotifierProvider).markNotificationsAsViewed('upgrades');
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const RebirthUpgradesPage(),
+            ),
+          );
+        },
+      ),
+      _MenuItemData(
+        icon: Icons.refresh,
+        label: 'Rebirth',
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEF4444), Color(0xFFEC4899)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        badgeCount: ref.watch(rebirthBadgeCountProvider),
+        onTap: () {
+          ref.read(notificationNotifierProvider).markNotificationsAsViewed('rebirth');
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const RebirthPage(),
+            ),
+          );
+        },
+      ),
+      _MenuItemData(
+        icon: Icons.account_circle,
+        label: 'Conta',
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3B82F6), Color(0xFF6366F1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () {
+          _showAccountSettings();
+        },
+      ),
+      _MenuItemData(
+        icon: Icons.leaderboard,
+        label: 'Ranking',
+        gradient: const LinearGradient(
+          colors: [Color(0xFFA855F7), Color(0xFFEC4899)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const RankingPage(),
+            ),
+          );
+        },
+      ),
+      _MenuItemData(
+        icon: Icons.emoji_events,
+        label: 'Conquistas',
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEAB308), Color(0xFFF59E0B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        badgeCount: _getAchievementsBadgeCount(),
+        onTap: () {
+          _markAllAchievementsAsViewed();
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const AchievementsPage(),
+            ),
+          );
+        },
+      ),
+      _MenuItemData(
+        icon: Icons.settings,
+        label: 'Config',
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF97316), Color(0xFFEF4444)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () {
+          _showPerformanceModeDialog();
+        },
+      ),
+      _MenuItemData(
+        icon: isAudioPlaying ? Icons.volume_up : Icons.volume_off,
+        label: 'Som',
+        gradient: LinearGradient(
+          colors: isAudioPlaying
+              ? [const Color(0xFF22C55E), const Color(0xFF14B8A6)]
+              : [Colors.grey.shade600, Colors.grey.shade700],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () {
+          _showVolumeControlDialog();
+        },
+      ),
+      if (!isMobile)
+        _MenuItemData(
+          icon: Icons.favorite,
+          label: 'Fubádor',
+          gradient: const LinearGradient(
+            colors: [Color(0xFFEF4444), Color(0xFFF43F5E)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          onTap: _showSupporterDialog,
+        ),
+    ];
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 6 : 10,
-            vertical: isMobile ? 4 : 6,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.black.withAlpha(110),
-            borderRadius: BorderRadius.circular(isMobile ? 22 : 26),
-            border: Border.all(color: Colors.white.withAlpha(20)),
-          ),
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: isMobile ? 4 : 12,
-            runSpacing: 10,
-            children: [
-              _buildIconButtonWithLabel(
-                Icons.shopping_bag,
-                Colors.white,
-                'Loja',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const LootBoxShopPage(),
-                    ),
-                  );
-                },
-              ),
-              _buildIconButtonWithLabel(
-                Icons.diamond,
-                Colors.cyan,
-                'Forus',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const ForusShopPage(),
-                    ),
-                  );
-                },
-              ),
-              if (hasMergeUpgrade)
-                _buildIconButtonWithLabel(
-                  Icons.merge,
-                  Colors.purple,
-                  'Fundir',
-                  () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const CraftPage(),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(isMobile ? 20 : 24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Stack(
+              children: [
+                if (!isMobile)
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            const Color(0xFFC4B5FD).withAlpha(200),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
+                if (isMobile)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Colors.transparent,
+                            const Color(0xFFC4B5FD).withAlpha(200),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 4 : 6,
+                    vertical: isMobile ? 4 : 6,
+                  ),
+                  child: isMobile
+                      ? _buildMobileMenuGrid(menuItems)
+                      : _buildDesktopMenuVertical(menuItems),
                 ),
-              _buildIconButtonWithLabel(
-                Icons.science,
-                Colors.purple,
-                'Poções',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const CauldronPage(),
-                    ),
-                  );
-                },
-              ),
-              _buildIconButtonWithLabel(
-                Icons.auto_awesome,
-                const Color.fromARGB(255, 141, 157, 248),
-                'Upgrades',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RebirthUpgradesPage(),
-                    ),
-                  );
-                },
-              ),
-              _buildIconButtonWithLabel(
-                Icons.refresh,
-                const Color.fromARGB(255, 255, 35, 35),
-                'Rebirth',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RebirthPage(),
-                    ),
-                  );
-                },
-              ),
-              _buildIconButtonWithLabel(
-                Icons.account_circle,
-                Colors.blue,
-                'Conta',
-                () {
-                  _showAccountSettings();
-                },
-              ),
-              _buildIconButtonWithLabel(
-                Icons.leaderboard,
-                Colors.purple,
-                'Ranking',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RankingPage(),
-                    ),
-                  );
-                },
-              ),
-              _buildIconButtonWithLabel(
-                Icons.emoji_events,
-                Colors.amber,
-                'Conquistas',
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AchievementsPage(),
-                    ),
-                  );
-                },
-              ),
-              _buildIconButtonWithLabel(
-                Icons.settings,
-                Colors.orange,
-                'Config',
-                () {
-                  _showPerformanceModeDialog();
-                },
-              ),
-              _buildIconButtonWithLabel(
-                isAudioPlaying ? Icons.volume_up : Icons.volume_off,
-                isAudioPlaying ? Colors.orange : Colors.grey,
-                'Som',
-                () {
-                  setState(() {
-                    _isVolumeVisible = !_isVolumeVisible;
-                  });
-                },
-              ),
-              if (!isMobile) _buildSupporterButton()
-            ],
+              ],
+            ),
           ),
         ),
-        if (_isVolumeVisible)
-          Padding(
-            padding: EdgeInsets.only(top: isMobile ? 4 : 6),
-            child: _buildInlineVolumeControl(),
-          ),
       ],
     );
+  }
+
+  Widget _buildMobileMenuGrid(List<_MenuItemData> items) {
+    final firstRowItems = items.take(6).toList();
+    final secondRowItems = items.skip(6).toList();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: firstRowItems.map((item) {
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: _buildMenuButton(item, true),
+              ),
+            );
+          }).toList(),
+        ),
+        if (secondRowItems.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              ...secondRowItems.map((item) {
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: _buildMenuButton(item, true),
+                  ),
+                );
+              }),
+              ...List.generate(
+                6 - secondRowItems.length,
+                (index) => const Expanded(child: SizedBox()),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDesktopMenuVertical(List<_MenuItemData> items) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: items.map((item) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: _buildMenuButton(item, false),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildMenuButton(_MenuItemData item, bool isMobile) {
+    return SizedBox(
+      height: isMobile ? 60 : 70,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: item.gradient,
+              borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+              border: Border.all(
+                color: Colors.white.withAlpha(102),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF8B5CF6).withAlpha(128),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                ),
+                BoxShadow(
+                  color: Colors.black.withAlpha(100),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: item.onTap,
+                borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                child: Stack(
+                  children: [
+                    Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withAlpha(51),
+                            Colors.transparent,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+                      ),
+                      // padding: EdgeInsets.all(isMobile ? 4 : 6),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            item.icon,
+                            color: Colors.white,
+                            size: isMobile ? 18 : 20,
+                            shadows: [
+                              Shadow(
+                                color: Colors.white.withAlpha(230),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          if (isMobile) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              item.label,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ] else ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              item.label,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (item.badgeCount != null && item.badgeCount! > 0)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.red.shade400,
+                        width: 1,
+                      ),
+                    ),
+                  )
+                      .animate(onPlay: (controller) => controller.repeat())
+                      .scale(
+                        begin: const Offset(1, 1),
+                        end: const Offset(2, 2),
+                        duration: 1500.ms,
+                        curve: Curves.easeOut,
+                      )
+                      .then()
+                      .fadeOut(duration: 1500.ms),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFFEF4444),
+                          Color(0xFFEC4899),
+                        ],
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF1a0a3e),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withAlpha(128),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 20,
+                      minHeight: 20,
+                    ),
+                    child: Center(
+                      child: Text(
+                        item.badgeCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                          .animate(onPlay: (controller) => controller.repeat())
+                          .scale(
+                            begin: const Offset(1, 1),
+                            end: const Offset(1.2, 1.2),
+                            duration: 500.ms,
+                            curve: Curves.easeInOut,
+                          )
+                          .then(delay: 2000.ms)
+                          .scale(
+                            begin: const Offset(1.2, 1.2),
+                            end: const Offset(1, 1),
+                            duration: 500.ms,
+                            curve: Curves.easeInOut,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  int? _getShopBadgeCount() {
+    return ref.watch(shopBadgeCountProvider);
+  }
+
+  int? _getUpgradesBadgeCount() {
+    return ref.watch(upgradesBadgeCountProvider);
+  }
+
+  int? _getAchievementsBadgeCount() {
+    return ref.watch(achievementsBadgeCountProvider);
+  }
+
+  void _markAllAchievementsAsViewed() {
+    final unlocked = ref.read(unlockedAchievementsProvider);
+    final notificationNotifier = ref.read(notificationNotifierProvider);
+    
+    for (final achievementId in unlocked) {
+      notificationNotifier.markAchievementAsViewed(achievementId);
+    }
   }
 
   Widget _buildAccessToolbar() {
@@ -461,37 +842,192 @@ class _HomePageState extends ConsumerState<HomePage>
   Widget _buildAccessToolbarOverlay() {
     final isAudioPlaying = ref.watch(audioStateProvider);
 
-    return _buildAccessBarInner(false, isAudioPlaying);
+    return SizedBox(
+      width: 80,
+      child: _buildAccessBarInner(false, isAudioPlaying),
+    );
   }
 
-  Widget _buildInlineVolumeControl() {
+  void _showVolumeControlDialog() {
     final isMobile = GameConstants.isMobile(context);
-    final currentVolume = ref.watch(audioVolumeProvider);
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 6 : 8,
-        vertical: isMobile ? 6 : 8,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.black.withAlpha(150),
-        borderRadius: BorderRadius.circular(isMobile ? 15 : 20),
-        border: Border.all(color: Colors.orange.withAlpha(100)),
-      ),
-      child: SizedBox(
-        height: isMobile ? 140 : 170,
-        width: isMobile ? 40 : 46,
-        child: RotatedBox(
-          quarterTurns: 3,
-          child: Slider(
-            value: currentVolume,
-            min: 0.01,
-            max: 1.0,
-            activeColor: Colors.orange,
-            inactiveColor: Colors.grey.withAlpha(100),
-            onChanged: (value) {
-              ref.read(audioVolumeProvider.notifier).setVolume(value);
-              ref.read(audioStateProvider.notifier).setVolume(value);
-            },
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withAlpha(100),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.all(isMobile ? 16 : 24),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF1a0a3e).withAlpha(242),
+                    const Color(0xFF2d1b5e).withAlpha(242),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: const Color(0xFFA78BFA).withAlpha(128),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF8B5CF6).withAlpha(128),
+                    blurRadius: 40,
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final volume = ref.watch(audioVolumeProvider);
+                  final audioState = ref.watch(audioStateProvider);
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF22C55E),
+                                      Color(0xFF14B8A6),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  audioState ? Icons.volume_up : Icons.volume_off,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Controle de Volume',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: isMobile ? 18 : 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white70),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.volume_off,
+                              color: Colors.white70,
+                              size: 28,
+                            ),
+                            onPressed: () {
+                              ref.read(audioVolumeProvider.notifier).setVolume(0.01);
+                              ref.read(audioStateProvider.notifier).setVolume(0.01);
+                            },
+                          ),
+                          Expanded(
+                            child: SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: const Color(0xFF22C55E),
+                                inactiveTrackColor: Colors.grey.withAlpha(100),
+                                thumbColor: const Color(0xFF22C55E),
+                                overlayColor: const Color(0xFF22C55E).withAlpha(51),
+                                thumbShape: const RoundSliderThumbShape(
+                                  enabledThumbRadius: 12,
+                                ),
+                                trackHeight: 4,
+                              ),
+                              child: Slider(
+                                value: volume,
+                                min: 0.01,
+                                max: 1.0,
+                                onChanged: (value) {
+                                  ref.read(audioVolumeProvider.notifier).setVolume(value);
+                                  ref.read(audioStateProvider.notifier).setVolume(value);
+                                },
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.volume_up,
+                              color: Colors.white70,
+                              size: 28,
+                            ),
+                            onPressed: () {
+                              ref.read(audioVolumeProvider.notifier).setVolume(1.0);
+                              ref.read(audioStateProvider.notifier).setVolume(1.0);
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '${(volume * 100).toInt()}%',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isMobile ? 24 : 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              ref.read(audioStateProvider.notifier).toggleAudio();
+                            },
+                            icon: Icon(
+                              audioState ? Icons.volume_off : Icons.volume_up,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              audioState ? 'Desativar' : 'Ativar',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: audioState
+                                  ? Colors.red.withAlpha(200)
+                                  : const Color(0xFF22C55E).withAlpha(200),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),
@@ -566,6 +1102,8 @@ class _HomePageState extends ConsumerState<HomePage>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildAccessToolbarOverlay(),
+        const SizedBox(width: 20),
         // Lado esquerdo - Fubá e bolo
         Expanded(
           flex: 2,
@@ -590,7 +1128,6 @@ class _HomePageState extends ConsumerState<HomePage>
                   const Spacer(),
                   _buildCakeButton(),
                   const Spacer(),
-                  _buildAccessToolbarOverlay(),
                 ],
               );
             }
@@ -619,7 +1156,6 @@ class _HomePageState extends ConsumerState<HomePage>
                     const SizedBox(height: 20),
                     _buildCakeButton(),
                     const SizedBox(height: 20),
-                    _buildAccessToolbarOverlay(),
                   ],
                 ),
               ),
@@ -627,6 +1163,8 @@ class _HomePageState extends ConsumerState<HomePage>
           }),
         ),
         const SizedBox(width: 20),
+        // Meio - Barra de menus
+
         // Lado direito - Geradores
         const Expanded(flex: 3, child: GeneratorSection()),
       ],
@@ -726,7 +1264,8 @@ class _HomePageState extends ConsumerState<HomePage>
     final oneTimeMultiplier = ref.read(oneTimeMultiplierProvider);
     final potionClickPower = ref.read(potionClickPowerProvider);
 
-    final potionClickPowerEfficient = EfficientNumber.fromValues(potionClickPower, 0);
+    final potionClickPowerEfficient =
+        EfficientNumber.fromValues(potionClickPower, 0);
 
     final totalClickMultiplier = clickMultiplier *
         achievementMultiplier *
@@ -973,10 +1512,25 @@ class _HomePageState extends ConsumerState<HomePage>
                         <String, double>{};
                     ref.read(upgradesLevelProvider.notifier).state =
                         <String, int>{};
+                    ref.read(forusUpgradesOwnedProvider.notifier).state =
+                        <String>{};
+                    ref.read(cauldronProvider.notifier).state =
+                        <PotionColor, int>{};
+                    ref.read(activePotionEffectsProvider.notifier).state =
+                        <PotionEffect>[];
+                    ref.read(permanentPotionMultiplierProvider.notifier).state =
+                        1.0;
+                    ref.read(activePotionCountProvider.notifier).state =
+                        <String, int>{};
 
                     // Limpar dados salvos
                     final saveService = SaveService();
                     await saveService.clearSave();
+
+                    // Salvar imediatamente para garantir que tudo foi limpo
+                    await ref
+                        .read(saveNotifierProvider.notifier)
+                        .saveImmediate();
 
                     // Mostrar confirmação
                     if (context.mounted) {
@@ -1011,7 +1565,6 @@ class _HomePageState extends ConsumerState<HomePage>
                   );
                   ref.read(generatorsProvider.notifier).state = newGenerators;
                   ref.read(saveNotifierProvider.notifier).saveImmediate();
- 
                 },
                 icon: const Icon(Icons.add_circle),
                 label: const Text('1000 gen'),
@@ -1132,7 +1685,9 @@ class _HomePageState extends ConsumerState<HomePage>
       final key = entry.key;
       final count = entry.value;
       final accessory = accessoryList.firstWhere(
-        (acc) => '${acc.emoji}_${acc.productionMultiplier.toStringAsFixed(2)}' == key,
+        (acc) =>
+            '${acc.emoji}_${acc.productionMultiplier.toStringAsFixed(2)}' ==
+            key,
       );
 
       double totalEffectiveMultiplier = 1.0;
@@ -1186,54 +1741,6 @@ class _HomePageState extends ConsumerState<HomePage>
           ),
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
-    final isMobile = GameConstants.isMobile(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withAlpha(150),
-        borderRadius: BorderRadius.circular(isMobile ? 10 : 10),
-        border: Border.all(color: color.withAlpha(100)),
-      ),
-      child: IconButton(
-        iconSize: isMobile ? 20 : 24,
-        icon: Icon(icon, color: color),
-        onPressed: onPressed,
-      ),
-    );
-  }
-
-  Widget _buildIconButtonWithLabel(
-    IconData icon,
-    Color color,
-    String label,
-    VoidCallback onPressed,
-  ) {
-    final isMobile = GameConstants.isMobile(context);
-
-    if (isMobile) {
-      return Tooltip(
-        message: label,
-        child: _buildIconButton(icon, color, onPressed),
-      );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildIconButton(icon, color, onPressed),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 

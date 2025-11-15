@@ -19,6 +19,7 @@ import '../providers/achievement_provider.dart';
 import '../providers/rebirth_upgrade_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/potion_provider.dart';
+import '../providers/forus_upgrade_provider.dart';
 import '../core/utils/save_validation.dart';
 import '../models/fuba_generator.dart';
 import '../models/potion_color.dart';
@@ -246,6 +247,11 @@ class SyncService extends StateNotifier<bool> {
       final achievements = _ref.read(unlockedAchievementsProvider);
       final achievementStats = _ref.read(achievementStatsProvider);
       final upgrades = _ref.read(upgradesLevelProvider);
+      final forusUpgrades = _ref.read(forusUpgradesOwnedProvider);
+      final upgradesWithForus = Map<String, int>.from(upgrades);
+      for (var upgradeId in forusUpgrades) {
+        upgradesWithForus['forus_$upgradeId'] = 1;
+      }
       final cauldron = _ref.read(cauldronProvider);
       final activeEffects = _ref.read(activePotionEffectsProvider);
       final permanentMultiplier = _ref.read(permanentPotionMultiplierProvider);
@@ -266,7 +272,7 @@ class SyncService extends StateNotifier<bool> {
         rebirthData: rebirthData,
         achievements: achievements,
         achievementStats: achievementStats,
-        upgrades: upgrades,
+        upgrades: upgradesWithForus,
         cauldron: cauldronJson,
         activePotionEffects: activeEffectsJson,
         permanentPotionMultiplier: permanentMultiplier,
@@ -328,8 +334,20 @@ class SyncService extends StateNotifier<bool> {
         ...Map<String, double>.from(userData.achievementStats ?? {}),
       };
       _ref.read(achievementStatsProvider.notifier).state = mergedStats;
-      _ref.read(upgradesLevelProvider.notifier).state =
-          Map<String, int>.from(userData.upgrades ?? {});
+      
+      final rebirthUpgrades = <String, int>{};
+      final forusUpgradesOwned = <String>{};
+      
+      (userData.upgrades ?? {}).forEach((key, value) {
+        if (key.startsWith('forus_')) {
+          forusUpgradesOwned.add(key.substring(6));
+        } else {
+          rebirthUpgrades[key] = value;
+        }
+      });
+      
+      _ref.read(upgradesLevelProvider.notifier).state = rebirthUpgrades;
+      _ref.read(forusUpgradesOwnedProvider.notifier).state = forusUpgradesOwned;
 
       final cauldronJson = userData.cauldron ?? {};
       final cauldron = <PotionColor, int>{};

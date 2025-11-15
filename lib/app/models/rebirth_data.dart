@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:hive/hive.dart';
 import '../core/utils/efficient_number.dart';
-import '../core/utils/safe_convert.dart';
 
 part 'rebirth_data.g.dart';
 
@@ -185,6 +184,9 @@ class RebirthData {
   @HiveField(8)
   final bool cauldronUnlocked;
 
+  @HiveField(9)
+  final bool craftUnlocked;
+
   const RebirthData({
     this.rebirthCount = 0,
     this.ascensionCount = 0,
@@ -195,6 +197,7 @@ class RebirthData {
     this.usedCoupons = const [],
     this.forus = 0.0,
     this.cauldronUnlocked = false,
+    this.craftUnlocked = false,
   });
 
   RebirthData copyWith({
@@ -207,6 +210,7 @@ class RebirthData {
     List<String>? usedCoupons,
     double? forus,
     bool? cauldronUnlocked,
+    bool? craftUnlocked,
   }) {
     return RebirthData(
       rebirthCount: rebirthCount ?? this.rebirthCount,
@@ -218,6 +222,7 @@ class RebirthData {
       usedCoupons: usedCoupons ?? this.usedCoupons,
       forus: forus ?? this.forus,
       cauldronUnlocked: cauldronUnlocked ?? this.cauldronUnlocked,
+      craftUnlocked: craftUnlocked ?? this.craftUnlocked,
     );
   }
 
@@ -259,6 +264,7 @@ class RebirthData {
       'usedCoupons': usedCoupons,
       'forus': forus,
       'cauldronUnlocked': cauldronUnlocked,
+      'craftUnlocked': craftUnlocked,
     };
   }
 
@@ -273,6 +279,7 @@ class RebirthData {
       usedCoupons: List<String>.from(json['usedCoupons'] ?? []),
       forus: (json['forus'] ?? 0).toDouble(),
       cauldronUnlocked: json['cauldronUnlocked'] ?? false,
+      craftUnlocked: json['craftUnlocked'] ?? false,
     );
   }
 }

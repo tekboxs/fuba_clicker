@@ -312,3 +312,9 @@ final cauldronUnlockedProvider = Provider<bool>((ref) {
   return rebirthData.cauldronUnlocked || ownedUpgrades.contains('cauldron');
 });
 
+final craftUnlockedProvider = Provider<bool>((ref) {
+  final rebirthData = ref.watch(rebirthDataProvider);
+  final ownedUpgrades = ref.watch(forusUpgradesOwnedProvider);
+  return rebirthData.craftUnlocked || ownedUpgrades.contains('merge_items');
+});
+

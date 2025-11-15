@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:math' as math;
 import '../../../core/utils/efficient_number.dart';
 import 'package:fuba_clicker/app/models/rebirth_upgrade.dart';
 import 'package:fuba_clicker/app/providers/rebirth_upgrade_provider.dart';
 import 'package:fuba_clicker/app/core/utils/difficulty_barriers.dart';
+import 'package:fuba_clicker/app/theme/tokens.dart';
 
 class HexagonalUpgradeCard extends ConsumerWidget {
   final RebirthUpgrade upgrade;
@@ -22,7 +25,6 @@ class HexagonalUpgradeCard extends ConsumerWidget {
     required this.fuba,
     required this.generatorsOwned,
   });
-  
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,7 +35,7 @@ class HexagonalUpgradeCard extends ConsumerWidget {
         final currentLevel = upgradeData['currentLevel'] as int;
         final isMaxed = upgradeData['isMaxed'] as bool;
         final isLocked = upgradeData['isLocked'] as bool;
-        
+
         final upgradeNotifier = ref.read(upgradeNotifierProvider);
         final canPurchase = upgradeNotifier.canPurchase(upgrade);
 
@@ -45,6 +47,13 @@ class HexagonalUpgradeCard extends ConsumerWidget {
           canPurchase,
         );
 
+        final isMobile = MediaQuery.of(context).size.width < 600;
+        final cardWidth = isMobile ? double.infinity : 480.0;
+        final cardHeight = isMobile ? 320.0 : 480.0;
+        final iconSize = isMobile ? 60.0 : 80.0;
+        final iconFontSize = isMobile ? 32.0 : 40.0;
+        final verticalPadding = isMobile ? 100.0 : 120.0;
+
         return GestureDetector(
           onTap: canPurchase && !isMaxed && !isLocked && !isBarrierLocked
               ? () {
@@ -52,47 +61,87 @@ class HexagonalUpgradeCard extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('${upgrade.name} melhorado!'),
-                      backgroundColor: Colors.green,
+                      backgroundColor: AppColors.emerald500,
                     ),
                   );
                 }
               : null,
-          child: SizedBox(
-            width: 180,
-            height: 220,
-            child: CustomPaint(
-              painter: HexagonalPainter(
-                gradient: cardColors.gradient,
-                borderColor: cardColors.borderColor,
-                isLocked: isLocked || isBarrierLocked,
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 90),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildIcon(upgrade, isLocked, isBarrierLocked),
-                    _buildContent(
-                      upgrade,
-                      currentLevel,
-                      isMaxed,
-                      isLocked,
-                      isBarrierLocked,
-                      canPurchase,
-                      cardColors,
+          child: Stack(
+            children: [
+              SizedBox(
+                width: cardWidth,
+                height: cardHeight,
+                child: CustomPaint(
+                  painter: HexagonalPainter(
+                    gradient: cardColors.gradient,
+                    borderColor: cardColors.borderColor,
+                    isLocked: isLocked || isBarrierLocked,
+                    canPurchase: canPurchase &&
+                        !isMaxed &&
+                        !isLocked &&
+                        !isBarrierLocked,
+                  ),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 16 : 20,
+                      vertical: verticalPadding,
                     ),
-                    const Spacer(),
-                    _buildBanner(
-                      upgrade,
-                      isMaxed,
-                      isLocked,
-                      isBarrierLocked,
-                      cardColors,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildIcon(
+                          upgrade,
+                          isLocked,
+                          isBarrierLocked,
+                          canPurchase &&
+                              !isMaxed &&
+                              !isLocked &&
+                              !isBarrierLocked,
+                          iconSize,
+                          iconFontSize,
+                        ),
+                        _buildContent(
+                          upgrade,
+                          currentLevel,
+                          isMaxed,
+                          isLocked,
+                          isBarrierLocked,
+                          canPurchase,
+                          cardColors,
+                          isMobile,
+                        ),
+                        const Spacer(),
+                        _buildBanner(
+                          upgrade,
+                          isMaxed,
+                          isLocked,
+                          isBarrierLocked,
+                          cardColors,
+                          canPurchase &&
+                              !isMaxed &&
+                              !isLocked &&
+                              !isBarrierLocked,
+                          isMobile,
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+              if (canPurchase && !isMaxed && !isLocked && !isBarrierLocked)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _GlowPainter(
+                        color: cardColors.borderColor,
+                      ),
+                    ),
+                  ),
+                ).animate(onPlay: (controller) => controller.repeat()).shimmer(
+                      duration: 2.seconds,
+                      color: cardColors.borderColor.withOpacity(0.3),
+                    ),
+            ],
           ),
         );
       },
@@ -103,14 +152,41 @@ class HexagonalUpgradeCard extends ConsumerWidget {
     RebirthUpgrade upgrade,
     bool isLocked,
     bool isBarrierLocked,
+    bool canPurchase,
+    double iconSize,
+    double iconFontSize,
   ) {
     return Container(
-      width: 60,
-      height: 60,
+      width: iconSize,
+      height: iconSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withOpacity(0.1),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+        gradient: RadialGradient(
+          colors: isLocked || isBarrierLocked
+              ? [
+                  AppColors.muted.withAlpha(50),
+                  AppColors.muted.withAlpha(30),
+                ]
+              : [
+                  AppColors.foreground.withAlpha(30),
+                  AppColors.foreground.withAlpha(10),
+                ],
+        ),
+        border: Border.all(
+          color: isLocked || isBarrierLocked
+              ? AppColors.mutedForeground.withAlpha(100)
+              : AppColors.foreground.withAlpha(150),
+          width: 2,
+        ),
+        boxShadow: canPurchase
+            ? [
+                BoxShadow(
+                  color: AppColors.cyan500.withAlpha(100),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -118,19 +194,34 @@ class HexagonalUpgradeCard extends ConsumerWidget {
           Text(
             upgrade.emoji,
             style: TextStyle(
-              fontSize: 32,
-              color: isLocked || isBarrierLocked ? Colors.grey.shade700 : null,
+              fontSize: iconFontSize,
+              color: isLocked || isBarrierLocked
+                  ? AppColors.mutedForeground
+                  : null,
             ),
+          ).animate(
+            onPlay: (controller) {
+              if (canPurchase) controller.repeat(reverse: true);
+            },
+          ).scale(
+            begin: const Offset(1.0, 1.0),
+            end: const Offset(1.1, 1.1),
+            duration: 1.5.seconds,
+            curve: Curves.easeInOut,
           ),
           if (isBarrierLocked)
             Container(
-              width: 60,
-              height: 60,
+              width: iconSize,
+              height: iconSize,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
+                color: AppColors.background.withAlpha(200),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.lock, color: Colors.grey, size: 24),
+              child: Icon(
+                Icons.lock,
+                color: AppColors.mutedForeground,
+                size: iconSize * 0.4,
+              ),
             ),
         ],
       ),
@@ -145,67 +236,77 @@ class HexagonalUpgradeCard extends ConsumerWidget {
     bool isBarrierLocked,
     bool canPurchase,
     CardColors cardColors,
+    bool isMobile,
   ) {
     return Column(
       children: [
         Text(
           upgrade.name,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: isMobile ? 14 : 18,
             fontWeight: FontWeight.bold,
             color: isLocked || isBarrierLocked
-                ? Colors.grey.shade600
-                : Colors.white,
+                ? AppColors.mutedForeground
+                : AppColors.foreground,
           ),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: isMobile ? 8 : 12),
         if (isBarrierLocked && barrier != null) ...[
-          _buildBarrierInfo(),
+          const SizedBox(),
+          // _buildBarrierInfo(isMobile),
         ] else if (isLocked) ...[
-          _buildLockedInfo(upgrade),
+          _buildLockedInfo(upgrade, isMobile),
         ] else if (!isMaxed) ...[
-          _buildUpgradeInfo(upgrade, currentLevel, canPurchase),
+          // const SizedBox(),
+
+          _buildUpgradeInfo(upgrade, currentLevel, canPurchase, isMobile),
         ] else ...[
-          _buildMaxedInfo(upgrade, currentLevel),
+          const SizedBox(),
+
+          // _buildMaxedInfo(upgrade, currentLevel, isMobile),
         ],
       ],
     );
   }
 
-  Widget _buildBarrierInfo() {
+  Widget _buildBarrierInfo(bool isMobile) {
     return Consumer(
       builder: (context, ref, child) {
         final progress = ref.watch(barrierProgressProvider(upgrade.id));
-        
+
         return Column(
           children: [
             Text(
               '🔒 ${barrier!.description}',
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.orange,
+              style: TextStyle(
+                fontSize: isMobile ? 10 : 12,
+                color: AppColors.amber500,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: isMobile ? 4 : 6),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
               child: LinearProgressIndicator(
                 value: progress,
-                minHeight: 6,
-                backgroundColor: Colors.grey.shade800,
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.orange),
+                minHeight: isMobile ? 6 : 8,
+                backgroundColor: AppColors.muted,
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppColors.amber500),
               ),
             ),
             Text(
               '${(progress * 100).toStringAsFixed(1)}%',
-              style: TextStyle(fontSize: 8, color: Colors.grey.shade400),
+              style: TextStyle(
+                fontSize: isMobile ? 8 : 10,
+                color: AppColors.mutedForeground,
+              ),
             ),
           ],
         );
@@ -213,12 +314,12 @@ class HexagonalUpgradeCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildLockedInfo(RebirthUpgrade upgrade) {
+  Widget _buildLockedInfo(RebirthUpgrade upgrade, bool isMobile) {
     return Text(
       'Requer ${upgrade.ascensionRequirement} Ascensões',
-      style: const TextStyle(
-        fontSize: 10,
-        color: Colors.red,
+      style: TextStyle(
+        fontSize: isMobile ? 10 : 12,
+        color: AppColors.destructive,
         fontWeight: FontWeight.bold,
       ),
       textAlign: TextAlign.center,
@@ -229,6 +330,7 @@ class HexagonalUpgradeCard extends ConsumerWidget {
     RebirthUpgrade upgrade,
     int currentLevel,
     bool canPurchase,
+    bool isMobile,
   ) {
     final cost = upgrade.getTokenCost(currentLevel);
 
@@ -236,34 +338,54 @@ class HexagonalUpgradeCard extends ConsumerWidget {
       children: [
         Text(
           upgrade.getEffectDescription(currentLevel + 1),
-          style: const TextStyle(
-            fontSize: 9,
-            color: Colors.white,
+          style: TextStyle(
+            fontSize: isMobile ? 9 : 11,
+            color: AppColors.foreground,
             fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: isMobile ? 4 : 6),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 10 : 12,
+            vertical: isMobile ? 6 : 8,
+          ),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.cyan.withOpacity(0.5)),
+            gradient: LinearGradient(
+              colors: [
+                AppColors.cyan500.withAlpha(200),
+                AppColors.purple500.withAlpha(200),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            border: Border.all(
+              color: AppColors.cyan500.withAlpha(200),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.cyan500.withAlpha(80),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('💎', style: TextStyle(fontSize: 12)),
-              const SizedBox(width: 2),
+              Text('💎', style: TextStyle(fontSize: isMobile ? 14 : 16)),
+              SizedBox(width: isMobile ? 4 : 6),
               Text(
                 '$cost',
-                style: const TextStyle(
-                  fontSize: 10,
+                style: TextStyle(
+                  fontSize: isMobile ? 11 : 13,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: AppColors.foreground,
                 ),
               ),
             ],
@@ -273,19 +395,7 @@ class HexagonalUpgradeCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildMaxedInfo(RebirthUpgrade upgrade, int currentLevel) {
-    return Text(
-      upgrade.getEffectDescription(currentLevel),
-      style: const TextStyle(
-        fontSize: 9,
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
-      textAlign: TextAlign.center,
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
+  
 
   Widget _buildBanner(
     RebirthUpgrade upgrade,
@@ -293,6 +403,8 @@ class HexagonalUpgradeCard extends ConsumerWidget {
     bool isLocked,
     bool isBarrierLocked,
     CardColors cardColors,
+    bool canPurchase,
+    bool isMobile,
   ) {
     String bannerText;
     if (isMaxed) {
@@ -302,21 +414,53 @@ class HexagonalUpgradeCard extends ConsumerWidget {
     } else {
       bannerText = 'UPGRADE';
     }
-
+    if (bannerText != 'LOCKED') {
+      return const SizedBox();
+    }
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: isMobile ? 8 : 10,
+      ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: cardColors.bannerColors),
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: cardColors.bannerColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(
+          color: canPurchase
+              ? AppColors.cyan500.withAlpha(150)
+              : Colors.transparent,
+          width: 1.5,
+        ),
+        boxShadow: canPurchase
+            ? [
+                BoxShadow(
+                  color: cardColors.borderColor.withAlpha(100),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
       ),
       child: Text(
         bannerText,
-        style: const TextStyle(
-          fontSize: 10,
+        style: TextStyle(
+          fontSize: isMobile ? 10 : 12,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: AppColors.foreground,
+          letterSpacing: 1.2,
         ),
       ),
+    ).animate(
+      onPlay: (controller) {
+        if (canPurchase) controller.repeat();
+      },
+    ).shimmer(
+      duration: 2.seconds,
+      color: AppColors.cyan500.withOpacity(0.3),
     );
   }
 
@@ -332,22 +476,22 @@ class HexagonalUpgradeCard extends ConsumerWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+          colors: [AppColors.emerald500, AppColors.emerald600],
         ),
-        borderColor: Colors.green.withOpacity(0.8),
-        bannerColors: [Colors.green.shade600, Colors.green.shade800],
+        borderColor: AppColors.emerald500.withOpacity(0.8),
+        bannerColors: [AppColors.emerald500, AppColors.emerald600],
       );
     }
 
     if (isLocked || isBarrierLocked) {
       return CardColors(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF424242), Color(0xFF212121)],
+          colors: [AppColors.muted, AppColors.muted.withAlpha(200)],
         ),
-        borderColor: Colors.grey.withOpacity(0.5),
-        bannerColors: [Colors.grey.shade600, Colors.grey.shade800],
+        borderColor: AppColors.mutedForeground.withOpacity(0.5),
+        bannerColors: [AppColors.muted, AppColors.muted.withAlpha(200)],
       );
     }
 
@@ -378,20 +522,20 @@ class HexagonalUpgradeCard extends ConsumerWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF9C27B0), Color(0xFF7B1FA2)],
+            colors: [AppColors.purple500, AppColors.purple600],
           ),
-          borderColor: Colors.purple.withOpacity(0.8),
-          bannerColors: [Colors.purple.shade600, Colors.purple.shade800],
+          borderColor: AppColors.purple500.withOpacity(0.8),
+          bannerColors: [AppColors.purple500, AppColors.purple600],
         );
       case 'lucky_boxes':
         return CardColors(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFE91E63), Color(0xFFC2185B)],
+            colors: [AppColors.pink500, AppColors.pink600],
           ),
-          borderColor: Colors.pink.withOpacity(0.8),
-          bannerColors: [Colors.pink.shade600, Colors.pink.shade800],
+          borderColor: AppColors.pink500.withOpacity(0.8),
+          bannerColors: [AppColors.pink500, AppColors.pink600],
         );
       case 'starting_fuba':
         return CardColors(
@@ -408,10 +552,10 @@ class HexagonalUpgradeCard extends ConsumerWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF00BCD4), Color(0xFF0097A7)],
+            colors: [AppColors.cyan500, AppColors.cyan600],
           ),
-          borderColor: Colors.cyan.withOpacity(0.8),
-          bannerColors: [Colors.cyan.shade600, Colors.cyan.shade800],
+          borderColor: AppColors.cyan500.withOpacity(0.8),
+          bannerColors: [AppColors.cyan500, AppColors.cyan600],
         );
       case 'offline_production':
         return CardColors(
@@ -428,10 +572,10 @@ class HexagonalUpgradeCard extends ConsumerWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFFFC107), Color(0xFFFF8F00)],
+            colors: [AppColors.amber500, AppColors.amber600],
           ),
-          borderColor: Colors.amber.withOpacity(0.8),
-          bannerColors: [Colors.amber.shade600, Colors.amber.shade800],
+          borderColor: AppColors.amber500.withOpacity(0.8),
+          bannerColors: [AppColors.amber500, AppColors.amber600],
         );
       default:
         return CardColors(
@@ -463,11 +607,13 @@ class HexagonalPainter extends CustomPainter {
   final LinearGradient gradient;
   final Color borderColor;
   final bool isLocked;
+  final bool canPurchase;
 
   HexagonalPainter({
     required this.gradient,
     required this.borderColor,
     required this.isLocked,
+    this.canPurchase = false,
   });
 
   @override
@@ -481,7 +627,7 @@ class HexagonalPainter extends CustomPainter {
     final borderPaint = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = canPurchase ? 2.5 : 2.0;
 
     final path = _createHexagonPath(size);
 
@@ -490,6 +636,10 @@ class HexagonalPainter extends CustomPainter {
 
     if (!isLocked) {
       _drawSparkles(canvas, size);
+    }
+
+    if (canPurchase) {
+      _drawGlow(canvas, size);
     }
   }
 
@@ -521,7 +671,7 @@ class HexagonalPainter extends CustomPainter {
 
   void _drawSparkles(Canvas canvas, Size size) {
     final sparklePaint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = AppColors.cyan500.withOpacity(0.8)
       ..style = PaintingStyle.fill;
 
     final sparklePositions = [
@@ -534,15 +684,58 @@ class HexagonalPainter extends CustomPainter {
     ];
 
     for (final position in sparklePositions) {
-      canvas.drawCircle(position, 1.5, sparklePaint);
+      canvas.drawCircle(position, 2.0, sparklePaint);
+      final glowPaint = Paint()
+        ..color = AppColors.cyan500.withOpacity(0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      canvas.drawCircle(position, 4.0, glowPaint);
     }
+  }
+
+  void _drawGlow(Canvas canvas, Size size) {
+    final glowPaint = Paint()
+      ..color = borderColor.withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.0;
+
+    final path = _createHexagonPath(size);
+    canvas.drawPath(path, glowPaint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     if (oldDelegate is! HexagonalPainter) return true;
     return oldDelegate.gradient != gradient ||
-           oldDelegate.borderColor != borderColor ||
-           oldDelegate.isLocked != isLocked;
+        oldDelegate.borderColor != borderColor ||
+        oldDelegate.isLocked != isLocked ||
+        oldDelegate.canPurchase != canPurchase;
   }
+}
+
+class _GlowPainter extends CustomPainter {
+  final Color color;
+
+  _GlowPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final glowPaint = Paint()
+      ..color = color.withOpacity(0.2)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20)
+      ..style = PaintingStyle.fill;
+
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    final radius = math.min(size.width, size.height) * 0.3;
+
+    canvas.drawCircle(
+      Offset(centerX, centerY),
+      radius,
+      glowPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

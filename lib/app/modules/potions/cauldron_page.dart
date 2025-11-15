@@ -60,34 +60,33 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
     final actualQuantity =
         quantity > availableQuantity ? availableQuantity : quantity;
 
-    return SizedBox(
-      width: isMobile ? 50 : 60,
-      child: ElevatedButton(
-        onPressed: canAdd
-            ? () {
-                _addItemToCauldron(accessory, actualQuantity);
-              }
-            : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: canAdd ? AppColors.primary : AppColors.muted,
-          foregroundColor: AppColors.foreground,
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 4 : 8,
-            vertical: isMobile ? 8 : 10,
-          ),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.sm),
-          ),
-          elevation: canAdd ? AppElevations.level2 : 0,
+    return ElevatedButton(
+      onPressed: canAdd
+          ? () {
+              _addItemToCauldron(accessory, actualQuantity);
+            }
+          : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: canAdd ? AppColors.primary : AppColors.muted,
+        foregroundColor: AppColors.foreground,
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 6 : 12,
+          vertical: isMobile ? 12 : 12,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: isMobile ? 10 : 12,
-            fontWeight: FontWeight.bold,
-          ),
+        minimumSize: isMobile ? const Size(0, 44) : Size.zero,
+        tapTargetSize: isMobile
+            ? MaterialTapTargetSize.padded
+            : MaterialTapTargetSize.shrinkWrap,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+        ),
+        elevation: canAdd ? AppElevations.level2 : 0,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: isMobile ? 11 : 11,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -585,8 +584,14 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
                       ),
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                : GridView.builder(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: isMobile ? 160 : 200,
+                      mainAxisExtent: isMobile ? 200 : 200,
+                      mainAxisSpacing: AppSpacing.sm,
+                      crossAxisSpacing: AppSpacing.sm,
+                    ),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
                       final entry = items[index];
@@ -602,159 +607,202 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
                       final availableQuantity = entry.value - equippedCount;
 
                       return Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                          vertical: AppSpacing.xs,
-                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0F1115),
-                          borderRadius: BorderRadius.circular(AppRadii.lg),
+                          color: color.color.withAlpha(20),
+                          borderRadius: BorderRadius.circular(AppRadii.md),
                           border: Border.all(
-                            color: Colors.white.withAlpha(25),
-                            width: 1,
+                            color: color.color.withAlpha(150),
+                            width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: color.color.withAlpha(40),
-                              blurRadius: 12,
+                              color: color.color.withAlpha(60),
+                              blurRadius: 8,
                               spreadRadius: 0,
                             ),
                           ],
                         ),
                         child: Material(
                           color: Colors.transparent,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.xs,
-                            ),
-                            leading: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF0F1115),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadii.md),
-                                border: Border.all(
-                                  color: color.color.withAlpha(100),
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: color.color.withAlpha(60),
-                                    blurRadius: 8,
-                                    spreadRadius: 0,
-                                  ),
-                                ],
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(AppRadii.md),
+                            child: Padding(
+                              padding: EdgeInsets.all(
+                                isMobile ? AppSpacing.xs : AppSpacing.sm,
                               ),
-                              child: Center(
-                                child: Text(
-                                  accessory.emoji,
-                                  style: const TextStyle(fontSize: 24),
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              accessory.name,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.foreground,
-                                  ),
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: AppSpacing.xs),
-                              child: Row(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.xs,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: availableQuantity > 0
-                                          ? AppColors.emerald500.withAlpha(30)
-                                          : AppColors.destructive.withAlpha(30),
-                                      borderRadius:
-                                          BorderRadius.circular(AppRadii.sm),
-                                      border: Border.all(
-                                        color: availableQuantity > 0
-                                            ? AppColors.emerald500
-                                                .withAlpha(100)
-                                            : AppColors.destructive
-                                                .withAlpha(100),
-                                        width: 1,
+                                  Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: isMobile ? 44 : 48,
+                                        height: isMobile ? 44 : 48,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF0F1115),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: color.color.withAlpha(200),
+                                            width: 2,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: color.color.withAlpha(80),
+                                              blurRadius: 8,
+                                              spreadRadius: 0,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            accessory.emoji,
+                                            style: TextStyle(
+                                              fontSize: isMobile ? 20 : 24,
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    child: Text(
-                                      availableQuantity > 0
-                                          ? 'Disponível: ${availableQuantity}x'
-                                          : 'Todos equipados',
-                                      style: TextStyle(
-                                        color: availableQuantity > 0
-                                            ? AppColors.emerald500
-                                            : AppColors.destructive,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
+                                      Positioned(
+                                        bottom: 0,
+                                        right: 0,
+                                        child: Container(
+                                          width: isMobile ? 25 : 28,
+                                          height: isMobile ? 25 : 28,
+                                          decoration: BoxDecoration(
+                                            color: color.color,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: const Color(0xFF0F1115),
+                                              width: 2,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: color.color.withAlpha(150),
+                                                blurRadius: 4,
+                                                spreadRadius: 0,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              '+$colorValue',
+                                              style: TextStyle(
+                                                color: AppColors.foreground,
+                                                fontSize: isMobile ? 11 : 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                  const SizedBox(width: AppSpacing.xs),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.xs,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: color.color.withAlpha(30),
-                                      borderRadius:
-                                          BorderRadius.circular(AppRadii.sm),
-                                      border: Border.all(
-                                        color: color.color.withAlpha(100),
-                                        width: 1,
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    accessory.name,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.foreground,
+                                          fontSize: isMobile ? 10 : 11,
+                                        ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Tem  ',
+                                        style: TextStyle(
+                                          color: AppColors.emerald500
+                                              .withAlpha(100),
+                                          fontSize: isMobile ? 9 : 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
-                                    ),
-                                    child: Text(
-                                      '+$colorValue ${color.name}',
-                                      style: TextStyle(
-                                        color: color.color,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppSpacing.xs,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: availableQuantity > 0
+                                              ? AppColors.emerald500
+                                                  .withAlpha(30)
+                                              : AppColors.destructive
+                                                  .withAlpha(30),
+                                          borderRadius: BorderRadius.circular(
+                                              AppRadii.sm),
+                                          border: Border.all(
+                                            color: availableQuantity > 0
+                                                ? AppColors.emerald500
+                                                    .withAlpha(100)
+                                                : AppColors.destructive
+                                                    .withAlpha(100),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${availableQuantity}x',
+                                          style: TextStyle(
+                                            color: availableQuantity > 0
+                                                ? AppColors.emerald500
+                                                : AppColors.destructive,
+                                            fontSize: isMobile ? 8 : 9,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height: isMobile
+                                        ? AppSpacing.xs
+                                        : AppSpacing.sm,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Expanded(
+                                        child: _buildAddButton(
+                                          '+1',
+                                          1,
+                                          availableQuantity,
+                                          accessory,
+                                          isMobile,
+                                        ),
+                                      ),
+                                      SizedBox(width: isMobile ? 3 : 4),
+                                      Expanded(
+                                        child: _buildAddButton(
+                                          '+10',
+                                          10,
+                                          availableQuantity,
+                                          accessory,
+                                          isMobile,
+                                        ),
+                                      ),
+                                      SizedBox(width: isMobile ? 3 : 4),
+                                      Expanded(
+                                        child: _buildAddButton(
+                                          'MAX',
+                                          availableQuantity,
+                                          availableQuantity,
+                                          accessory,
+                                          isMobile,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _buildAddButton(
-                                  '+1',
-                                  1,
-                                  availableQuantity,
-                                  accessory,
-                                  isMobile,
-                                ),
-                                const SizedBox(width: AppSpacing.xs),
-                                _buildAddButton(
-                                  '+10',
-                                  10,
-                                  availableQuantity,
-                                  accessory,
-                                  isMobile,
-                                ),
-                                const SizedBox(width: AppSpacing.xs),
-                                _buildAddButton(
-                                  'MAX',
-                                  availableQuantity,
-                                  availableQuantity,
-                                  accessory,
-                                  isMobile,
-                                ),
-                              ],
                             ),
                           ),
                         ),
@@ -807,7 +855,8 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                     itemCount: potions.length,
                     itemBuilder: (context, index) {
                       final potion = potions[index];
@@ -905,7 +954,8 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
                                     ),
                               ),
                               subtitle: Padding(
-                                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                                padding:
+                                    const EdgeInsets.only(top: AppSpacing.xs),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

@@ -26,13 +26,14 @@ class RebirthDataAdapter extends TypeAdapter<RebirthData> {
       usedCoupons: (fields[6] as List).cast<String>(),
       forus: fields[7] as double,
       cauldronUnlocked: fields[8] as bool,
+      craftUnlocked: fields[9] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, RebirthData obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.rebirthCount)
       ..writeByte(1)
@@ -50,7 +51,9 @@ class RebirthDataAdapter extends TypeAdapter<RebirthData> {
       ..writeByte(7)
       ..write(obj.forus)
       ..writeByte(8)
-      ..write(obj.cauldronUnlocked);
+      ..write(obj.cauldronUnlocked)
+      ..writeByte(9)
+      ..write(obj.craftUnlocked);
   }
 
   @override

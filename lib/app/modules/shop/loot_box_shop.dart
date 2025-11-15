@@ -8,6 +8,7 @@ import 'package:fuba_clicker/app/models/cake_accessory.dart';
 import 'package:fuba_clicker/app/providers/game_providers.dart';
 import 'package:fuba_clicker/app/providers/accessory_provider.dart';
 import 'package:fuba_clicker/app/providers/achievement_provider.dart';
+import 'package:fuba_clicker/app/providers/notification_provider.dart';
 import 'package:fuba_clicker/app/providers/save_provider.dart';
 import 'package:fuba_clicker/app/providers/rebirth_provider.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
@@ -35,6 +36,9 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _checkTutorialStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationNotifierProvider).markNotificationsAsViewed('shop');
+    });
   }
 
   Future<void> _checkTutorialStatus() async {

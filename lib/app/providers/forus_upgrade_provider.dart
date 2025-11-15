@@ -31,18 +31,21 @@ class ForusUpgradeNotifier {
     final rebirthData = ref.read(rebirthDataProvider);
     if (rebirthData.forus < upgrade.forusCost) return;
 
-    ref.read(rebirthDataProvider.notifier).state =
-        rebirthData.copyWith(forus: rebirthData.forus - upgrade.forusCost);
-
     final owned = ref.read(forusUpgradesOwnedProvider);
     final newOwned = Set<String>.from(owned);
     newOwned.add(upgrade.id);
     ref.read(forusUpgradesOwnedProvider.notifier).state = newOwned;
 
-    if (upgrade.type == ForusUpgradeType.cauldron) {
-      ref.read(rebirthDataProvider.notifier).state =
-          ref.read(rebirthDataProvider).copyWith(cauldronUnlocked: true);
-    }
+    final updatedRebirthData = rebirthData.copyWith(
+      forus: rebirthData.forus - upgrade.forusCost,
+      cauldronUnlocked: upgrade.type == ForusUpgradeType.cauldron 
+          ? true 
+          : rebirthData.cauldronUnlocked,
+      craftUnlocked: upgrade.type == ForusUpgradeType.mergeItems 
+          ? true 
+          : rebirthData.craftUnlocked,
+    );
+    ref.read(rebirthDataProvider.notifier).state = updatedRebirthData;
 
     ref.read(saveNotifierProvider.notifier).saveImmediate();
   }
