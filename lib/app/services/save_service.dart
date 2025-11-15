@@ -60,6 +60,10 @@ class SaveService {
     required List<String> achievements,
     required Map<String, double> achievementStats,
     required Map<String, int> upgrades,
+    required Map<String, int> cauldron,
+    required List<Map<String, dynamic>> activePotionEffects,
+    required double permanentPotionMultiplier,
+    required Map<String, int> activePotionCount,
   }) async {
     if (_box == null) return;
 
@@ -72,6 +76,10 @@ class SaveService {
       achievements: achievements,
       achievementStats: achievementStats,
       upgrades: upgrades,
+      cauldron: cauldron,
+      activePotionEffects: activePotionEffects,
+      permanentPotionMultiplier: permanentPotionMultiplier,
+      activePotionCount: activePotionCount,
     );
 
     try {
@@ -95,14 +103,28 @@ class SaveService {
     return null;
   }
 
+  Future<bool> hasCompletedShopTutorial() async {
+    if (_settingsBox == null) return false;
+    final data = _settingsBox!.get('shop_tutorial_completed');
+    if (data is Map && data['completed'] == true) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> setShopTutorialCompleted(bool completed) async {
+    if (_settingsBox == null) return;
+    await _settingsBox!
+        .put('shop_tutorial_completed', {'completed': completed});
+  }
+
   Future<GameSaveData> loadGame() async {
     if (_box == null) return _getDefaultSaveData();
 
     GameSaveData? compressedBackup;
     try {
       compressedBackup = await _loadCompressedData();
-    } catch (e) {
-    }
+    } catch (e) {}
 
     try {
       final saveData = _box!.get(_saveKey);
@@ -164,6 +186,10 @@ class SaveService {
       achievements: <String>[],
       achievementStats: <String, double>{},
       upgrades: <String, int>{},
+      cauldron: <String, int>{},
+      activePotionEffects: <Map<String, dynamic>>[],
+      permanentPotionMultiplier: 1.0,
+      activePotionCount: <String, int>{},
     );
   }
 

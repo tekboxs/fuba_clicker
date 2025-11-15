@@ -2,18 +2,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/efficient_number.dart';
 import '../models/rebirth_data.dart';
 import '../models/fuba_generator.dart';
+import '../models/craft_recipe.dart';
 import 'game_providers.dart';
 import 'accessory_provider.dart';
 import 'save_provider.dart';
 import 'rebirth_upgrade_provider.dart';
 import 'forus_upgrade_provider.dart';
+import 'potion_provider.dart';
+import '../models/potion_effect.dart';
  
 final rebirthDataProvider = StateProvider<RebirthData>((ref) {
   return const RebirthData();
 });
 
 final rebirthMultiplierProvider = Provider<EfficientNumber>((ref) {
-  return ref.watch(rebirthDataProvider).getTotalMultiplier();
+  final baseMultiplier = ref.watch(rebirthDataProvider).getTotalMultiplier();
+  
+  final activeEffects = ref.watch(activePotionEffectsProvider);
+  double potionRebirthMultiplier = 1.0;
+  for (final effect in activeEffects) {
+    if (!effect.isExpired && effect.type == PotionEffectType.rebirthMultiplier) {
+      potionRebirthMultiplier *= effect.value;
+    }
+  }
+  
+  final potionRebirthMultiplierEfficient = EfficientNumber.fromValues(potionRebirthMultiplier, 0);
+  return baseMultiplier * potionRebirthMultiplierEfficient;
 });
 
 
@@ -83,7 +97,17 @@ class RebirthNotifier {
 
     final upgradeNotifier = ref.read(upgradeNotifierProvider);
     final tokenMultiplier = upgradeNotifier.getTokenMultiplier();
-    final finalTokenReward = tokenReward * tokenMultiplier;
+    
+    final activeEffects = ref.read(activePotionEffectsProvider);
+    double potionTokenGain = 0.0;
+    for (final effect in activeEffects) {
+      if (!effect.isExpired && effect.type == PotionEffectType.tokenGain) {
+        potionTokenGain += effect.value;
+      }
+    }
+    final tokenGainMultiplier = 1.0 + (potionTokenGain / 100.0);
+    
+    final finalTokenReward = tokenReward * tokenMultiplier * tokenGainMultiplier;
 
     _resetProgress(tier);
 
@@ -108,12 +132,22 @@ class RebirthNotifier {
         break;
       case RebirthTier.furuborus:
         if (currentData.transcendenceCount >= 100) {
+          final activeEffects = ref.read(activePotionEffectsProvider);
+          double potionForusGain = 0.0;
+          for (final effect in activeEffects) {
+            if (!effect.isExpired && effect.type == PotionEffectType.forusGain) {
+              potionForusGain += effect.value;
+            }
+          }
+          final forusGainMultiplier = 1.0 + (potionForusGain / 100.0);
+          
           ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
             rebirthCount: 0,
             ascensionCount: 0,
-            transcendenceCount: currentData.transcendenceCount - 100,
+            transcendenceCount: 0,
             furuborusCount: currentData.furuborusCount + 1,
-            forus: currentData.forus + 1.0,
+            forus: currentData.forus + (1.0 * forusGainMultiplier),
+            celestialTokens: 0.0,
           );
         }
         break;
@@ -127,15 +161,20 @@ class RebirthNotifier {
     final shouldKeepItems = upgradeNotifier.shouldKeepItems();
     final keepGeneratorsPercent = upgradeNotifier.getKeepGeneratorsPercent();
 
-    final currentGenerators = ref.read(generatorsProvider);
-    if (keepGeneratorsPercent > 0) {
-      final keptGenerators = currentGenerators.map((count) => 
-        (count * keepGeneratorsPercent).floor()
-      ).toList();
-      ref.read(generatorsProvider.notifier).state = keptGenerators;
-    } else {
+    if (tier == RebirthTier.furuborus) {
       ref.read(generatorsProvider.notifier).state =
           List.filled(availableGenerators.length, 0);
+    } else {
+      final currentGenerators = ref.read(generatorsProvider);
+      if (keepGeneratorsPercent > 0) {
+        final keptGenerators = currentGenerators.map((count) => 
+          (count * keepGeneratorsPercent).floor()
+        ).toList();
+        ref.read(generatorsProvider.notifier).state = keptGenerators;
+      } else {
+        ref.read(generatorsProvider.notifier).state =
+            List.filled(availableGenerators.length, 0);
+      }
     }
 
     switch (tier) {
@@ -154,10 +193,18 @@ class RebirthNotifier {
         }
         break;
       case RebirthTier.furuborus:
-        if (!shouldKeepItems) {
-          ref.read(inventoryProvider.notifier).state = {};
-          ref.read(equippedAccessoriesProvider.notifier).state = [];
+        final currentInventory = ref.read(inventoryProvider);
+        final craftedItemIds = allCraftRecipes.map((recipe) => recipe.outputId).toSet();
+        final preservedInventory = <String, int>{};
+        
+        for (final entry in currentInventory.entries) {
+          if (craftedItemIds.contains(entry.key)) {
+            preservedInventory[entry.key] = entry.value;
+          }
         }
+        
+        ref.read(inventoryProvider.notifier).state = preservedInventory;
+        ref.read(equippedAccessoriesProvider.notifier).state = [];
         final forusUpgrades = ref.read(forusUpgradesOwnedProvider);
         ref.read(upgradesLevelProvider.notifier).state = {};
         ref.read(forusUpgradesOwnedProvider.notifier).state = forusUpgrades;
@@ -228,12 +275,22 @@ class RebirthNotifier {
         final actualCount = count.clamp(0, maxByTranscendence.clamp(0, 5));
         if (actualCount <= 0) return;
         
+        final activeEffects = ref.read(activePotionEffectsProvider);
+        double potionForusGain = 0.0;
+        for (final effect in activeEffects) {
+          if (!effect.isExpired && effect.type == PotionEffectType.forusGain) {
+            potionForusGain += effect.value;
+          }
+        }
+        final forusGainMultiplier = 1.0 + (potionForusGain / 100.0);
+        
         ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
           rebirthCount: 0,
           ascensionCount: 0,
-          transcendenceCount: currentData.transcendenceCount - (actualCount * 100),
+          transcendenceCount: 0,
           furuborusCount: currentData.furuborusCount + actualCount,
-          forus: currentData.forus + actualCount.toDouble(),
+          forus: currentData.forus + (actualCount.toDouble() * forusGainMultiplier),
+          celestialTokens: 0.0,
         );
         _resetProgress(tier);
         return;
@@ -241,8 +298,8 @@ class RebirthNotifier {
 
     // Limites máximos por operação
     const maxRebirths = 50;
-    const maxAscensions = 10;
-    const maxTranscendences = 5;
+    const maxAscensions = 50;
+    const maxTranscendences = 50;
 
     int maxAllowed;
     switch (tier) {
@@ -272,7 +329,17 @@ class RebirthNotifier {
 
     final upgradeNotifier = ref.read(upgradeNotifierProvider);
     final tokenMultiplier = upgradeNotifier.getTokenMultiplier();
-    final finalTotalTokenReward = totalTokenReward * tokenMultiplier;
+    
+    final activeEffects = ref.read(activePotionEffectsProvider);
+    double potionTokenGain = 0.0;
+    for (final effect in activeEffects) {
+      if (!effect.isExpired && effect.type == PotionEffectType.tokenGain) {
+        potionTokenGain += effect.value;
+      }
+    }
+    final tokenGainMultiplier = 1.0 + (potionTokenGain / 100.0);
+    
+    final finalTotalTokenReward = totalTokenReward * tokenMultiplier * tokenGainMultiplier;
 
     _resetProgress(tier);
 
@@ -325,8 +392,8 @@ int calculateMaxOperations(RebirthTier tier, EfficientNumber fuba, RebirthData r
   
   // Limites máximos seguros para evitar travamentos
   const maxRebirths = 50;
-  const maxAscensions = 10;
-  const maxTranscendences = 5;
+  const maxAscensions = 50;
+  const maxTranscendences = 50;
   
   // Determina limite baseado no tier
   int maxAllowed;

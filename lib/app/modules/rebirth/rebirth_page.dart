@@ -396,7 +396,7 @@ class RebirthPage extends ConsumerWidget {
                 context,
                 ref,
                 tier,
-                10,
+                50,
                 maxCount: barrierLocked ? 0 : maxCount,
               ),
             ],
@@ -550,10 +550,15 @@ class RebirthPage extends ConsumerWidget {
       if (reward.isFinite && !reward.isNaN && reward >= 0) {
         totalTokenReward += reward.clamp(0, 1e6).toInt();
       }
-      final multiplier = tier.getMultiplierGain(currentCount + i);
-      if (multiplier.isFinite && !multiplier.isNaN) {
-        totalMultiplierGain += multiplier;
-      }
+    }
+    
+    final multiplierAfter = tier.getEffectiveMultiplierGain(currentCount + count);
+    final multiplierBefore = tier.getEffectiveMultiplierGain(currentCount);
+    
+    if (tier == RebirthTier.rebirth) {
+      totalMultiplierGain = multiplierAfter / multiplierBefore;
+    } else {
+      totalMultiplierGain = multiplierAfter / multiplierBefore;
     }
 
     showDialog(
@@ -765,12 +770,7 @@ class RebirthPage extends ConsumerWidget {
               onPressed: () {
                 ref.read(rebirthNotifierProvider).addDebugRebirth(tier, 100);
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('+100 $label adicionados'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                
               },
               icon: const Icon(Icons.add_circle_rounded),
               color: Colors.green,

@@ -31,6 +31,18 @@ class GameSaveData {
   @HiveField(7)
   final Map<String, int> upgrades;
 
+  @HiveField(8)
+  final Map<String, int> cauldron;
+
+  @HiveField(9)
+  final List<Map<String, dynamic>> activePotionEffects;
+
+  @HiveField(10)
+  final double permanentPotionMultiplier;
+
+  @HiveField(11)
+  final Map<String, int> activePotionCount;
+
   GameSaveData({
     required this.fuba,
     required this.generators,
@@ -40,6 +52,10 @@ class GameSaveData {
     required this.achievements,
     required this.achievementStats,
     required this.upgrades,
+    required this.cauldron,
+    required this.activePotionEffects,
+    required this.permanentPotionMultiplier,
+    required this.activePotionCount,
   });
 
   Map<String, dynamic> toJson() {
@@ -52,6 +68,10 @@ class GameSaveData {
       'achievements': achievements,
       'achievementStats': achievementStats,
       'upgrades': upgrades,
+      'cauldron': cauldron,
+      'activePotionEffects': activePotionEffects,
+      'permanentPotionMultiplier': permanentPotionMultiplier,
+      'activePotionCount': activePotionCount,
     };
   }
 
@@ -66,6 +86,12 @@ class GameSaveData {
       achievementStats:
           Map<String, double>.from(json['achievementStats'] ?? {}),
       upgrades: Map<String, int>.from(json['upgrades'] ?? {}),
+      cauldron: Map<String, int>.from(json['cauldron'] ?? {}),
+      activePotionEffects: (json['activePotionEffects'] != null)
+          ? List<Map<String, dynamic>>.from(json['activePotionEffects'])
+          : [],
+      permanentPotionMultiplier: (json['permanentPotionMultiplier'] ?? 1.0).toDouble(),
+      activePotionCount: Map<String, int>.from(json['activePotionCount'] ?? {}),
     );
   }
 }

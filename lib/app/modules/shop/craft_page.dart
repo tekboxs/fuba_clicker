@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuba_clicker/app/core/utils/constants.dart';
@@ -6,6 +7,7 @@ import 'package:fuba_clicker/app/models/craft_recipe.dart';
 import 'package:fuba_clicker/app/providers/accessory_provider.dart';
 import 'package:fuba_clicker/app/providers/rebirth_provider.dart';
 import 'package:fuba_clicker/app/providers/save_provider.dart';
+import 'package:fuba_clicker/app/global_widgets/orbiting_emoji.dart';
 import 'package:fuba_clicker/gen/assets.gen.dart';
 
 class CraftPage extends ConsumerStatefulWidget {
@@ -27,6 +29,14 @@ class _CraftPageState extends ConsumerState<CraftPage> {
       appBar: AppBar(
         title: const Text('Receitas de Craft'),
         backgroundColor: Colors.purple.withAlpha(200),
+        actions: [
+          if (kDebugMode)
+            IconButton(
+              icon: const Icon(Icons.bug_report),
+              tooltip: 'Debug: Desbloquear todos os itens',
+              onPressed: _debugUnlockAllItems,
+            ),
+        ],
       ),
       body: Padding(
         padding: EdgeInsets.all(GameConstants.getDefaultPadding(context)),
@@ -155,9 +165,10 @@ class _CraftPageState extends ConsumerState<CraftPage> {
                     borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
                   child: Center(
-                    child: Text(
-                      outputAccessory.emoji,
-                      style: TextStyle(fontSize: isMobile ? 38 : 48),
+                    child: OrbitingEmoji(
+                      emoji: outputAccessory.emoji,
+                      fontSize: isMobile ? 38 : 48,
+                      orbitRadius: isMobile ? 16 : 20,
                     ),
                   ),
                 ),
@@ -323,9 +334,10 @@ class _CraftPageState extends ConsumerState<CraftPage> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              accessory.emoji,
-                              style: const TextStyle(fontSize: 20),
+                            OrbitingEmoji(
+                              emoji: accessory.emoji,
+                              fontSize: 20,
+                              orbitRadius: 10,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -463,6 +475,44 @@ class _CraftPageState extends ConsumerState<CraftPage> {
         content: Text('✅ ${outputAccessory.name} criado!'),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _debugUnlockAllItems() {
+    final inventory = ref.read(inventoryProvider);
+    final rebirthData = ref.read(rebirthDataProvider);
+    final newInventory = Map<String, int>.from(inventory);
+
+    double maxForus = 0;
+    double maxCelestialTokens = 0;
+
+    for (final recipe in allCraftRecipes) {
+      maxForus = maxForus > recipe.forusCost ? maxForus : recipe.forusCost;
+      maxCelestialTokens = maxCelestialTokens > recipe.celestialTokensCost
+          ? maxCelestialTokens
+          : recipe.celestialTokensCost;
+
+      for (int i = 0; i < recipe.inputIds.length; i++) {
+        final itemId = recipe.inputIds[i];
+        final requiredQuantity = recipe.inputQuantities[i];
+        final currentQuantity = newInventory[itemId] ?? 0;
+        newInventory[itemId] = currentQuantity + requiredQuantity + 10;
+      }
+    }
+
+    ref.read(inventoryProvider.notifier).state = newInventory;
+    ref.read(rebirthDataProvider.notifier).state = rebirthData.copyWith(
+      forus: rebirthData.forus + maxForus * 2,
+      celestialTokens: rebirthData.celestialTokens + maxCelestialTokens * 2,
+    );
+    ref.read(saveNotifierProvider.notifier).saveImmediate();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('✅ Debug: Todos os itens desbloqueados!'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
       ),
     );
   }

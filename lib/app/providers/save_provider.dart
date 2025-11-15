@@ -11,6 +11,9 @@ import 'rebirth_upgrade_provider.dart';
 import 'forus_upgrade_provider.dart';
 import 'visual_settings_provider.dart';
 import 'sync_notifier.dart';
+import 'potion_provider.dart';
+import '../models/potion_color.dart';
+import '../models/potion_effect.dart';
 
 class SaveNotifier extends StateNotifier<bool> {
   SaveNotifier(this.ref) : super(false) {
@@ -58,6 +61,18 @@ class SaveNotifier extends StateNotifier<bool> {
         upgradesWithForus['forus_$upgradeId'] = 1;
       });
 
+      final cauldron = ref.read(cauldronProvider);
+      final activeEffects = ref.read(activePotionEffectsProvider);
+      final permanentMultiplier = ref.read(permanentPotionMultiplierProvider);
+      final activePotionCount = ref.read(activePotionCountProvider);
+
+      final cauldronJson = <String, int>{};
+      cauldron.forEach((color, value) {
+        cauldronJson[color.name] = value;
+      });
+
+      final activeEffectsJson = activeEffects.map((effect) => effect.toJson()).toList();
+
       await _saveService.saveGame(
         fuba: fuba,
         generators: generators,
@@ -67,6 +82,10 @@ class SaveNotifier extends StateNotifier<bool> {
         achievements: achievements,
         achievementStats: achievementStats,
         upgrades: upgradesWithForus,
+        cauldron: cauldronJson,
+        activePotionEffects: activeEffectsJson,
+        permanentPotionMultiplier: permanentMultiplier,
+        activePotionCount: activePotionCount,
       );
 
       await _optimizeStorageIfNeeded();
@@ -143,6 +162,29 @@ class SaveNotifier extends StateNotifier<bool> {
       
       ref.read(upgradesLevelProvider.notifier).state = rebirthUpgrades;
       ref.read(forusUpgradesOwnedProvider.notifier).state = forusUpgradesOwned;
+
+      final cauldronJson = data.cauldron;
+      final cauldron = <PotionColor, int>{};
+      cauldronJson.forEach((colorName, value) {
+        final color = PotionColor.values.firstWhere(
+          (c) => c.name == colorName,
+          orElse: () => PotionColor.red,
+        );
+        cauldron[color] = value;
+      });
+      ref.read(cauldronProvider.notifier).state = cauldron;
+
+      final activeEffects = data.activePotionEffects
+          .map((json) => PotionEffect.fromJson(json))
+          .where((effect) => !effect.isExpired)
+          .toList();
+      ref.read(activePotionEffectsProvider.notifier).state = activeEffects;
+
+      ref.read(permanentPotionMultiplierProvider.notifier).state = data.permanentPotionMultiplier;
+
+      ref.read(activePotionCountProvider.notifier).state = data.activePotionCount;
+      
+      ref.read(potionNotifierProvider).updateActiveEffects();
 
       // Carregar configurações visuais
       final visualSettings = await _saveService.loadVisualSettings();

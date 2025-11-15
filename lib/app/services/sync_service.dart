@@ -18,8 +18,11 @@ import '../providers/rebirth_provider.dart';
 import '../providers/achievement_provider.dart';
 import '../providers/rebirth_upgrade_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/potion_provider.dart';
 import '../core/utils/save_validation.dart';
 import '../models/fuba_generator.dart';
+import '../models/potion_color.dart';
+import '../models/potion_effect.dart';
 
 class CloudSaveData {
   final UserData userData;
@@ -243,6 +246,17 @@ class SyncService extends StateNotifier<bool> {
       final achievements = _ref.read(unlockedAchievementsProvider);
       final achievementStats = _ref.read(achievementStatsProvider);
       final upgrades = _ref.read(upgradesLevelProvider);
+      final cauldron = _ref.read(cauldronProvider);
+      final activeEffects = _ref.read(activePotionEffectsProvider);
+      final permanentMultiplier = _ref.read(permanentPotionMultiplierProvider);
+      final activePotionCount = _ref.read(activePotionCountProvider);
+
+      final cauldronJson = <String, int>{};
+      cauldron.forEach((color, value) {
+        cauldronJson[color.name] = value;
+      });
+
+      final activeEffectsJson = activeEffects.map((effect) => effect.toJson()).toList();
 
       return GameSaveData(
         fuba: fuba,
@@ -253,6 +267,10 @@ class SyncService extends StateNotifier<bool> {
         achievements: achievements,
         achievementStats: achievementStats,
         upgrades: upgrades,
+        cauldron: cauldronJson,
+        activePotionEffects: activeEffectsJson,
+        permanentPotionMultiplier: permanentMultiplier,
+        activePotionCount: activePotionCount,
       );
     } catch (e) {
       print('Erro ao obter dados atuais dos providers: $e');
@@ -313,6 +331,29 @@ class SyncService extends StateNotifier<bool> {
       _ref.read(upgradesLevelProvider.notifier).state =
           Map<String, int>.from(userData.upgrades ?? {});
 
+      final cauldronJson = userData.cauldron ?? {};
+      final cauldron = <PotionColor, int>{};
+      cauldronJson.forEach((colorName, value) {
+        final color = PotionColor.values.firstWhere(
+          (c) => c.name == colorName,
+          orElse: () => PotionColor.red,
+        );
+        cauldron[color] = value;
+      });
+      _ref.read(cauldronProvider.notifier).state = cauldron;
+
+      final activeEffects = (userData.activePotionEffects ?? [])
+          .map((json) => PotionEffect.fromJson(json))
+          .where((effect) => !effect.isExpired)
+          .toList();
+      _ref.read(activePotionEffectsProvider.notifier).state = activeEffects;
+
+      _ref.read(permanentPotionMultiplierProvider.notifier).state = 
+          userData.permanentPotionMultiplier ?? 1.0;
+
+      _ref.read(activePotionCountProvider.notifier).state = 
+          Map<String, int>.from(userData.activePotionCount ?? {});
+
       await SaveService().saveGame(
         fuba: fuba,
         generators: generators,
@@ -323,6 +364,10 @@ class SyncService extends StateNotifier<bool> {
         achievementStats:
             Map<String, double>.from(userData.achievementStats ?? {}),
         upgrades: Map<String, int>.from(userData.upgrades ?? {}),
+        cauldron: cauldronJson,
+        activePotionEffects: userData.activePotionEffects ?? [],
+        permanentPotionMultiplier: userData.permanentPotionMultiplier ?? 1.0,
+        activePotionCount: Map<String, int>.from(userData.activePotionCount ?? {}),
       );
 
       _ref.read(syncNotifierProvider.notifier).notifyDataLoaded();

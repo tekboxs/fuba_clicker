@@ -235,7 +235,7 @@ class RankingCardDesktop extends StatelessWidget {
                                                                 entry.profilePicture),
                                                             width: avatarSize,
                                                             height: avatarSize,
-                                                            fit: BoxFit.cover,
+                                                            // fit: BoxFit.cover,
                                                             errorBuilder: (context, error, stackTrace) {
                                                               return Container(
                                                                 decoration: BoxDecoration(

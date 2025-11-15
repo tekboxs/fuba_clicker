@@ -74,7 +74,6 @@ class ForusUpgradeCard extends ConsumerWidget {
         child: Padding(
           padding: EdgeInsets.all(isMobile ? 16 : 20),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -140,6 +139,7 @@ class ForusUpgradeCard extends ConsumerWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           upgrade.name,
@@ -256,10 +256,10 @@ class ForusUpgradeCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const Spacer(),
               SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
+                width: double.infinity,
+                child: ElevatedButton(
                     onPressed: hasUpgrade
                         ? null
                         : canPurchase

@@ -12,73 +12,27 @@ class RebirthDataAdapter extends TypeAdapter<RebirthData> {
 
   @override
   RebirthData read(BinaryReader reader) {
-    try {
-      final numOfFields = reader.readByte();
-      int rebirthCount = 0;
-      int ascensionCount = 0;
-      int transcendenceCount = 0;
-      int furuborusCount = 0;
-      double celestialTokens = 0.0;
-      bool hasUsedOneTimeMultiplier = false;
-      List<String> usedCoupons = const [];
-      double forus = 0.0;
-
-      for (int i = 0; i < numOfFields; i++) {
-        final key = reader.readByte();
-        try {
-          final value = reader.read();
-          switch (key) {
-            case 0:
-              rebirthCount = safeToInt(value, context: 'RebirthData.rebirthCount');
-              break;
-            case 1:
-              ascensionCount = safeToInt(value, context: 'RebirthData.ascensionCount');
-              break;
-            case 2:
-              transcendenceCount = safeToInt(value, context: 'RebirthData.transcendenceCount');
-              break;
-            case 3:
-              furuborusCount = safeToInt(value, context: 'RebirthData.furuborusCount');
-              break;
-            case 4:
-              celestialTokens = safeToDouble(value, context: 'RebirthData.celestialTokens');
-              break;
-            case 5:
-              hasUsedOneTimeMultiplier = (value as bool?) ?? false;
-              break;
-            case 6:
-              usedCoupons = safeCastToListString(value, context: 'RebirthData.usedCoupons');
-              break;
-            case 7:
-              forus = safeToDouble(value, context: 'RebirthData.forus');
-              break;
-          }
-        } catch (e) {
-          print('[HiveAdapter] Erro ao ler campo $key de RebirthData: $e');
-        }
-      }
-
-      return RebirthData(
-        rebirthCount: rebirthCount,
-        ascensionCount: ascensionCount,
-        transcendenceCount: transcendenceCount,
-        furuborusCount: furuborusCount,
-        celestialTokens: celestialTokens,
-        hasUsedOneTimeMultiplier: hasUsedOneTimeMultiplier,
-        usedCoupons: usedCoupons,
-        forus: forus,
-      );
-    } catch (e, st) {
-      print('[HiveAdapter] Erro ao ler RebirthData: $e');
-      print(st);
-      return const RebirthData();
-    }
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return RebirthData(
+      rebirthCount: fields[0] as int,
+      ascensionCount: fields[1] as int,
+      transcendenceCount: fields[2] as int,
+      furuborusCount: fields[3] as int,
+      celestialTokens: fields[4] as double,
+      hasUsedOneTimeMultiplier: fields[5] as bool,
+      usedCoupons: (fields[6] as List).cast<String>(),
+      forus: fields[7] as double,
+      cauldronUnlocked: fields[8] as bool,
+    );
   }
 
   @override
   void write(BinaryWriter writer, RebirthData obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.rebirthCount)
       ..writeByte(1)
@@ -94,7 +48,9 @@ class RebirthDataAdapter extends TypeAdapter<RebirthData> {
       ..writeByte(6)
       ..write(obj.usedCoupons)
       ..writeByte(7)
-      ..write(obj.forus);
+      ..write(obj.forus)
+      ..writeByte(8)
+      ..write(obj.cauldronUnlocked);
   }
 
   @override

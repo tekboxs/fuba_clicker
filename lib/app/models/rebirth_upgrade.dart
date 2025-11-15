@@ -201,7 +201,7 @@ const List<RebirthUpgrade> allUpgrades = [
     description: 'Aumenta capacidade de acessórios equipados',
     type: UpgradeType.accessoryCapacity,
     baseTokenCost: 8,
-    maxLevel: 25,
+    maxLevel: 100,
     ascensionRequirement: 0,
   ),
   RebirthUpgrade(

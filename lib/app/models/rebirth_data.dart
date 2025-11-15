@@ -55,11 +55,11 @@ extension RebirthTierExtension on RebirthTier {
   double getRequirement(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return _safeCalculateRequirement(1e15, 10, currentCount * 0.8);
+        return _safeCalculateRequirement(1e16, 12, currentCount * 0.8);
       case RebirthTier.ascension:
-        return _safeCalculateRequirement(500e27, 20, currentCount.toDouble());
+        return _safeCalculateRequirement(500e28, 24, currentCount.toDouble() * 1.2);
       case RebirthTier.transcendence:
-        return _safeCalculateRequirement(1e45, 50, currentCount.toDouble());
+        return _safeCalculateRequirement(1e46, 60, currentCount.toDouble() * 1.2);
       case RebirthTier.furuborus:
         return _safeCalculateRequirement(1e60, 100, currentCount.toDouble());
     }
@@ -92,17 +92,54 @@ extension RebirthTierExtension on RebirthTier {
     return result;
   }
 
-  double getMultiplierGain(int currentCount) {
+  double getLogarithmicGain(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return 2.0; // 2x por rebirth
+        return 1.05 * (1 + log(currentCount + 1) * 0.1);
       case RebirthTier.ascension:
-        return 10.0; // 10x por ascensão
+        return 2.0 * log(currentCount + 1) + 1.0;
       case RebirthTier.transcendence:
-        return 10.0; // 10x por transcendência
+        return 3.0 * log(currentCount + 1) + 1.0;
       case RebirthTier.furuborus:
-        return 1.0; // Sem multiplicador, apenas forus
+        return 1.0;
     }
+  }
+
+  double getEffectiveMultiplierGain(int currentCount) {
+    if (this == RebirthTier.furuborus) {
+      return 1.0;
+    }
+
+    final base = getLogarithmicGain(currentCount);
+    
+    switch (this) {
+      case RebirthTier.rebirth:
+        return base;
+      case RebirthTier.ascension:
+        const softCap = 5.0;
+        const hardCap = 10.0;
+        if (base <= softCap) {
+          return base;
+        }
+        final excess = base - softCap;
+        final withSoftCap = softCap + excess * 0.1;
+        return withSoftCap < hardCap ? withSoftCap : hardCap;
+      case RebirthTier.transcendence:
+        const softCap = 8.0;
+        const hardCap = 15.0;
+        if (base <= softCap) {
+          return base;
+        }
+        final excess = base - softCap;
+        final withSoftCap = softCap + excess * 0.1;
+        return withSoftCap < hardCap ? withSoftCap : hardCap;
+      case RebirthTier.furuborus:
+        return 1.0;
+    }
+  }
+
+  double getMultiplierGain(int currentCount) {
+    return getEffectiveMultiplierGain(currentCount);
   }
 
   double getTokenReward(int currentCount) {
@@ -112,7 +149,7 @@ extension RebirthTierExtension on RebirthTier {
       case RebirthTier.ascension:
         return (1 + (currentCount ~/ 2)).toDouble();
       case RebirthTier.transcendence:
-        return (5 + currentCount).toDouble();
+        return (50 + currentCount * 5).toDouble();
       case RebirthTier.furuborus:
         return 0.0;
     }
@@ -145,6 +182,9 @@ class RebirthData {
   @HiveField(7)
   final double forus;
 
+  @HiveField(8)
+  final bool cauldronUnlocked;
+
   const RebirthData({
     this.rebirthCount = 0,
     this.ascensionCount = 0,
@@ -154,6 +194,7 @@ class RebirthData {
     this.hasUsedOneTimeMultiplier = false,
     this.usedCoupons = const [],
     this.forus = 0.0,
+    this.cauldronUnlocked = false,
   });
 
   RebirthData copyWith({
@@ -165,6 +206,7 @@ class RebirthData {
     bool? hasUsedOneTimeMultiplier,
     List<String>? usedCoupons,
     double? forus,
+    bool? cauldronUnlocked,
   }) {
     return RebirthData(
       rebirthCount: rebirthCount ?? this.rebirthCount,
@@ -175,35 +217,33 @@ class RebirthData {
       hasUsedOneTimeMultiplier: hasUsedOneTimeMultiplier ?? this.hasUsedOneTimeMultiplier,
       usedCoupons: usedCoupons ?? this.usedCoupons,
       forus: forus ?? this.forus,
+      cauldronUnlocked: cauldronUnlocked ?? this.cauldronUnlocked,
     );
   }
 
   EfficientNumber getTotalMultiplier() {
     EfficientNumber multiplier = const EfficientNumber.one();
 
-    // Rebirth multiplier
+    // Rebirth multiplier (logarítmico com base cumulativa)
     if (rebirthCount > 0) {
-      final rebirthGain = EfficientNumber.fromValues(
-          RebirthTier.rebirth.getMultiplierGain(0), 0);
-      final rebirthMultiplier = const EfficientNumber.one() + 
-          (rebirthGain * EfficientNumber.fromValues(rebirthCount.toDouble(), 0));
+      final rebirthGain = RebirthTier.rebirth.getEffectiveMultiplierGain(rebirthCount);
+      final rebirthMultiplier = EfficientNumber.fromValues(rebirthGain, 0);
       multiplier *= rebirthMultiplier;
     }
 
-    // Ascension multiplier
+    // Ascension multiplier (logarítmico com caps)
     if (ascensionCount > 0) {
-      final gainValue = RebirthTier.ascension.getMultiplierGain(0);
-      final ascensionMultiplier = EfficientNumber.fromPower(gainValue, ascensionCount.toDouble());
+      final gainValue = RebirthTier.ascension.getEffectiveMultiplierGain(ascensionCount);
+      final ascensionMultiplier = EfficientNumber.fromValues(gainValue, 0);
       multiplier *= ascensionMultiplier;
     }
 
-    // Transcendence multiplier
+    // Transcendence multiplier (logarítmico com caps)
     if (transcendenceCount > 0) {
-      final gainValue = RebirthTier.transcendence.getMultiplierGain(0);
-      final transcendenceMultiplier = EfficientNumber.fromPower(gainValue, transcendenceCount.toDouble());
+      final gainValue = RebirthTier.transcendence.getEffectiveMultiplierGain(transcendenceCount);
+      final transcendenceMultiplier = EfficientNumber.fromValues(gainValue, 0);
       multiplier *= transcendenceMultiplier;
     }
-
 
     return multiplier;
   }
@@ -218,6 +258,7 @@ class RebirthData {
       'hasUsedOneTimeMultiplier': hasUsedOneTimeMultiplier,
       'usedCoupons': usedCoupons,
       'forus': forus,
+      'cauldronUnlocked': cauldronUnlocked,
     };
   }
 
@@ -231,6 +272,7 @@ class RebirthData {
       hasUsedOneTimeMultiplier: json['hasUsedOneTimeMultiplier'] ?? false,
       usedCoupons: List<String>.from(json['usedCoupons'] ?? []),
       forus: (json['forus'] ?? 0).toDouble(),
+      cauldronUnlocked: json['cauldronUnlocked'] ?? false,
     );
   }
 }

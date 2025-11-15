@@ -39,6 +39,11 @@ class ForusUpgradeNotifier {
     newOwned.add(upgrade.id);
     ref.read(forusUpgradesOwnedProvider.notifier).state = newOwned;
 
+    if (upgrade.type == ForusUpgradeType.cauldron) {
+      ref.read(rebirthDataProvider.notifier).state =
+          ref.read(rebirthDataProvider).copyWith(cauldronUnlocked: true);
+    }
+
     ref.read(saveNotifierProvider.notifier).saveImmediate();
   }
 }

@@ -12,6 +12,7 @@ import '../../providers/rebirth_upgrade_provider.dart';
 import '../../providers/rebirth_provider.dart';
 import '../../providers/forus_upgrade_provider.dart';
 import '../../providers/visual_settings_provider.dart';
+import '../../providers/potion_provider.dart';
 import '../../services/save_service.dart';
 import '../../models/achievement.dart';
 import '../../models/cake_accessory.dart';
@@ -24,6 +25,7 @@ import '../../theme/components.dart';
 import '../shop/loot_box_shop.dart';
 import '../shop/forus_shop.dart';
 import '../shop/craft_page.dart';
+import '../potions/cauldron_page.dart';
 import 'components/floating_accessories.dart';
 import 'components/cake_display.dart';
 import '../rebirth/rebirth_page.dart';
@@ -342,6 +344,18 @@ class _HomePageState extends ConsumerState<HomePage>
                     );
                   },
                 ),
+              _buildIconButtonWithLabel(
+                Icons.science,
+                Colors.purple,
+                'Poções',
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const CauldronPage(),
+                    ),
+                  );
+                },
+              ),
               _buildIconButtonWithLabel(
                 Icons.auto_awesome,
                 const Color.fromARGB(255, 141, 157, 248),
@@ -710,12 +724,16 @@ class _HomePageState extends ConsumerState<HomePage>
     final accessoryMultiplier = ref.read(accessoryMultiplierProvider);
     final rebirthMultiplier = ref.read(rebirthMultiplierProvider);
     final oneTimeMultiplier = ref.read(oneTimeMultiplierProvider);
+    final potionClickPower = ref.read(potionClickPowerProvider);
+
+    final potionClickPowerEfficient = EfficientNumber.fromValues(potionClickPower, 0);
 
     final totalClickMultiplier = clickMultiplier *
         achievementMultiplier *
         accessoryMultiplier *
         rebirthMultiplier *
-        oneTimeMultiplier;
+        oneTimeMultiplier *
+        potionClickPowerEfficient;
 
     final clickValue = totalClickMultiplier;
 
@@ -896,116 +914,137 @@ class _HomePageState extends ConsumerState<HomePage>
             fontWeight: FontWeight.bold,
           ),
         ),
-        if (kDebugMode ) ...[
-          ElevatedButton(
-            onPressed: () async {
-              // Mostrar diálogo de confirmação
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('⚠️ WIPE ALL DATA'),
-                  content: const Text(
-                    'Esta ação irá EXCLUIR PERMANENTEMENTE todos os seus dados do jogo!\n\n'
-                    'Isso inclui:\n'
-                    '• Todo o fubá\n'
-                    '• Todos os geradores\n'
-                    '• Todos os acessórios\n'
-                    '• Todas as conquistas\n'
-                    '• Todos os upgrades\n'
-                    '• Todos os rebirths\n\n'
-                    'Esta ação NÃO PODE ser desfeita!\n\n'
-                    'Tem certeza que deseja continuar?',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('Cancelar'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
+        if (kDebugMode)
+          Wrap(
+            children: [
+              ElevatedButton(
+                onPressed: () async {
+                  // Mostrar diálogo de confirmação
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('⚠️ WIPE ALL DATA'),
+                      content: const Text(
+                        'Esta ação irá EXCLUIR PERMANENTEMENTE todos os seus dados do jogo!\n\n'
+                        'Isso inclui:\n'
+                        '• Todo o fubá\n'
+                        '• Todos os geradores\n'
+                        '• Todos os acessórios\n'
+                        '• Todas as conquistas\n'
+                        '• Todos os upgrades\n'
+                        '• Todos os rebirths\n\n'
+                        'Esta ação NÃO PODE ser desfeita!\n\n'
+                        'Tem certeza que deseja continuar?',
                       ),
-                      child: const Text('SIM, EXCLUIR TUDO'),
-                    ),
-                  ],
-                ),
-              );
-
-              if (confirmed == true) {
-                // Limpar todos os providers
-                ref.read(fubaProvider.notifier).state =
-                    const EfficientNumber.zero();
-                ref.read(generatorsProvider.notifier).state = List.filled(
-                  availableGenerators.length,
-                  0,
-                );
-                ref.read(inventoryProvider.notifier).state = <String, int>{};
-                ref.read(equippedAccessoriesProvider.notifier).state =
-                    <String>[];
-                ref.read(rebirthDataProvider.notifier).state =
-                    const RebirthData();
-                ref.read(unlockedAchievementsProvider.notifier).state =
-                    <String>[];
-                ref.read(achievementStatsProvider.notifier).state =
-                    <String, double>{};
-                ref.read(upgradesLevelProvider.notifier).state =
-                    <String, int>{};
-
-                // Limpar dados salvos
-                final saveService = SaveService();
-                await saveService.clearSave();
-
-                // Mostrar confirmação
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Todos os dados foram excluídos!'),
-                      backgroundColor: Colors.red,
-                      duration: Duration(seconds: 3),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancelar'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('SIM, EXCLUIR TUDO'),
+                        ),
+                      ],
                     ),
                   );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Wipe All Data'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(fubaProvider.notifier).state *=
-                  EfficientNumber.parse('1e90');
-            },
-            child: const Text('mult'),
-          ),
-          ElevatedButton.icon(
-            onPressed: () {
-              final newGenerators = List.generate(
-                availableGenerators.length,
-                (index) => 1000,
-              );
-              ref.read(generatorsProvider.notifier).state = newGenerators;
-              ref.read(saveNotifierProvider.notifier).saveImmediate();
-              
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('+1000 de todos os geradores adicionados'),
-                  backgroundColor: Colors.green,
+
+                  if (confirmed == true) {
+                    // Limpar todos os providers
+                    ref.read(fubaProvider.notifier).state =
+                        const EfficientNumber.zero();
+                    ref.read(generatorsProvider.notifier).state = List.filled(
+                      availableGenerators.length,
+                      0,
+                    );
+                    ref.read(inventoryProvider.notifier).state =
+                        <String, int>{};
+                    ref.read(equippedAccessoriesProvider.notifier).state =
+                        <String>[];
+                    ref.read(rebirthDataProvider.notifier).state =
+                        const RebirthData();
+                    ref.read(unlockedAchievementsProvider.notifier).state =
+                        <String>[];
+                    ref.read(achievementStatsProvider.notifier).state =
+                        <String, double>{};
+                    ref.read(upgradesLevelProvider.notifier).state =
+                        <String, int>{};
+
+                    // Limpar dados salvos
+                    final saveService = SaveService();
+                    await saveService.clearSave();
+
+                    // Mostrar confirmação
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('✅ Todos os dados foram excluídos!'),
+                          backgroundColor: Colors.red,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
                 ),
-              );
-            },
-            icon: const Icon(Icons.add_circle),
-            label: const Text('Dar 1000 de todos os geradores'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
+                child: const Text('Wipe All Data'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  ref.read(fubaProvider.notifier).state *=
+                      EfficientNumber.parse('1e90');
+                },
+                child: const Text('mult'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final newGenerators = List.generate(
+                    availableGenerators.length,
+                    (index) => 1000,
+                  );
+                  ref.read(generatorsProvider.notifier).state = newGenerators;
+                  ref.read(saveNotifierProvider.notifier).saveImmediate();
+ 
+                },
+                icon: const Icon(Icons.add_circle),
+                label: const Text('1000 gen'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final newGenerators = List.generate(
+                    availableGenerators.length,
+                    (index) => 1,
+                  );
+                  ref.read(generatorsProvider.notifier).state = newGenerators;
+                  ref.read(saveNotifierProvider.notifier).saveImmediate();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('+1 de todos os geradores adicionados'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add_circle),
+                label: const Text('1 gen'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
           ),
-        ],
         const SizedBox(height: 5),
         if (totalMultiplier.compareTo(const EfficientNumber.one()) > 0) ...[
           const SizedBox(height: 4),
@@ -1069,15 +1108,62 @@ class _HomePageState extends ConsumerState<HomePage>
         .map((id) => allAccessories.firstWhere((acc) => acc.id == id))
         .toList();
 
-    accessoryList.sort(
-      (a, b) => b.productionMultiplier.compareTo(a.productionMultiplier),
-    );
+    final Map<String, int> groupedAccessories = {};
+    final Map<String, dynamic> accessoryData = {};
+
+    for (int i = 0; i < accessoryList.length; i++) {
+      final accessory = accessoryList[i];
+
+      final key =
+          '${accessory.emoji}_${accessory.productionMultiplier.toStringAsFixed(2)}';
+      groupedAccessories[key] = (groupedAccessories[key] ?? 0) + 1;
+
+      if (!accessoryData.containsKey(key)) {
+        accessoryData[key] = {
+          'emoji': accessory.emoji,
+          'multiplier': accessory.productionMultiplier,
+          'rarity': accessory.rarity,
+        };
+      }
+    }
+
+    final Map<String, double> effectiveMultipliers = {};
+    for (final entry in groupedAccessories.entries) {
+      final key = entry.key;
+      final count = entry.value;
+      final accessory = accessoryList.firstWhere(
+        (acc) => '${acc.emoji}_${acc.productionMultiplier.toStringAsFixed(2)}' == key,
+      );
+
+      double totalEffectiveMultiplier = 1.0;
+      for (int i = 0; i < count; i++) {
+        totalEffectiveMultiplier *= accessory.productionMultiplier;
+      }
+
+      effectiveMultipliers[key] = totalEffectiveMultiplier;
+    }
+
+    final sortedKeys = groupedAccessories.keys.toList()
+      ..sort((a, b) {
+        final dataA = accessoryData[a]!;
+        final dataB = accessoryData[b]!;
+        return dataB['multiplier'].compareTo(dataA['multiplier']);
+      });
 
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 6,
       runSpacing: 2,
-      children: accessoryList.map((accessory) {
+      children: sortedKeys.map((key) {
+        final count = groupedAccessories[key]!;
+        final data = accessoryData[key]!;
+        final totalEffectiveMultiplier = effectiveMultipliers[key]!;
+        final accessory = accessoryList.firstWhere(
+          (acc) =>
+              acc.emoji == data['emoji'] &&
+              acc.productionMultiplier == data['multiplier'],
+        );
+
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
@@ -1089,7 +1175,9 @@ class _HomePageState extends ConsumerState<HomePage>
             ),
           ),
           child: Text(
-            '${accessory.emoji} x${accessory.productionMultiplier.toStringAsFixed(2)}',
+            count > 1
+                ? '${data['emoji']} x${GameConstants.formatNumber(EfficientNumber.fromDouble(totalEffectiveMultiplier))} (x$count)'
+                : '${data['emoji']} x${totalEffectiveMultiplier.toStringAsFixed(2)}',
             style: TextStyle(
               fontSize: 10,
               color: accessory.rarity.color,

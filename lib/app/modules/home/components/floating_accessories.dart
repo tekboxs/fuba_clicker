@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fuba_clicker/app/models/cake_accessory.dart';
 import 'package:fuba_clicker/app/providers/visual_settings_provider.dart';
+import 'package:fuba_clicker/app/global_widgets/orbiting_emoji.dart';
 
 class AccessoryShapePainter extends CustomPainter {
   final AccessoryShape shape;
@@ -161,7 +162,8 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
 
   void _initializeAccessories() {
     final random = Random();
-    for (int i = 0; i < widget.accessories.length; i++) {
+    final maxControllers = widget.accessories.length > 50 ? 50 : widget.accessories.length;
+    for (int i = 0; i < maxControllers; i++) {
       _addAccessoryController(i, random);
     }
   }
@@ -174,7 +176,8 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
     controller.repeat();
     _controllers.add(controller);
 
-    _angles.add((360 / widget.accessories.length) * index);
+    final maxControllers = widget.accessories.length > 50 ? 50 : widget.accessories.length;
+    _angles.add((360 / maxControllers) * index);
     _distances.add(widget.centerSize / 2 + 40 + random.nextDouble() * 30);
     _speeds.add(1.0);
   }
@@ -182,13 +185,15 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
   void _updateAccessories(int oldLength) {
     final random = Random();
     final newLength = widget.accessories.length;
+    final maxControllers = newLength > 50 ? 50 : newLength;
+    final oldMaxControllers = oldLength > 50 ? 50 : oldLength;
 
-    if (newLength > oldLength) {
-      for (int i = oldLength; i < newLength; i++) {
+    if (maxControllers > oldMaxControllers) {
+      for (int i = oldMaxControllers; i < maxControllers; i++) {
         _addAccessoryController(i, random);
       }
-    } else if (newLength < oldLength) {
-      for (int i = oldLength - 1; i >= newLength; i--) {
+    } else if (maxControllers < oldMaxControllers) {
+      for (int i = oldMaxControllers - 1; i >= maxControllers; i--) {
         _controllers[i].dispose();
         _controllers.removeAt(i);
         _angles.removeAt(i);
@@ -198,7 +203,7 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
     }
 
     for (int i = 0; i < _angles.length; i++) {
-      _angles[i] = (360 / widget.accessories.length) * i;
+      _angles[i] = (360 / maxControllers) * i;
     }
   }
 
@@ -218,6 +223,8 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
       return const SizedBox.shrink();
     }
 
+    final maxVisible = widget.accessories.length > 50 ? 50 : widget.accessories.length;
+
     return RepaintBoundary(
       child: SizedBox(
         width: widget.centerSize + 200,
@@ -225,7 +232,7 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
         child: Stack(
           alignment: Alignment.center,
           children: List.generate(
-            widget.accessories.length,
+            maxVisible,
             (index) => _buildFloatingAccessory(index),
           ),
         ),
@@ -234,48 +241,50 @@ class _FloatingAccessoriesState extends ConsumerState<FloatingAccessories>
   }
 
   Widget _buildFloatingAccessory(int index) {
-    return AnimatedBuilder(
-      animation: _controllers[index],
-      builder: (context, child) {
-        final angle =
-            _angles[index] + (_controllers[index].value * 360 * _speeds[index]);
-        final radians = angle * pi / 180;
-        final distance = _distances[index];
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _controllers[index],
+        builder: (context, child) {
+          final angle =
+              _angles[index] + (_controllers[index].value * 360 * _speeds[index]);
+          final radians = angle * pi / 180;
+          final distance = _distances[index];
 
-        final x = cos(radians) * distance;
-        final y = sin(radians) * distance;
+          final x = cos(radians) * distance;
+          final y = sin(radians) * distance;
 
-        return Transform.translate(offset: Offset(x, y), child: child);
-      },
-      child:
-          SizedBox(
-                width: 50,
-                height: 50,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CustomPaint(
-                      painter: AccessoryShapePainter(
-                        shape: widget.accessories[index].shape,
-                        color: widget.accessories[index].rarity.color.withOpacity(0.35),
-                        size: 53,
-                      ),
-                    ),
-                    Text(
-                      widget.accessories[index].emoji,
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                  ],
+          return Transform.translate(offset: Offset(x, y), child: child);
+        },
+        child: SizedBox(
+          width: 50,
+          height: 50,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              CustomPaint(
+                painter: AccessoryShapePainter(
+                  shape: widget.accessories[index].shape,
+                  color: widget.accessories[index].rarity.color.withOpacity(0.35),
+                  size: 53,
                 ),
-              )
-              .animate(
-                autoPlay: true,
-                onComplete: (controller) => controller.repeat(),
-              )
-              .shimmer(
-                duration: 2.seconds,
-                color: widget.accessories[index].rarity.color.withOpacity(0.4),
               ),
+              OrbitingEmoji(
+                emoji: widget.accessories[index].emoji,
+                fontSize: 24,
+                orbitRadius: 12,
+              ),
+            ],
+          ),
+        )
+            .animate(
+              autoPlay: true,
+              onComplete: (controller) => controller.repeat(),
+            )
+            .shimmer(
+              duration: 2.seconds,
+              color: widget.accessories[index].rarity.color.withOpacity(0.4),
+            ),
+      ),
     );
   }
 }

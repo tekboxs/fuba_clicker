@@ -14,6 +14,8 @@ import 'package:fuba_clicker/app/core/utils/constants.dart';
 import 'package:fuba_clicker/app/modules/shop/components/loot_box_opening.dart';
 import 'package:fuba_clicker/app/modules/shop/components/loot_box_card.dart';
 import 'package:fuba_clicker/app/modules/shop/components/inventory_tab.dart';
+import 'package:fuba_clicker/app/modules/shop/components/shop_tutorial.dart';
+import 'package:fuba_clicker/app/services/save_service.dart';
 
 class LootBoxShopPage extends ConsumerStatefulWidget {
   const LootBoxShopPage({super.key});
@@ -25,11 +27,94 @@ class LootBoxShopPage extends ConsumerStatefulWidget {
 class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _showTutorial = false;
+  bool _tutorialChecked = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _checkTutorialStatus();
+  }
+
+  Future<void> _checkTutorialStatus() async {
+    final completed = await SaveService().hasCompletedShopTutorial();
+    if (!completed && mounted) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        _showTutorialDialog();
+      }
+    }
+    setState(() {
+      _tutorialChecked = true;
+    });
+  }
+
+  void _showTutorialDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1D23),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: Colors.cyan.withOpacity(0.5),
+            width: 2,
+          ),
+        ),
+        title: const Text(
+          'Bem-vindo à Loja!',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Deseja fazer um tutorial rápido para aprender a usar a loja?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              SaveService().setShopTutorialCompleted(true);
+            },
+            child: const Text(
+              'Pular',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _showTutorial = true;
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.cyan,
+              foregroundColor: Colors.black,
+            ),
+            child: const Text(
+              'Fazer Tutorial',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _completeTutorial() {
+    setState(() {
+      _showTutorial = false;
+    });
+    SaveService().setShopTutorialCompleted(true);
+  }
+
+  void _skipTutorial() {
+    setState(() {
+      _showTutorial = false;
+    });
+    SaveService().setShopTutorialCompleted(true);
   }
 
   @override
@@ -54,24 +139,42 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black.withAlpha(240),
-      appBar: AppBar(
-        title: const Text('Loja de Acessórios'),
-        backgroundColor: Colors.deepOrange.withAlpha(200),
-      ),
-      floatingActionButton: _FloatingNav(
-        currentIndex: _tabController.index,
-        onIndexChange: (index) {
-          setState(() {
-            _tabController.index = index;
-          });
-        },
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [_buildShopTab(), const LootBoxInventoryTab()],
-      ),
+    if (!_tutorialChecked) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Colors.black.withAlpha(240),
+          appBar: AppBar(
+            title: const Text('Loja de Acessórios'),
+            backgroundColor: Colors.deepOrange.withAlpha(200),
+          ),
+          floatingActionButton: _FloatingNav(
+            currentIndex: _tabController.index,
+            onIndexChange: (index) {
+              setState(() {
+                _tabController.index = index;
+              });
+            },
+          ),
+          body: TabBarView(
+            controller: _tabController,
+            children: [_buildShopTab(), const LootBoxInventoryTab()],
+          ),
+        ),
+        if (_showTutorial)
+          ShopTutorial(
+            onComplete: _completeTutorial,
+            onSkip: _skipTutorial,
+          ),
+      ],
     );
   }
 
@@ -148,6 +251,9 @@ class _LootBoxShopPageState extends ConsumerState<LootBoxShopPage>
                 final tier = LootBoxTier.values[index];
                 final generatorsOwned = ref.watch(generatorsProvider);
                 return LootBoxCard(
+                  key: index == 0
+                      ? const ValueKey('loot_box_card')
+                      : null,
                   tier: tier,
                   fuba: fuba,
                   generatorsOwned: generatorsOwned,
@@ -347,8 +453,12 @@ class _FloatingNav extends StatefulWidget {
 }
 
 class _FloatingNavState extends State<_FloatingNav>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _pulseController;
+  late AnimationController _entranceController;
+  late Animation<double> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -357,72 +467,127 @@ class _FloatingNavState extends State<_FloatingNav>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
+
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _slideAnimation = Tween<double>(
+      begin: 100.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _entranceController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _entranceController,
+      curve: Curves.easeOut,
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _entranceController,
+      curve: Curves.elasticOut,
+    ));
+
+    _entranceController.forward();
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _entranceController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(100),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF18181B).withOpacity(0.9),
-              const Color(0xFF27272A).withOpacity(0.9),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: Colors.orange.withOpacity(0.3),
-            width: 1,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x80000000),
-              blurRadius: 32,
-              offset: Offset(0, 0),
+    return AnimatedBuilder(
+      animation: _entranceController,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _slideAnimation.value),
+          child: Opacity(
+            opacity: _fadeAnimation.value,
+            child: Transform.scale(
+              scale: _scaleAnimation.value,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFF18181B).withOpacity(0.95),
+                        const Color(0xFF27272A).withOpacity(0.95),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(100),
+                    border: Border.all(
+                      color: Colors.orange.withOpacity(0.5),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withOpacity(0.4),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
+                      ),
+                      const BoxShadow(
+                        color: Color(0x80000000),
+                        blurRadius: 32,
+                        offset: Offset(0, 0),
+                      ),
+                    ],
+                  ),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _NavButton(
+                          icon: Icons.shopping_bag,
+                          label: 'Caixas',
+                          isSelected: widget.currentIndex == 0,
+                          selectedGradient: const LinearGradient(
+                            colors: [Color(0xFFEA580C), Color(0xFFF97316)],
+                          ),
+                          selectedShadowColor: Colors.orange.withOpacity(0.5),
+                          onTap: () => widget.onIndexChange(0),
+                        ),
+                        const SizedBox(width: 12),
+                        _NavButton(
+                          icon: Icons.inventory,
+                          label: 'Inventário',
+                          isSelected: widget.currentIndex == 1,
+                          selectedGradient: const LinearGradient(
+                            colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
+                          ),
+                          selectedShadowColor: Colors.cyan.withOpacity(0.5),
+                          onTap: () => widget.onIndexChange(1),
+                          pulseController: widget.currentIndex != 1
+                              ? _pulseController
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _NavButton(
-                icon: Icons.shopping_bag,
-                label: 'Caixas',
-                isSelected: widget.currentIndex == 0,
-                selectedGradient: const LinearGradient(
-                  colors: [Color(0xFFEA580C), Color(0xFFF97316)],
-                ),
-                selectedShadowColor: Colors.orange.withOpacity(0.5),
-                onTap: () => widget.onIndexChange(0),
-              ),
-              const SizedBox(width: 12),
-              _NavButton(
-                icon: Icons.inventory,
-                label: 'Inventário',
-                isSelected: widget.currentIndex == 1,
-                selectedGradient: const LinearGradient(
-                  colors: [Color(0xFF0891B2), Color(0xFF06B6D4)],
-                ),
-                selectedShadowColor: Colors.cyan.withOpacity(0.5),
-                onTap: () => widget.onIndexChange(1),
-              ),
-            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -434,6 +599,7 @@ class _NavButton extends StatelessWidget {
   final LinearGradient selectedGradient;
   final Color selectedShadowColor;
   final VoidCallback onTap;
+  final AnimationController? pulseController;
 
   const _NavButton({
     required this.icon,
@@ -442,18 +608,27 @@ class _NavButton extends StatelessWidget {
     required this.selectedGradient,
     required this.selectedShadowColor,
     required this.onTap,
+    this.pulseController,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final button = GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(
           gradient: isSelected ? selectedGradient : null,
-          color: isSelected ? null : Colors.transparent,
+          color: isSelected
+              ? null
+              : Colors.white.withOpacity(0.1),
           borderRadius: BorderRadius.circular(100),
+          border: isSelected
+              ? null
+              : Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
@@ -485,8 +660,9 @@ class _NavButton extends StatelessWidget {
                 Icon(
                   icon,
                   size: 20,
-                  color:
-                      isSelected ? Colors.white : Colors.white.withOpacity(0.5),
+                  color: isSelected
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.7),
                 ),
                 if (isSelected) ...[
                   const SizedBox(width: 12),
@@ -498,6 +674,16 @@ class _NavButton extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
+                ] else ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -505,5 +691,30 @@ class _NavButton extends StatelessWidget {
         ),
       ),
     );
+
+    if (pulseController != null && !isSelected) {
+      return AnimatedBuilder(
+        animation: pulseController!,
+        builder: (context, child) {
+          final pulseValue = pulseController!.value;
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.cyan.withOpacity(0.3 * (1 - pulseValue)),
+                  blurRadius: 20 + (10 * pulseValue),
+                  spreadRadius: 2 + (3 * pulseValue),
+                ),
+              ],
+            ),
+            child: child,
+          );
+        },
+        child: button,
+      );
+    }
+
+    return button;
   }
 }

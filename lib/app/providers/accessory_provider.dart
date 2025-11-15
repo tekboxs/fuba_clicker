@@ -97,11 +97,12 @@ class AccessoryNotifier {
     if (equipped.isEmpty) return const EfficientNumber.one();
 
     EfficientNumber totalMultiplier = const EfficientNumber.one();
-    for (final id in equipped) {
+    for (int i = 0; i < equipped.length; i++) {
+      final id = equipped[i];
       final accessory = allAccessories.firstWhere((acc) => acc.id == id);
-      totalMultiplier *= EfficientNumber.fromValues(
-          accessory.productionMultiplier, 0);
+      totalMultiplier *= EfficientNumber.fromValues(accessory.productionMultiplier, 0);
     }
+    
     return totalMultiplier;
   }
 
@@ -161,6 +162,49 @@ class AccessoryNotifier {
     }
   }
 
+  void equipBestItems() {
+    final inventory = ref.read(inventoryProvider);
+    final maxCapacity = ref.read(accessoryCapacityProvider);
+    final equipped = ref.read(equippedAccessoriesProvider);
+    
+    final availableAccessories = <CakeAccessory>[];
+    
+    for (final entry in inventory.entries) {
+      final accessory = allAccessories.firstWhere((acc) => acc.id == entry.key);
+      final inventoryCount = entry.value;
+      final equippedCount = getEquippedCount(entry.key);
+      final availableCount = inventoryCount - equippedCount;
+      
+      for (int i = 0; i < availableCount; i++) {
+        availableAccessories.add(accessory);
+      }
+    }
+    
+    availableAccessories.sort((a, b) => 
+      b.productionMultiplier.compareTo(a.productionMultiplier)
+    );
+    
+    final slotsRemaining = maxCapacity - equipped.length;
+    final itemsToEquip = availableAccessories.take(slotsRemaining).toList();
+    
+    if (itemsToEquip.isEmpty) {
+      return;
+    }
+    
+    final newEquipped = List<String>.from(equipped);
+    for (final accessory in itemsToEquip) {
+      newEquipped.add(accessory.id);
+    }
+    
+    ref.read(equippedAccessoriesProvider.notifier).state = newEquipped;
+    ref.read(achievementNotifierProvider).updateStat(
+      'equipped_count',
+      newEquipped.length.toDouble(),
+      null,
+    );
+    _checkMythicalAchievement();
+  }
+
   void _updateInventoryStats() {
     final inventory = ref.read(inventoryProvider);
     final totalAccessories = inventory.values.fold(0, (sum, count) => sum + count);
@@ -179,11 +223,12 @@ final accessoryMultiplierProvider = Provider<EfficientNumber>((ref) {
   if (equipped.isEmpty) return const EfficientNumber.one();
 
   EfficientNumber totalMultiplier = const EfficientNumber.one();
-  for (final id in equipped) {
+  for (int i = 0; i < equipped.length; i++) {
+    final id = equipped[i];
     final accessory = allAccessories.firstWhere((acc) => acc.id == id);
-    totalMultiplier *= EfficientNumber.fromValues(
-        accessory.productionMultiplier, 0);
+    totalMultiplier *= EfficientNumber.fromValues(accessory.productionMultiplier, 0);
   }
+  
   return totalMultiplier;
 });
 

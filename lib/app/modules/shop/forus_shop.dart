@@ -139,7 +139,7 @@ class ForusShopPage extends ConsumerWidget {
               child: GridView.builder(
                 gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: isMobile ? 350 : 300,
-                  mainAxisExtent: isMobile ? 300 : 250,
+                  mainAxisExtent: isMobile ? 340 : 280,
                   crossAxisSpacing: isMobile ? 16 : 20,
                   mainAxisSpacing: isMobile ? 16 : 20,
                 ),

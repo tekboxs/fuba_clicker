@@ -49,40 +49,56 @@ class FubaGenerator {
     this.secretUnlockCondition,
   });
 
+  double _getLateGameCostMultiplier() {
+    if (unlockRequirement >= 50) {
+      return 5.0;
+    } else if (unlockRequirement >= 40) {
+      return 4.0;
+    } else if (unlockRequirement >= 30) {
+      return 3.0;
+    } else if (unlockRequirement >= 25) {
+      return 2.0;
+    }
+    return 1.0;
+  }
+
+  double _getLateGameProductionMultiplier() {
+    if (unlockRequirement >= 50) {
+      return 0.2;
+    } else if (unlockRequirement >= 40) {
+      return 0.3;
+    } else if (unlockRequirement >= 30) {
+      return 0.4;
+    } else if (unlockRequirement >= 25) {
+      return 0.5;
+    }
+    return 1.0;
+  }
+
   /// Calcula o custo baseado na quantidade já possuída (crescimento exponencial suavizado)
   EfficientNumber getCost(int owned) {
+    final lateGameCostMultiplier = _getLateGameCostMultiplier();
+    final adjustedBaseCost = baseCost * EfficientNumber.fromValues(lateGameCostMultiplier, 0);
+    
     if (owned <= 50) {
-      return baseCost * EfficientNumber.fromPower(1.15, owned.toDouble());
+      return adjustedBaseCost * EfficientNumber.fromPower(1.20, owned.toDouble());
     } else if (owned <= 200) {
-      final baseCost50 = baseCost * EfficientNumber.fromPower(1.15, 50.0);
+      final baseCost50 = adjustedBaseCost * EfficientNumber.fromPower(1.20, 50.0);
       final excessOwned = owned - 50;
-      return baseCost50 * EfficientNumber.fromPower(1.12, excessOwned.toDouble());
+      return baseCost50 * EfficientNumber.fromPower(1.18, excessOwned.toDouble());
     } else if (owned <= 500) {
-      final baseCost50 = baseCost * EfficientNumber.fromPower(1.15, 50.0);
-      final baseCost200 = baseCost50 * EfficientNumber.fromPower(1.12, 150.0);
+      final baseCost50 = adjustedBaseCost * EfficientNumber.fromPower(1.20, 50.0);
+      final baseCost200 = baseCost50 * EfficientNumber.fromPower(1.18, 150.0);
       final excessOwned = owned - 200;
-      return baseCost200 * EfficientNumber.fromPower(1.10, excessOwned.toDouble());
+      return baseCost200 * EfficientNumber.fromPower(1.15, excessOwned.toDouble());
     } else {
-      final baseCost50 = baseCost * EfficientNumber.fromPower(1.15, 50.0);
-      final baseCost200 = baseCost50 * EfficientNumber.fromPower(1.12, 150.0);
-      final baseCost500 = baseCost200 * EfficientNumber.fromPower(1.10, 300.0);
+      final baseCost50 = adjustedBaseCost * EfficientNumber.fromPower(1.20, 50.0);
+      final baseCost200 = baseCost50 * EfficientNumber.fromPower(1.18, 150.0);
+      final baseCost500 = baseCost200 * EfficientNumber.fromPower(1.15, 300.0);
       final excessOwned = owned - 500;
       
-      if (excessOwned > 1000) {
-        const maxExponent = 1000;
-        final cappedExcess = excessOwned > maxExponent ? maxExponent : excessOwned;
-        final multiplier = EfficientNumber.fromPower(1.08, cappedExcess.toDouble());
-        
-        if (excessOwned > maxExponent) {
-          final additionalMultiplier = EfficientNumber.fromValues(
-              (excessOwned - maxExponent).toDouble(), 0);
-          return baseCost500 * multiplier * additionalMultiplier;
-        }
-        
-        return baseCost500 * multiplier;
-      }
-      
-      return baseCost500 * EfficientNumber.fromPower(1.08, excessOwned.toDouble());
+      final rate = 1.12 - (excessOwned / 10000.0).clamp(0.0, 0.05);
+      return baseCost500 * EfficientNumber.fromPower(rate, excessOwned.toDouble());
     }
   }
 
@@ -90,54 +106,49 @@ class FubaGenerator {
   EfficientNumber getProduction(int owned) {
     if (owned <= 0) return const EfficientNumber.zero();
 
+    final lateGameProductionMultiplier = _getLateGameProductionMultiplier();
+    final adjustedBaseProduction = baseProduction * EfficientNumber.fromValues(lateGameProductionMultiplier, 0);
+
+    if (owned <= 50) {
+      return adjustedBaseProduction * EfficientNumber.fromValues(owned.toDouble(), 0);
+    }
+
     if (owned <= 100) {
-      return baseProduction * EfficientNumber.fromValues(owned.toDouble(), 0);
+      final linearBase = adjustedBaseProduction * EfficientNumber.fromValues(50.0, 0);
+      final excessOwned = owned - 50;
+      final diminishingFactor = 1.0 - (excessOwned / 50.0) * 0.3;
+      return linearBase * EfficientNumber.fromValues(1.0 + (excessOwned * diminishingFactor / 50.0), 0);
     }
 
     if (owned <= 300) {
-      final linearBase = baseProduction * EfficientNumber.fromValues(100.0, 0);
+      final tier1Max = adjustedBaseProduction * EfficientNumber.fromValues(100.0, 0);
       final excessOwned = owned - 100;
-      final power = excessOwned / 100.0;
-      return linearBase * EfficientNumber.fromPower(1 + power, 12.7);
+      final power = excessOwned / 200.0;
+      return tier1Max * EfficientNumber.fromPower(1 + power * 0.5, 8.0);
     }
 
     if (owned <= 700) {
-      final tier2Value = _calculateTier2Max();
+      final tier2Value = _calculateTier2Max(adjustedBaseProduction);
       final excessOwned = owned - 300;
-      final power = excessOwned / 300.0;
-      return tier2Value * EfficientNumber.fromPower(1 + power, 35.5);
+      final power = excessOwned / 400.0;
+      return tier2Value * EfficientNumber.fromPower(1 + power * 0.3, 20.0);
     }
 
-    final tier3Value = _calculateTier3Max();
+    final tier3Value = _calculateTier3Max(adjustedBaseProduction);
     final excessOwned = owned - 700;
-    
-    if (excessOwned > 10000) {
-      const maxExponent = 10000;
-      final cappedExcess = excessOwned > maxExponent ? maxExponent : excessOwned;
-      final power = cappedExcess / 700.0;
-      final baseResult = tier3Value * EfficientNumber.fromPower(1 + power, 100.7);
-      
-      if (excessOwned > maxExponent) {
-        final additionalMultiplier = EfficientNumber.fromValues(
-            (excessOwned - maxExponent).toDouble(), 0);
-        return baseResult * additionalMultiplier;
-      }
-      
-      return baseResult;
-    }
-    
     final power = excessOwned / 700.0;
-    return tier3Value * EfficientNumber.fromPower(1 + power, 100.7);
+    final diminishingRate = 0.2 - (excessOwned / 50000.0).clamp(0.0, 0.1);
+    return tier3Value * EfficientNumber.fromPower(1 + power * diminishingRate, 50.0);
   }
 
-  EfficientNumber _calculateTier2Max() {
-    final linearBase = baseProduction * EfficientNumber.fromValues(100.0, 0);
-    return linearBase * EfficientNumber.fromPower(3.0, 1.25);
+  EfficientNumber _calculateTier2Max(EfficientNumber adjustedBaseProduction) {
+    final linearBase = adjustedBaseProduction * EfficientNumber.fromValues(100.0, 0);
+    return linearBase * EfficientNumber.fromPower(2.0, 1.0);
   }
 
-  EfficientNumber _calculateTier3Max() {
-    final tier2Value = _calculateTier2Max();
-    return tier2Value * EfficientNumber.fromPower(2.0, 1.5);
+  EfficientNumber _calculateTier3Max(EfficientNumber adjustedBaseProduction) {
+    final tier2Value = _calculateTier2Max(adjustedBaseProduction);
+    return tier2Value * EfficientNumber.fromPower(1.5, 1.0);
   }
 
   /// Verifica se o gerador está desbloqueado baseado na quantidade do gerador anterior

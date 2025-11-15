@@ -12,6 +12,12 @@ class UserData {
   final List<String>? achievements;
   final Map<String, double>? achievementStats;
   final Map<String, int>? upgrades;
+  final Map<String, int>? cauldron;
+
+  final List<Map<String, dynamic>>? activePotionEffects;
+
+  final double? permanentPotionMultiplier;
+  final Map<String, int>? activePotionCount;
   final Profile? profile;
   final bool? isInscribed;
 
@@ -27,6 +33,10 @@ class UserData {
     this.achievements,
     this.achievementStats,
     this.upgrades,
+    this.cauldron,
+    this.activePotionEffects,
+    this.permanentPotionMultiplier,
+    this.activePotionCount,
     this.profile,
     this.isInscribed,
   });
@@ -57,6 +67,18 @@ class UserData {
       upgrades: json['upgrades'] != null
           ? Map<String, int>.from(json['upgrades'])
           : null,
+      cauldron: json['cauldron'] != null
+          ? Map<String, int>.from(json['cauldron'])
+          : null,
+      activePotionEffects: json['activePotionEffects'] != null
+          ? List<Map<String, dynamic>>.from(json['activePotionEffects'])
+          : null,
+      permanentPotionMultiplier: json['permanentPotionMultiplier'] != null
+          ? (json['permanentPotionMultiplier'] as num).toDouble()
+          : null,
+      activePotionCount: json['activePotionCount'] != null
+          ? Map<String, int>.from(json['activePotionCount'])
+          : null,
       profile: json['profile'] != null
           ? Profile.fromJson(json['profile'] as Map<String, dynamic>)
           : null,
@@ -71,7 +93,11 @@ class UserData {
         rebirthData == null &&
         achievements == null &&
         achievementStats == null &&
-        upgrades == null;
+        upgrades == null &&
+        cauldron == null &&
+        activePotionEffects == null &&
+        permanentPotionMultiplier == null &&
+        activePotionCount == null;
   }
 
   Map<String, dynamic> toJson() {
@@ -87,6 +113,10 @@ class UserData {
       'achievements': achievements,
       'achievementStats': achievementStats,
       'upgrades': upgrades,
+      'cauldron': cauldron,
+      'activePotionEffects': activePotionEffects,
+      'permanentPotionMultiplier': permanentPotionMultiplier,
+      'activePotionCount': activePotionCount,
       'profile': profile?.toJson(),
       'inscribed': isInscribed,
     };
@@ -104,6 +134,10 @@ class UserData {
     List<String>? achievements,
     Map<String, double>? achievementStats,
     Map<String, int>? upgrades,
+    Map<String, int>? cauldron,
+    List<Map<String, dynamic>>? activePotionEffects,
+    double? permanentPotionMultiplier,
+    Map<String, int>? activePotionCount,
     Profile? profile,
     bool? isInscribed,
   }) {
@@ -119,6 +153,10 @@ class UserData {
       achievements: achievements ?? this.achievements,
       achievementStats: achievementStats ?? this.achievementStats,
       upgrades: upgrades ?? this.upgrades,
+      cauldron: cauldron ?? this.cauldron,
+      activePotionEffects: activePotionEffects ?? this.activePotionEffects,
+      permanentPotionMultiplier: permanentPotionMultiplier ?? this.permanentPotionMultiplier,
+      activePotionCount: activePotionCount ?? this.activePotionCount,
       profile: profile ?? this.profile,
       isInscribed: isInscribed ?? this.isInscribed,
     );

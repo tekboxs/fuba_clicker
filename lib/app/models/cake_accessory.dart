@@ -151,37 +151,37 @@ enum AccessoryRarity {
   double get productionMultiplier {
     switch (this) {
       case AccessoryRarity.common:
-        return 1.05;
+        return 1.01;
       case AccessoryRarity.uncommon:
-        return 1.10;
+        return 1.02;
       case AccessoryRarity.rare:
-        return 1.25;
+        return 1.05;
       case AccessoryRarity.epic:
-        return 1.50;
+        return 1.10;
       case AccessoryRarity.legendary:
-        return 2.0;
+        return 1.25;
       case AccessoryRarity.mythical:
-        return 2.5;
+        return 1.50;
       case AccessoryRarity.divine:
-        return 3.0;
+        return 2.0;
       case AccessoryRarity.transcendent:
-        return 4.0;
+        return 3.0;
       case AccessoryRarity.primordial:
-        return 8.0;
+        return 4.0;
       case AccessoryRarity.cosmic:
-        return 12.0;
+        return 5.0;
       case AccessoryRarity.infinite:
-        return 20.0;
+        return 6.0;
       case AccessoryRarity.omniversal:
-        return 50.0;
+        return 8.0;
       case AccessoryRarity.reality:
-        return 100.0;
+        return 10.0;
       case AccessoryRarity.tek:
-        return 250.0;
+        return 15.0;
       case AccessoryRarity.absolute:
-        return 500.0;
+        return 25.0;
       case AccessoryRarity.perfected:
-        return 750.0;
+        return 50.0;
     }
   }
 
@@ -231,6 +231,7 @@ class CakeAccessory {
   final String description;
   final VisualEffect visualEffect;
   final SpecialAbility specialAbility;
+  final double? customMultiplier;
 
   const CakeAccessory({
     required this.id,
@@ -240,9 +241,10 @@ class CakeAccessory {
     required this.description,
     this.visualEffect = VisualEffect.none,
     this.specialAbility = SpecialAbility.none,
+    this.customMultiplier,
   });
 
-  double get productionMultiplier => rarity.productionMultiplier;
+  double get productionMultiplier => customMultiplier ?? rarity.productionMultiplier;
   AccessoryShape get shape => rarity.shape;
 }
 
@@ -889,6 +891,7 @@ const List<CakeAccessory> allAccessories = [
     description: 'Uma deliciosa mistura de frutas tropicais',
     visualEffect: VisualEffect.rainbow,
     specialAbility: SpecialAbility.luckyBox,
+    customMultiplier: 50.0,
   ),
   CakeAccessory(
     id: 'corvo_calcinha_item',
@@ -898,6 +901,7 @@ const List<CakeAccessory> allAccessories = [
     description: 'Um corvo estiloso com calcinha',
     visualEffect: VisualEffect.rainbow,
     specialAbility: SpecialAbility.criticalClick,
+    customMultiplier: 55.0,
   ),
   CakeAccessory(
     id: 'quasar_item',
@@ -907,6 +911,7 @@ const List<CakeAccessory> allAccessories = [
     description: 'O núcleo energético de uma galáxia ativa',
     visualEffect: VisualEffect.rainbow,
     specialAbility: SpecialAbility.autoClicker,
+    customMultiplier: 59.0,
   ),
   CakeAccessory(
     id: 'kotoamatsukami_item',
@@ -916,5 +921,196 @@ const List<CakeAccessory> allAccessories = [
     description: 'A ilusão dos deuses que manipula a realidade',
     visualEffect: VisualEffect.rainbow,
     specialAbility: SpecialAbility.timeWarp,
+    customMultiplier: 100.0,
+  ),
+  CakeAccessory(
+    id: 'star_fruit_basket_item',
+    name: 'Cesta de Frutas Estelares',
+    emoji: '⭐🧺',
+    rarity: AccessoryRarity.perfected,
+    description: 'Cesta repleta de frutas brilhantes',
+    visualEffect: VisualEffect.glow,
+    specialAbility: SpecialAbility.none,
+    customMultiplier: 52.0,
+  ),
+  CakeAccessory(
+    id: 'crystal_garden_item',
+    name: 'Jardim de Cristais',
+    emoji: '💠🌱',
+    rarity: AccessoryRarity.perfected,
+    description: 'Jardim cultivado com cristais mágicos',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.luckyBox,
+    customMultiplier: 53.0,
+  ),
+  CakeAccessory(
+    id: 'cosmic_smoothie_item',
+    name: 'Smoothie Cósmico',
+    emoji: '🥤',
+    rarity: AccessoryRarity.perfected,
+    description: 'Smoothie feito com frutas das estrelas',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.luckyBox,
+    customMultiplier: 54.0,
+  ),
+  CakeAccessory(
+    id: 'dragon_essence_item',
+    name: 'Essência do Covro',
+    emoji: '🐦‍⬛💧',
+    rarity: AccessoryRarity.perfected,
+    description: 'A essência pura do corvo lendário',
+    visualEffect: VisualEffect.glow,
+    specialAbility: SpecialAbility.luckyBox,
+    customMultiplier: 55.0,
+  ),
+  CakeAccessory(
+    id: 'stellar_crown_item',
+    name: 'Coroa Estelar',
+    emoji: '👑⭐',
+    rarity: AccessoryRarity.perfected,
+    description: 'Coroa forjada com estrelas e brilhos',
+    visualEffect: VisualEffect.glow,
+    specialAbility: SpecialAbility.criticalClick,
+    customMultiplier: 56.0,
+  ),
+  CakeAccessory(
+    id: 'phoenix_flame_item',
+    name: 'Chama da Fênix',
+    emoji: '🔥🦅',
+    rarity: AccessoryRarity.perfected,
+    description: 'A chama eterna da fênix renascida',
+    visualEffect: VisualEffect.flames,
+    specialAbility: SpecialAbility.criticalClick,
+    customMultiplier: 57.0,
+  ),
+  CakeAccessory(
+    id: 'void_dragon_item',
+    name: 'Covro do Vazio',
+    emoji: '🐦‍⬛🌑',
+    rarity: AccessoryRarity.perfected,
+    description: 'Corvo que habita o vazio primordial',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.luckyBox,
+    customMultiplier: 58.0,
+  ),
+  CakeAccessory(
+    id: 'cosmic_avocado_item',
+    name: 'Abacate Cósmico',
+    emoji: '🥑🌌',
+    rarity: AccessoryRarity.perfected,
+    description: 'Abacate que veio das profundezas do espaço',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.criticalClick,
+    customMultiplier: 60.0,
+  ),
+  CakeAccessory(
+    id: 'time_fruit_item',
+    name: 'Fruta Temporal',
+    emoji: '⏰🍎',
+    rarity: AccessoryRarity.perfected,
+    description: 'Fruta que amadurece através do tempo',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.timeWarp,
+    customMultiplier: 65.0,
+  ),
+  CakeAccessory(
+    id: 'void_berry_item',
+    name: 'Baga do Vazio',
+    emoji: '🌑🫐',
+    rarity: AccessoryRarity.perfected,
+    description: 'Baga cultivada no vazio primordial',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.luckyBox,
+    customMultiplier: 70.0,
+  ),
+  CakeAccessory(
+    id: 'quantum_juice_item',
+    name: 'Suco Quântico',
+    emoji: '⚛️🧃',
+    rarity: AccessoryRarity.perfected,
+    description: 'Suco que existe em superposição',
+    visualEffect: VisualEffect.pulse,
+    specialAbility: SpecialAbility.autoClicker,
+    customMultiplier: 75.0,
+  ),
+  CakeAccessory(
+    id: 'quantum_fruit_bowl_item',
+    name: 'Tigela Quântica de Frutas',
+    emoji: '🍎⚛️',
+    rarity: AccessoryRarity.perfected,
+    description: 'Frutas que existem em múltiplas dimensões',
+    visualEffect: VisualEffect.orbit,
+    specialAbility: SpecialAbility.timeWarp,
+    customMultiplier: 50.0,
+  ),
+  CakeAccessory(
+    id: 'nebula_salad_item',
+    name: 'Salada de Nebulosa',
+    emoji: '🌫️🥗',
+    rarity: AccessoryRarity.perfected,
+    description: 'Salada feita com poeira estelar',
+    visualEffect: VisualEffect.cosmic,
+    specialAbility: SpecialAbility.autoClicker,
+    customMultiplier: 75.0,
+  ),
+  CakeAccessory(
+    id: 'infinity_cake_item',
+    name: 'Bolo Infinito',
+    emoji: '♾️🎂',
+    rarity: AccessoryRarity.perfected,
+    description: 'Bolo que nunca acaba',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.autoClicker,
+    customMultiplier: 200.0,
+  ),
+  CakeAccessory(
+    id: 'multiverse_mix_item',
+    name: 'Mistura Multiversal',
+    emoji: '🌐🔀',
+    rarity: AccessoryRarity.perfected,
+    description: 'Mistura de ingredientes de todos os universos',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.criticalClick,
+    customMultiplier: 500.0,
+  ),
+  CakeAccessory(
+    id: 'reality_soup_item',
+    name: 'Sopa da Realidade',
+    emoji: '🍲🧵',
+    rarity: AccessoryRarity.perfected,
+    description: 'Sopa feita com o tecido da realidade',
+    visualEffect: VisualEffect.sparkle,
+    specialAbility: SpecialAbility.timeWarp,
+    customMultiplier: 1000.0,
+  ),
+  CakeAccessory(
+    id: 'tek_smoothie_item',
+    name: 'Smoothie Tek',
+    emoji: '💻🥤',
+    rarity: AccessoryRarity.perfected,
+    description: 'Smoothie processado por tecnologia avançada',
+    visualEffect: VisualEffect.lightning,
+    specialAbility: SpecialAbility.autoClicker,
+    customMultiplier: 2000.0,
+  ),
+  CakeAccessory(
+    id: 'absolute_fusion_item',
+    name: 'Fusão Absoluta',
+    emoji: '⚛️💥',
+    rarity: AccessoryRarity.perfected,
+    description: 'A fusão definitiva de todos os elementos',
+    visualEffect: VisualEffect.flames,
+    specialAbility: SpecialAbility.criticalClick,
+    customMultiplier: 5000.0,
+  ),
+  CakeAccessory(
+    id: 'infinity_snack_item',
+    name: 'Lanche Infinito',
+    emoji: '♾️🍪',
+    rarity: AccessoryRarity.perfected,
+    description: 'Lanche que nunca termina',
+    visualEffect: VisualEffect.rainbow,
+    specialAbility: SpecialAbility.luckyBox,
+    customMultiplier: 100000000.0,
   ),
 ];

@@ -1,5 +1,6 @@
 enum ForusUpgradeType {
   mergeItems,
+  cauldron,
 }
 
 class ForusUpgrade {
@@ -30,6 +31,15 @@ const List<ForusUpgrade> allForusUpgrades = [
     description: 'Permite fundir acessórios para criar versões melhores',
     type: ForusUpgradeType.mergeItems,
     forusCost: 1.0,
+    isOneTime: true,
+  ),
+  ForusUpgrade(
+    id: 'cauldron',
+    name: 'Caldeirão de Poções',
+    emoji: '🧪',
+    description: 'Desbloqueia o caldeirão para criar poções mágicas',
+    type: ForusUpgradeType.cauldron,
+    forusCost: 5.0,
     isOneTime: true,
   ),
 ];
