@@ -6,7 +6,8 @@ Um jogo clicker viciante em Flutter onde você produz fubá clicando em bolos e 
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)
 
-## ![Veja você Mesmo!](https://fubaclicker.com.br)
+## https://fubaclicker.com.br
+
 ## 🎮 Sobre o Jogo
 
 Fuba Clicker é um jogo de clicker incremental onde você:
