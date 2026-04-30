@@ -7,6 +7,7 @@ import '../../../models/fuba_generator.dart';
 import '../../../providers/game_providers.dart';
 import '../../../providers/achievement_provider.dart';
 import '../../../providers/save_provider.dart';
+import '../../../providers/rebirth_provider.dart';
 import '../../../core/utils/constants.dart';
 import '../../../theme/tokens.dart';
 import '../../../theme/components.dart';
@@ -235,6 +236,8 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
 
   /// Constrói os botões de compra múltipla globais
   Widget _buildGlobalMultiBuyButtons(WidgetRef ref, BuildContext context) {
+    final rebirthCount = ref.watch(rebirthDataProvider).rebirthCount;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -245,10 +248,69 @@ class _GeneratorSectionState extends ConsumerState<GeneratorSection> {
         _buildToggleButton('x100', 100, Colors.purple),
         const SizedBox(width: 4),
         _buildToggleButton('x1000', 1000, Colors.orange),
-        // const SizedBox(width: 4),
-        // _buildToggleButton('xMAX', -1, Colors.red),
+        if (rebirthCount >= 10) ...[
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () => _buyAllGeneratorsBottomToTop(ref, context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.teal.shade700,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.tealAccent, width: 1.5),
+              ),
+              child: const Text(
+                '🛒',
+                style: TextStyle(fontSize: 14),
+              ),
+            ),
+          ),
+        ],
       ],
     );
+  }
+
+  /// Compra o máximo possível de todos os geradores, de baixo pra cima (mais caro ao mais barato)
+  void _buyAllGeneratorsBottomToTop(WidgetRef ref, BuildContext context) {
+    var currentFuba = ref.read(fubaProvider);
+    final generators = List<int>.from(ref.read(generatorsProvider));
+    bool boughtAny = false;
+
+    for (int i = availableGenerators.length - 1; i >= 0; i--) {
+      final generator = availableGenerators[i];
+      if (!generator.isUnlocked(generators, <String>{})) continue;
+
+      EfficientNumber totalCost = const EfficientNumber.zero();
+      int qty = 0;
+
+      while (true) {
+        final cost = generator.getCost(generators[i] + qty);
+        if (currentFuba.compareTo(totalCost + cost) >= 0) {
+          totalCost += cost;
+          qty++;
+        } else {
+          break;
+        }
+      }
+
+      if (qty > 0) {
+        currentFuba -= totalCost;
+        generators[i] += qty;
+        boughtAny = true;
+      }
+    }
+
+    if (boughtAny) {
+      ref.read(fubaProvider.notifier).state = currentFuba;
+      ref.read(generatorsProvider.notifier).state = generators;
+      final differentGenerators = generators.where((c) => c > 0).length;
+      ref.read(achievementNotifierProvider).updateStat(
+            'different_generators',
+            differentGenerators.toDouble(),
+            context,
+          );
+      ref.read(saveNotifierProvider.notifier).saveImmediate();
+    }
   }
 
   /// Constrói um botão toggle

@@ -1435,8 +1435,6 @@ class _HomePageState extends ConsumerState<HomePage>
     final accessoryMultiplier = ref.watch(accessoryMultiplierProvider);
     final oneTimeMultiplier = ref.watch(oneTimeMultiplierProvider);
     final equippedIds = ref.watch(equippedAccessoriesProvider);
-    final rebirthCount = ref.watch(rebirthDataProvider).rebirthCount;
-
     final manualTotal = accessoryMultiplier *
         rebirthMultiplier *
         upgradeMultiplier *
@@ -1446,39 +1444,13 @@ class _HomePageState extends ConsumerState<HomePage>
     return Column(
       children: [
         const SizedBox(height: 5),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Multiplicador Total: x${GameConstants.formatNumber(totalMultiplier)}',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.amber,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (rebirthCount >= 10) ...[
-              const SizedBox(width: 8),
-              SizedBox(
-                height: 22,
-                child: ElevatedButton.icon(
-                  onPressed: () => _buyAllGeneratorsMax(ref),
-                  icon: const Icon(Icons.shopping_cart, size: 11),
-                  label: const Text(
-                    'Comprar Tudo',
-                    style: TextStyle(fontSize: 10),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-              ),
-            ],
-          ],
+        Text(
+          'Multiplicador Total: x${GameConstants.formatNumber(totalMultiplier)}',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.amber,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         if (kDebugMode)
           Wrap(
@@ -2374,46 +2346,6 @@ class _HomePageState extends ConsumerState<HomePage>
     final achievement = allAchievements.firstWhere((a) => a.id == randomId);
 
     AchievementPopupManager.showAchievementPopup(context, achievement);
-  }
-
-  void _buyAllGeneratorsMax(WidgetRef ref) {
-    var currentFuba = ref.read(fubaProvider);
-    final generators = List<int>.from(ref.read(generatorsProvider));
-    bool boughtAny = false;
-
-    for (int i = 0; i < availableGenerators.length; i++) {
-      final generator = availableGenerators[i];
-      EfficientNumber totalCost = const EfficientNumber.zero();
-      int qty = 0;
-
-      while (true) {
-        final cost = generator.getCost(generators[i] + qty);
-        if (currentFuba.compareTo(totalCost + cost) >= 0) {
-          totalCost += cost;
-          qty++;
-        } else {
-          break;
-        }
-      }
-
-      if (qty > 0) {
-        currentFuba -= totalCost;
-        generators[i] += qty;
-        boughtAny = true;
-      }
-    }
-
-    if (boughtAny) {
-      ref.read(fubaProvider.notifier).state = currentFuba;
-      ref.read(generatorsProvider.notifier).state = generators;
-      final differentGenerators = generators.where((c) => c > 0).length;
-      ref.read(achievementNotifierProvider).updateStat(
-            'different_generators',
-            differentGenerators.toDouble(),
-            context,
-          );
-      ref.read(saveNotifierProvider.notifier).saveImmediate();
-    }
   }
 
   void _showAccountSettings() {
