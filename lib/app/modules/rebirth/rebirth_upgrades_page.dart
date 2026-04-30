@@ -17,7 +17,8 @@ class RebirthUpgradesPage extends ConsumerStatefulWidget {
   const RebirthUpgradesPage({super.key});
 
   @override
-  ConsumerState<RebirthUpgradesPage> createState() => _RebirthUpgradesPageState();
+  ConsumerState<RebirthUpgradesPage> createState() =>
+      _RebirthUpgradesPageState();
 }
 
 class _RebirthUpgradesPageState extends ConsumerState<RebirthUpgradesPage>
@@ -32,7 +33,9 @@ class _RebirthUpgradesPageState extends ConsumerState<RebirthUpgradesPage>
       duration: const Duration(seconds: 3),
     )..repeat();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(notificationNotifierProvider).markNotificationsAsViewed('upgrades');
+      ref
+          .read(notificationNotifierProvider)
+          .markNotificationsAsViewed('upgrades');
     });
   }
 
@@ -94,6 +97,9 @@ class _RebirthUpgradesPageState extends ConsumerState<RebirthUpgradesPage>
     final rebirthData = ref.watch(rebirthDataProvider);
     final fuba = ref.watch(fubaProvider);
     final generatorsOwned = ref.watch(generatorsProvider);
+    final autoPrestigeLevel =
+        ref.watch(upgradeLevelsProvider)['auto_prestige'] ?? 0;
+    final autoPrestigeEnabled = ref.watch(autoPrestigeEnabledProvider);
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
@@ -131,7 +137,12 @@ class _RebirthUpgradesPageState extends ConsumerState<RebirthUpgradesPage>
             _buildAnimatedBackground(),
             Column(
               children: [
-                _buildTokenDisplay(rebirthData.celestialTokens, isMobile),
+                _buildTokenDisplay(
+                  rebirthData.celestialTokens,
+                  isMobile,
+                  autoPrestigeLevel,
+                  autoPrestigeEnabled,
+                ),
                 Expanded(
                   child: GridView.builder(
                     padding: EdgeInsets.all(isMobile ? 12 : 24),
@@ -198,7 +209,12 @@ class _RebirthUpgradesPageState extends ConsumerState<RebirthUpgradesPage>
     );
   }
 
-  Widget _buildTokenDisplay(double tokens, bool isMobile) {
+  Widget _buildTokenDisplay(
+    double tokens,
+    bool isMobile,
+    int autoPrestigeLevel,
+    bool autoPrestigeEnabled,
+  ) {
     return Container(
       margin: EdgeInsets.all(isMobile ? 12 : 16),
       child: Stack(
@@ -234,8 +250,11 @@ class _RebirthUpgradesPageState extends ConsumerState<RebirthUpgradesPage>
                 ),
               ],
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: isMobile ? 12 : 16,
+              runSpacing: 12,
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
@@ -260,14 +279,15 @@ class _RebirthUpgradesPageState extends ConsumerState<RebirthUpgradesPage>
                     style: TextStyle(fontSize: 32),
                   ),
                 )
-                    .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                    .animate(
+                        onPlay: (controller) =>
+                            controller.repeat(reverse: true))
                     .scale(
                       begin: const Offset(1.0, 1.0),
                       end: const Offset(1.08, 1.08),
                       duration: 2.seconds,
                       curve: Curves.easeInOut,
                     ),
-                SizedBox(width: isMobile ? 12 : 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -320,8 +340,13 @@ class _RebirthUpgradesPageState extends ConsumerState<RebirthUpgradesPage>
                     ),
                   ],
                 ),
+                if (autoPrestigeLevel > 0)
+                  _buildAutoPrestigeToggle(
+                    autoPrestigeLevel,
+                    autoPrestigeEnabled,
+                    isMobile,
+                  ),
                 if (kDebugMode) ...[
-                  const Spacer(),
                   Row(
                     children: [
                       Consumer(
@@ -373,11 +398,73 @@ class _RebirthUpgradesPageState extends ConsumerState<RebirthUpgradesPage>
         .slideY(begin: -0.2, end: 0, duration: 500.ms, curve: Curves.easeOut);
   }
 
+  Widget _buildAutoPrestigeToggle(
+    int level,
+    bool enabled,
+    bool isMobile,
+  ) {
+    return Container(
+      constraints: BoxConstraints(minWidth: isMobile ? 0 : 220),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: (enabled ? AppColors.emerald500 : AppColors.destructive)
+            .withAlpha(35),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(
+          color: (enabled ? AppColors.emerald500 : AppColors.destructive)
+              .withAlpha(150),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            enabled ? Icons.autorenew : Icons.pause_circle_outline,
+            color: enabled ? AppColors.emerald400 : AppColors.destructive,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                enabled ? 'Auto-Rebirth ligado' : 'Auto-Rebirth pausado',
+                style: TextStyle(
+                  color: AppColors.foreground,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                'Nível $level',
+                style: TextStyle(
+                  color: AppColors.mutedForeground,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 8),
+          Switch.adaptive(
+            value: enabled,
+            activeColor: AppColors.emerald500,
+            onChanged: (value) {
+              ref.read(upgradeNotifierProvider).setAutoPrestigeEnabled(value);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   void _unlockAllUpgrades(WidgetRef ref) {
     final upgradeNotifier = ref.read(upgradeNotifierProvider);
     final rebirthData = ref.read(rebirthDataProvider);
 
-    final maxAscensionRequirement = allUpgrades.map((u) => u.ascensionRequirement).reduce((a, b) => a > b ? a : b);
+    final maxAscensionRequirement = allUpgrades
+        .map((u) => u.ascensionRequirement)
+        .reduce((a, b) => a > b ? a : b);
 
     ref.read(rebirthDataProvider.notifier).state = rebirthData.copyWith(
       celestialTokens: 9999999.0,

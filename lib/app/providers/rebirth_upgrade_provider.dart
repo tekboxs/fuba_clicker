@@ -13,6 +13,10 @@ final upgradeLevelsProvider = Provider<Map<String, int>>((ref) {
   return ref.watch(upgradesLevelProvider);
 });
 
+final autoPrestigeEnabledProvider = StateProvider<bool>((ref) {
+  return true;
+});
+
 class UpgradeNotifier {
   UpgradeNotifier(this.ref);
   final Ref ref;
@@ -126,7 +130,14 @@ class UpgradeNotifier {
   }
 
   int getAutoPrestigeLevel() {
+    if (!ref.read(autoPrestigeEnabledProvider)) {
+      return 0;
+    }
     return getUpgradeEffect(UpgradeType.autoPrestige).toInt();
+  }
+
+  void setAutoPrestigeEnabled(bool enabled) {
+    ref.read(autoPrestigeEnabledProvider.notifier).state = enabled;
   }
 }
 

@@ -38,7 +38,8 @@ class SaveNotifier extends StateNotifier<bool> {
       if (next == SyncConflictType.needsConfirmation) {
         return;
       }
-      if (previous == SyncConflictType.needsConfirmation && next == SyncConflictType.none) {
+      if (previous == SyncConflictType.needsConfirmation &&
+          next == SyncConflictType.none) {
         loadGame();
         ref.read(syncNotifierProvider.notifier).reset();
       }
@@ -71,13 +72,16 @@ class SaveNotifier extends StateNotifier<bool> {
       if (campaignMaxPhase > 0) {
         upgradesWithForus['_campaign_max_phase'] = campaignMaxPhase;
       }
+      upgradesWithForus['_auto_prestige_enabled'] =
+          ref.read(autoPrestigeEnabledProvider) ? 1 : 0;
 
       final cauldronJson = <String, int>{};
       cauldron.forEach((color, value) {
         cauldronJson[color.name] = value;
       });
 
-      final activeEffectsJson = activeEffects.map((effect) => effect.toJson()).toList();
+      final activeEffectsJson =
+          activeEffects.map((effect) => effect.toJson()).toList();
 
       await _saveService.saveGame(
         fuba: fuba,
@@ -151,23 +155,26 @@ class SaveNotifier extends StateNotifier<bool> {
         'consecutive_play_time': 0,
         'max_consecutive_play_time': 0,
       };
-      
+
       final mergedStats = {...defaultStats, ...data.achievementStats};
-      ref.read(achievementStatsProvider.notifier).state = Map<String, double>.from(mergedStats);
-      
+      ref.read(achievementStatsProvider.notifier).state =
+          Map<String, double>.from(mergedStats);
+
       final rebirthUpgrades = <String, int>{};
       final forusUpgradesOwned = <String>{};
-      
+
       data.upgrades.forEach((key, value) {
         if (key.startsWith('forus_')) {
           forusUpgradesOwned.add(key.substring(6));
         } else if (key == '_campaign_max_phase') {
           ref.read(campaignMaxPhaseProvider.notifier).state = value;
+        } else if (key == '_auto_prestige_enabled') {
+          ref.read(autoPrestigeEnabledProvider.notifier).state = value == 1;
         } else {
           rebirthUpgrades[key] = value;
         }
       });
-      
+
       ref.read(upgradesLevelProvider.notifier).state = rebirthUpgrades;
       ref.read(forusUpgradesOwnedProvider.notifier).state = forusUpgradesOwned;
 
@@ -188,10 +195,12 @@ class SaveNotifier extends StateNotifier<bool> {
           .toList();
       ref.read(activePotionEffectsProvider.notifier).state = activeEffects;
 
-      ref.read(permanentPotionMultiplierProvider.notifier).state = data.permanentPotionMultiplier;
+      ref.read(permanentPotionMultiplierProvider.notifier).state =
+          data.permanentPotionMultiplier;
 
-      ref.read(activePotionCountProvider.notifier).state = data.activePotionCount;
-      
+      ref.read(activePotionCountProvider.notifier).state =
+          data.activePotionCount;
+
       ref.read(potionNotifierProvider).updateActiveEffects();
 
       // Carregar configurações visuais
