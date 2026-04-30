@@ -234,27 +234,34 @@ class RebirthData {
   EfficientNumber getTotalMultiplier() {
     EfficientNumber multiplier = const EfficientNumber.one();
 
-    // Rebirth multiplier (logarítmico com base cumulativa)
+    // Rebirth multiplier keeps the logarithmic gain, but adds a permanent
+    // ramp so repeated rebirths remain meaningful in later walls.
     if (rebirthCount > 0) {
       final rebirthGain =
           RebirthTier.rebirth.getEffectiveMultiplierGain(rebirthCount);
-      final rebirthMultiplier = EfficientNumber.fromValues(rebirthGain, 0);
+      final rebirthMultiplier = EfficientNumber.fromValues(rebirthGain, 0) *
+          EfficientNumber.fromPower(
+              1.10, rebirthCount.clamp(0, 300).toDouble());
       multiplier *= rebirthMultiplier;
     }
 
-    // Ascension multiplier (logarítmico com caps)
+    // Ascensions/transcendences should feel like major production breakpoints,
+    // not just small capped bonuses.
     if (ascensionCount > 0) {
       final gainValue =
           RebirthTier.ascension.getEffectiveMultiplierGain(ascensionCount);
-      final ascensionMultiplier = EfficientNumber.fromValues(gainValue, 0);
+      final ascensionMultiplier = EfficientNumber.fromValues(gainValue, 0) *
+          EfficientNumber.fromPower(
+              1.20, ascensionCount.clamp(0, 200).toDouble());
       multiplier *= ascensionMultiplier;
     }
 
-    // Transcendence multiplier (logarítmico com caps)
     if (transcendenceCount > 0) {
       final gainValue = RebirthTier.transcendence
           .getEffectiveMultiplierGain(transcendenceCount);
-      final transcendenceMultiplier = EfficientNumber.fromValues(gainValue, 0);
+      final transcendenceMultiplier = EfficientNumber.fromValues(gainValue, 0) *
+          EfficientNumber.fromPower(
+              1.45, transcendenceCount.clamp(0, 120).toDouble());
       multiplier *= transcendenceMultiplier;
     }
 

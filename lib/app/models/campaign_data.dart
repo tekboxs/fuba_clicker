@@ -25,33 +25,75 @@ class CampaignPhase {
       (30 * pow(1.08, phase - 1)).ceilToDouble();
 
   static final _normalNames = [
-    'Espiga Rebelde', 'Milho Guerreiro', 'Grão Enraivecido',
-    'Espigazinha Furia', 'Polenta Sombria', 'Farinha do Caos',
-    'Milho Encantado', 'Grão das Trevas', 'Canjica Irada',
-    'Angu Selvagem', 'Milho do Abismo', 'Creme de Milho Maldito',
-    'Fubá Vingativo', 'Pamonha Cruel', 'Cuscuz do Inferno',
-    'Quirera Mágica', 'Broinha do Mal', 'Xerém Sombrio',
-    'Mingau Amaldiçoado', 'Mungunzá das Sombras',
-    'Milho Fantasma', 'Espiga Venenosa', 'Grão Dimensional',
-    'Fubá Quântico', 'Polenta Interdimensional',
-    'Angu do Vazio', 'Canjica Eterna', 'Milho do Tempo',
-    'Farinha Cósmica', 'Grão da Eternidade',
-    'Espiga do Destino', 'Milho Transcendente',
+    'Espiga Rebelde',
+    'Milho Guerreiro',
+    'Grão Enraivecido',
+    'Espigazinha Furia',
+    'Polenta Sombria',
+    'Farinha do Caos',
+    'Milho Encantado',
+    'Grão das Trevas',
+    'Canjica Irada',
+    'Angu Selvagem',
+    'Milho do Abismo',
+    'Creme de Milho Maldito',
+    'Fubá Vingativo',
+    'Pamonha Cruel',
+    'Cuscuz do Inferno',
+    'Quirera Mágica',
+    'Broinha do Mal',
+    'Xerém Sombrio',
+    'Mingau Amaldiçoado',
+    'Mungunzá das Sombras',
+    'Milho Fantasma',
+    'Espiga Venenosa',
+    'Grão Dimensional',
+    'Fubá Quântico',
+    'Polenta Interdimensional',
+    'Angu do Vazio',
+    'Canjica Eterna',
+    'Milho do Tempo',
+    'Farinha Cósmica',
+    'Grão da Eternidade',
+    'Espiga do Destino',
+    'Milho Transcendente',
   ];
 
   static final _bossNames = [
-    'Rei do Milho', 'Senhor do Fubá', 'Imperador da Polenta',
-    'Deus da Farinha', 'Lorde do Angu', 'Titã da Canjica',
-    'Supremo do Quirera', 'O Absoluto Fubá',
+    'Rei do Milho',
+    'Senhor do Fubá',
+    'Imperador da Polenta',
+    'Deus da Farinha',
+    'Lorde do Angu',
+    'Titã da Canjica',
+    'Supremo do Quirera',
+    'O Absoluto Fubá',
   ];
 
   static final _normalEmojis = [
-    '🌽', '🌾', '🫘', '🌿', '🍞', '🥣',
-    '🫙', '🌰', '🧀', '🍳', '🥫', '🍜',
+    '🌽',
+    '🌾',
+    '🫘',
+    '🌿',
+    '🍞',
+    '🥣',
+    '🫙',
+    '🌰',
+    '🧀',
+    '🍳',
+    '🥫',
+    '🍜',
   ];
 
   static final _bossEmojis = [
-    '👑', '🐉', '💀', '🔥', '⚡', '🌪️', '🌊', '☄️',
+    '👑',
+    '🐉',
+    '💀',
+    '🔥',
+    '⚡',
+    '🌪️',
+    '🌊',
+    '☄️',
   ];
 
   static CampaignPhase forPhase(int phase) {
@@ -72,7 +114,7 @@ class CampaignPhase {
       maxHp: hp,
       isBoss: isBoss,
       tokenReward: isBoss ? phase * 50 : phase * 10,
-      forusReward: (isBoss && phase >= 10) ? 1.0 : 0.0,
+      forusReward: (isBoss && phase >= 10) ? 0.5 : 0.0,
     );
   }
 
@@ -95,8 +137,7 @@ class CampaignBattle {
 
   double get hpPercent => (currentHp / phase.maxHp).clamp(0.0, 1.0);
 
-  int get secondsElapsed =>
-      DateTime.now().difference(startedAt).inSeconds;
+  int get secondsElapsed => DateTime.now().difference(startedAt).inSeconds;
 
   int get secondsRemaining =>
       (phase.timerSeconds - secondsElapsed).clamp(0, phase.timerSeconds);

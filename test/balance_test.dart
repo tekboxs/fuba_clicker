@@ -39,13 +39,13 @@ void main() {
         if (i == 0) {
           positionMultiplier = 1.0;
         } else if (i == 1) {
-          positionMultiplier = 0.5;
+          positionMultiplier = 0.75;
         } else if (i == 2) {
-          positionMultiplier = 0.25;
+          positionMultiplier = 0.55;
         } else if (i == 3) {
-          positionMultiplier = 0.15;
+          positionMultiplier = 0.40;
         } else {
-          positionMultiplier = 0.10;
+          positionMultiplier = 0.30;
         }
 
         totalBonus += baseValue * positionMultiplier;
@@ -96,21 +96,21 @@ void main() {
         if (i == 0) {
           positionMultiplier = 1.0;
         } else if (i == 1) {
-          positionMultiplier = 0.5;
+          positionMultiplier = 0.75;
         } else if (i == 2) {
-          positionMultiplier = 0.25;
+          positionMultiplier = 0.55;
         } else if (i == 3) {
-          positionMultiplier = 0.15;
+          positionMultiplier = 0.40;
         } else {
-          positionMultiplier = 0.10;
+          positionMultiplier = 0.30;
         }
         totalBonus += baseValue * positionMultiplier;
       }
 
       final total = 1.0 + totalBonus;
 
-      expect(total, closeTo(99.0, 1.0));
-      expect(total, lessThan(120.0));
+      expect(total, closeTo(148.0, 1.0));
+      expect(total, lessThan(200.0));
     });
   });
 
@@ -121,10 +121,10 @@ void main() {
       final rebirth100 = RebirthTier.rebirth.getEffectiveMultiplierGain(100);
 
       expect(rebirth1, greaterThan(1.20));
-      expect(rebirth10, closeTo(1.59, 0.1));
-      expect(rebirth100, closeTo(2.0, 0.1));
+      expect(rebirth10, closeTo(2.70, 0.1));
+      expect(rebirth100, closeTo(3.81, 0.1));
 
-      expect(rebirth100, lessThan(2.5));
+      expect(rebirth100, lessThan(4.0));
     });
 
     test('Ascension deve ter soft cap e hard cap', () {
@@ -135,11 +135,11 @@ void main() {
           RebirthTier.ascension.getEffectiveMultiplierGain(100);
 
       expect(ascension1, greaterThan(1.0));
-      expect(ascension20, lessThanOrEqualTo(9.0));
+      expect(ascension20, lessThanOrEqualTo(15.0));
       expect(ascension50, lessThanOrEqualTo(18.0));
-      expect(ascension100, lessThanOrEqualTo(18.0));
+      expect(ascension100, lessThanOrEqualTo(21.0));
 
-      expect(ascension100, lessThan(20.0));
+      expect(ascension100, lessThan(22.0));
     });
 
     test('Transcendence deve ter soft cap e hard cap', () {
@@ -150,11 +150,11 @@ void main() {
           RebirthTier.transcendence.getEffectiveMultiplierGain(100);
 
       expect(trans1, greaterThan(1.0));
-      expect(trans15, lessThanOrEqualTo(14.0));
-      expect(trans50, lessThanOrEqualTo(30.0));
-      expect(trans100, lessThanOrEqualTo(30.0));
+      expect(trans15, lessThanOrEqualTo(30.0));
+      expect(trans50, lessThanOrEqualTo(40.0));
+      expect(trans100, lessThanOrEqualTo(45.0));
 
-      expect(trans100, lessThan(35.0));
+      expect(trans100, lessThan(46.0));
     });
 
     test('Multiplicadores não devem crescer exponencialmente', () {
@@ -400,11 +400,11 @@ void main() {
       final totalMultiplier = data.getTotalMultiplier();
       final totalValue = totalMultiplier.toDouble();
 
-      expect(totalValue, lessThan(250.0));
+      expect(totalValue, lessThan(1e9));
       expect(totalValue, greaterThan(1.0));
     });
 
-    test('Multiplicador não deve crescer exponencialmente com rebirths', () {
+    test('Multiplicador deve crescer forte sem estourar com rebirths', () {
       final data10 = RebirthData(rebirthCount: 10);
       final data50 = RebirthData(rebirthCount: 50);
       final data100 = RebirthData(rebirthCount: 100);
@@ -416,8 +416,9 @@ void main() {
       final ratio10to50 = mult50 / mult10;
       final ratio50to100 = mult100 / mult50;
 
-      expect(ratio10to50, lessThan(3.0));
-      expect(ratio50to100, lessThan(2.0));
+      expect(ratio10to50, greaterThan(10.0));
+      expect(ratio50to100, greaterThan(10.0));
+      expect(mult100, lessThan(1e6));
     });
   });
 

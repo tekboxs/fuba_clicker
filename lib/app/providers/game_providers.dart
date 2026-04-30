@@ -9,7 +9,6 @@ import 'potion_provider.dart';
 import 'random_event_provider.dart';
 import '../models/potion_effect.dart';
 
-
 final fubaProvider = StateProvider<EfficientNumber>((ref) {
   return const EfficientNumber.zero();
 });
@@ -44,29 +43,30 @@ final baseAutoProductionProvider = Provider<EfficientNumber>((ref) {
 final potionProductionMultiplierProvider = Provider<double>((ref) {
   final activeEffects = ref.watch(activePotionEffectsProvider);
   final permanentMultiplier = ref.watch(permanentPotionMultiplierProvider);
-  
+
   double multiplier = permanentMultiplier;
-  
+
   for (final effect in activeEffects) {
-    if (!effect.isExpired && effect.type == PotionEffectType.productionMultiplier) {
+    if (!effect.isExpired &&
+        effect.type == PotionEffectType.productionMultiplier) {
       multiplier *= effect.value;
     }
   }
-  
+
   return multiplier;
 });
 
 final potionClickPowerProvider = Provider<double>((ref) {
   final activeEffects = ref.watch(activePotionEffectsProvider);
-  
+
   double multiplier = 1.0;
-  
+
   for (final effect in activeEffects) {
     if (!effect.isExpired && effect.type == PotionEffectType.clickPower) {
       multiplier *= effect.value;
     }
   }
-  
+
   return multiplier;
 });
 
@@ -76,17 +76,22 @@ EfficientNumber calculateEffectiveMultiplier(Ref ref) {
   final achievementMultiplier = ref.watch(achievementMultiplierProvider);
   final oneTimeMultiplier = ref.watch(oneTimeMultiplierProvider);
   final accessoryMultiplier = ref.watch(accessoryMultiplierProvider);
+  final inventoryCollectionMultiplier =
+      ref.watch(inventoryCollectionMultiplierProvider);
   final potionMultiplier = ref.watch(potionProductionMultiplierProvider);
   final eventMultiplier = ref.watch(eventProductionMultiplierProvider);
 
-  final potionMultiplierEfficient = EfficientNumber.fromValues(potionMultiplier, 0);
-  final eventMultiplierEfficient = EfficientNumber.fromValues(eventMultiplier, 0);
+  final potionMultiplierEfficient =
+      EfficientNumber.fromValues(potionMultiplier, 0);
+  final eventMultiplierEfficient =
+      EfficientNumber.fromValues(eventMultiplier, 0);
 
-  final totalMultiplier = rebirthMultiplier *
-      upgradeMultiplier *
-      achievementMultiplier *
-      oneTimeMultiplier *
-      accessoryMultiplier *
+  final totalMultiplier = _activeMultiplier(rebirthMultiplier) *
+      _activeMultiplier(upgradeMultiplier) *
+      _activeMultiplier(achievementMultiplier) *
+      _activeMultiplier(oneTimeMultiplier) *
+      _activeMultiplier(accessoryMultiplier) *
+      _activeMultiplier(inventoryCollectionMultiplier) *
       potionMultiplierEfficient *
       eventMultiplierEfficient;
 
@@ -94,7 +99,19 @@ EfficientNumber calculateEffectiveMultiplier(Ref ref) {
     return const EfficientNumber.one();
   }
 
+  final totalAsDouble = totalMultiplier.toDouble();
+  if (totalAsDouble.isNaN || totalAsDouble <= 0) {
+    return EfficientNumber.fromValues(1.0, 300);
+  }
+
   return totalMultiplier;
+}
+
+EfficientNumber _activeMultiplier(EfficientNumber value) {
+  if (value.mantissa <= 0 || value.mantissa.isNaN) {
+    return const EfficientNumber.one();
+  }
+  return value;
 }
 
 final autoProductionProvider = Provider<EfficientNumber>((ref) {

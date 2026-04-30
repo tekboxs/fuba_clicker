@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/campaign_data.dart';
@@ -7,8 +6,6 @@ import '../../providers/campaign_provider.dart';
 import '../../providers/rebirth_provider.dart';
 import '../../providers/rebirth_upgrade_provider.dart';
 import '../../providers/save_provider.dart';
-import '../../core/utils/constants.dart';
-import '../../theme/components.dart';
 
 class CampaignPage extends ConsumerStatefulWidget {
   const CampaignPage({super.key});
@@ -127,7 +124,7 @@ class _CampaignPageState extends ConsumerState<CampaignPage>
               _rewardChip('⭐ ${phase.tokenReward} tokens', Colors.amber),
               if (phase.forusReward > 0)
                 _rewardChip(
-                    '💎 ${phase.forusReward.toInt()} forus', Colors.cyan),
+                    '💎 ${_formatForus(phase.forusReward)} forus', Colors.cyan),
             ],
           ],
         ),
@@ -143,8 +140,8 @@ class _CampaignPageState extends ConsumerState<CampaignPage>
                 Navigator.pop(context);
                 _startBattle(phase.phase);
               },
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
               child: const Text('Tentar novamente'),
             ),
         ],
@@ -164,16 +161,21 @@ class _CampaignPageState extends ConsumerState<CampaignPage>
             style: TextStyle(color: color, fontWeight: FontWeight.bold)),
       );
 
+  String _formatForus(double value) {
+    return value % 1 == 0 ? value.toInt().toString() : value.toStringAsFixed(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final battle = ref.watch(activeBattleProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F1A),
+      backgroundColor: const Color(0xFF090B14),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F0F1A),
-        title: const Text('⚔️ Campanha',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF090B14),
+        elevation: 0,
+        title: const Text('Campanha do Milharal',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           if (battle != null)
@@ -188,7 +190,16 @@ class _CampaignPageState extends ConsumerState<CampaignPage>
             ),
         ],
       ),
-      body: battle != null ? _buildBattle(battle) : _buildPhaseList(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF090B14), Color(0xFF151022), Color(0xFF24170A)],
+          ),
+        ),
+        child: battle != null ? _buildBattle(battle) : _buildPhaseList(),
+      ),
     );
   }
 
@@ -196,20 +207,78 @@ class _CampaignPageState extends ConsumerState<CampaignPage>
     final maxCleared = ref.watch(campaignMaxPhaseProvider);
     final phases = CampaignPhase.allPhases;
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: phases.length,
-      itemBuilder: (context, index) {
-        final phase = phases[index];
-        final isUnlocked = phase.phase <= maxCleared + 1;
-        final isCleared = phase.phase <= maxCleared;
-        return _buildPhaseCard(phase, isUnlocked, isCleared);
-      },
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        _buildCampaignHeader(maxCleared),
+        const SizedBox(height: 14),
+        for (final phase in phases)
+          _buildPhaseCard(
+            phase,
+            phase.phase <= maxCleared + 1,
+            phase.phase <= maxCleared,
+          ),
+      ],
     );
   }
 
-  Widget _buildPhaseCard(
-      CampaignPhase phase, bool isUnlocked, bool isCleared) {
+  Widget _buildCampaignHeader(int maxCleared) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3A2405), Color(0xFF171A35)],
+        ),
+        border: Border.all(color: Colors.amber.withOpacity(0.35)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.amber.withOpacity(0.12),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.16),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.amber.withOpacity(0.45)),
+            ),
+            child:
+                const Center(child: Text('⚔️', style: TextStyle(fontSize: 28))),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Avance pelo milharal sombrio',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 17,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'Maior fase concluída: $maxCleared • Bosses rendem 0.5 forus',
+                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhaseCard(CampaignPhase phase, bool isUnlocked, bool isCleared) {
     final borderColor = phase.isBoss
         ? Colors.amber
         : isCleared
@@ -218,89 +287,109 @@ class _CampaignPageState extends ConsumerState<CampaignPage>
                 ? Colors.blue
                 : Colors.grey.shade700;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor.withOpacity(0.6), width: 1.5),
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: borderColor.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(8),
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 180),
+      opacity: isUnlocked ? 1 : 0.56,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: phase.isBoss
+                ? [const Color(0xFF2C1A06), const Color(0xFF151727)]
+                : [const Color(0xFF151A2D), const Color(0xFF11131F)],
           ),
-          child: Center(
-            child: Text(
-              isUnlocked ? phase.enemyEmoji : '🔒',
-              style: const TextStyle(fontSize: 22),
-            ),
-          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: borderColor.withOpacity(0.6), width: 1.5),
+          boxShadow: isUnlocked
+              ? [
+                  BoxShadow(
+                    color: borderColor.withOpacity(0.13),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
         ),
-        title: Row(
-          children: [
-            Text(
-              'Fase ${phase.phase}',
-              style: TextStyle(
-                color: isUnlocked ? Colors.white : Colors.grey,
-                fontWeight: FontWeight.bold,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          leading: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: borderColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: borderColor.withOpacity(0.3)),
+            ),
+            child: Center(
+              child: Text(
+                isUnlocked ? phase.enemyEmoji : '🔒',
+                style: const TextStyle(fontSize: 25),
               ),
             ),
-            if (phase.isBoss)
-              Container(
-                margin: const EdgeInsets.only(left: 6),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.amber.withOpacity(0.5)),
+          ),
+          title: Row(
+            children: [
+              Text(
+                'Fase ${phase.phase}',
+                style: TextStyle(
+                  color: isUnlocked ? Colors.white : Colors.grey,
+                  fontWeight: FontWeight.bold,
                 ),
-                child: const Text('BOSS',
-                    style: TextStyle(
-                        color: Colors.amber,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold)),
               ),
-            if (isCleared)
-              const Padding(
-                padding: EdgeInsets.only(left: 6),
-                child: Icon(Icons.check_circle, color: Colors.green, size: 16),
-              ),
-          ],
+              if (phase.isBoss)
+                Container(
+                  margin: const EdgeInsets.only(left: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                  ),
+                  child: const Text('BOSS',
+                      style: TextStyle(
+                          color: Colors.amber,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold)),
+                ),
+              if (isCleared)
+                const Padding(
+                  padding: EdgeInsets.only(left: 6),
+                  child:
+                      Icon(Icons.check_circle, color: Colors.green, size: 16),
+                ),
+            ],
+          ),
+          subtitle: isUnlocked
+              ? Text(
+                  '${phase.enemyName} • ${phase.maxHp.toInt()} HP • ${phase.timerSeconds}s',
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                )
+              : const Text('Conclua a fase anterior',
+                  style: TextStyle(color: Colors.grey, fontSize: 11)),
+          trailing: isUnlocked
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('⭐ ${phase.tokenReward}',
+                        style:
+                            const TextStyle(color: Colors.amber, fontSize: 11)),
+                    if (phase.forusReward > 0)
+                      Text('💎 ${_formatForus(phase.forusReward)}',
+                          style: const TextStyle(
+                              color: Colors.cyan, fontSize: 11)),
+                  ],
+                )
+              : null,
+          onTap: isUnlocked
+              ? () {
+                  _startBattle(phase.phase);
+                  setState(() {});
+                }
+              : null,
         ),
-        subtitle: isUnlocked
-            ? Text(
-                '${phase.enemyName} • ${phase.maxHp.toInt()} HP • ${phase.timerSeconds}s',
-                style:
-                    const TextStyle(color: Colors.white54, fontSize: 11),
-              )
-            : const Text('Conclua a fase anterior',
-                style: TextStyle(color: Colors.grey, fontSize: 11)),
-        trailing: isUnlocked
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('⭐ ${phase.tokenReward}',
-                      style: const TextStyle(
-                          color: Colors.amber, fontSize: 11)),
-                  if (phase.forusReward > 0)
-                    Text('💎 ${phase.forusReward.toInt()}',
-                        style: const TextStyle(
-                            color: Colors.cyan, fontSize: 11)),
-                ],
-              )
-            : null,
-        onTap: isUnlocked
-            ? () {
-                _startBattle(phase.phase);
-                setState(() {});
-              }
-            : null,
       ),
     );
   }
@@ -356,8 +445,10 @@ class _CampaignPageState extends ConsumerState<CampaignPage>
                   Text(battle.phase.enemyName,
                       style: const TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold)),
-                  Text('${battle.currentHp.toInt()} / ${battle.phase.maxHp.toInt()} HP',
-                      style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                  Text(
+                      '${battle.currentHp.toInt()} / ${battle.phase.maxHp.toInt()} HP',
+                      style:
+                          const TextStyle(color: Colors.white60, fontSize: 12)),
                 ],
               ),
               const SizedBox(height: 6),
@@ -409,8 +500,7 @@ class _CampaignPageState extends ConsumerState<CampaignPage>
                       const Positioned(
                         top: 20,
                         right: 20,
-                        child: Text('💥',
-                            style: TextStyle(fontSize: 36)),
+                        child: Text('💥', style: TextStyle(fontSize: 36)),
                       ),
                   ],
                 ),

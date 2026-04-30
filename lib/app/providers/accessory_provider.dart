@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/efficient_number.dart';
 import '../models/cake_accessory.dart';
@@ -18,16 +20,30 @@ EfficientNumber calculateAccessoryProductionMultiplier(List<String> equipped) {
     if (i == 0) {
       positionMultiplier = 1.0;
     } else if (i == 1) {
-      positionMultiplier = 0.5;
+      positionMultiplier = 0.75;
     } else if (i == 2) {
-      positionMultiplier = 0.25;
+      positionMultiplier = 0.55;
     } else if (i == 3) {
-      positionMultiplier = 0.15;
+      positionMultiplier = 0.40;
     } else {
-      positionMultiplier = 0.10;
+      positionMultiplier = 0.30;
     }
 
     totalBonus += baseBonus * positionMultiplier;
+  }
+
+  return EfficientNumber.fromValues(1.0 + totalBonus, 0);
+}
+
+EfficientNumber calculateInventoryCollectionMultiplier(
+    Map<String, int> inventory) {
+  if (inventory.isEmpty) return const EfficientNumber.one();
+
+  double totalBonus = 0.0;
+  for (final entry in inventory.entries) {
+    if (entry.value <= 0) continue;
+    final accessory = allAccessories.firstWhere((acc) => acc.id == entry.key);
+    totalBonus += accessory.rarity.value * 0.03 * sqrt(entry.value.toDouble());
   }
 
   return EfficientNumber.fromValues(1.0 + totalBonus, 0);
@@ -240,6 +256,11 @@ final accessoryNotifierProvider = Provider<AccessoryNotifier>((ref) {
 final accessoryMultiplierProvider = Provider<EfficientNumber>((ref) {
   final equipped = ref.watch(equippedAccessoriesProvider);
   return calculateAccessoryProductionMultiplier(equipped);
+});
+
+final inventoryCollectionMultiplierProvider = Provider<EfficientNumber>((ref) {
+  final inventory = ref.watch(inventoryProvider);
+  return calculateInventoryCollectionMultiplier(inventory);
 });
 
 final accessoryCapacityProvider = Provider<int>((ref) {

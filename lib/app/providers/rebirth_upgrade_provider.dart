@@ -16,7 +16,7 @@ final upgradeLevelsProvider = Provider<Map<String, int>>((ref) {
 class UpgradeNotifier {
   UpgradeNotifier(this.ref);
   final Ref ref;
-  
+
   // Cache para evitar recálculos desnecessários
   final Map<String, bool> _canPurchaseCache = {};
   final Map<String, int> _lastLevelCache = {};
@@ -24,12 +24,13 @@ class UpgradeNotifier {
   bool canPurchase(RebirthUpgrade upgrade) {
     final currentLevel = getUpgradeLevel(upgrade.id);
     final rebirthData = ref.read(rebirthDataProvider);
-    
-    final cacheKey = '${upgrade.id}_${currentLevel}_${rebirthData.celestialTokens}';
+
+    final cacheKey =
+        '${upgrade.id}_${currentLevel}_${rebirthData.celestialTokens}';
     if (_canPurchaseCache.containsKey(cacheKey)) {
       return _canPurchaseCache[cacheKey]!;
     }
-    
+
     if (currentLevel >= upgrade.maxLevel) {
       _canPurchaseCache[cacheKey] = false;
       return false;
@@ -45,7 +46,7 @@ class UpgradeNotifier {
     _canPurchaseCache[cacheKey] = canPurchase;
     return canPurchase;
   }
-  
+
   void _clearCache() {
     _canPurchaseCache.clear();
     _lastLevelCache.clear();
@@ -63,10 +64,9 @@ class UpgradeNotifier {
     final newLevels = Map<String, int>.from(levels);
     newLevels[upgrade.id] = currentLevel + 1;
     ref.read(upgradesLevelProvider.notifier).state = newLevels;
-    
+
     _clearCache();
   }
-  
 
   int getUpgradeLevel(String upgradeId) {
     return ref.read(upgradeLevelsProvider)[upgradeId] ?? 0;
@@ -80,10 +80,15 @@ class UpgradeNotifier {
 
   EfficientNumber getTotalProductionMultiplier() {
     EfficientNumber multiplier = const EfficientNumber.one();
-    multiplier *= EfficientNumber.fromValues(
-        getUpgradeEffect(UpgradeType.idleBoost), 0);
-    multiplier *= EfficientNumber.fromValues(
-        getUpgradeEffect(UpgradeType.productionMultiplier), 0);
+    final idleBoost = getUpgradeEffect(UpgradeType.idleBoost);
+    final productionMultiplier =
+        getUpgradeEffect(UpgradeType.productionMultiplier);
+    if (idleBoost > 0) {
+      multiplier *= EfficientNumber.fromValues(idleBoost, 0);
+    }
+    if (productionMultiplier > 0) {
+      multiplier *= EfficientNumber.fromValues(productionMultiplier, 0);
+    }
     return multiplier;
   }
 
@@ -133,15 +138,16 @@ final upgradeProductionMultiplierProvider = Provider<EfficientNumber>((ref) {
   return ref.watch(upgradeNotifierProvider).getTotalProductionMultiplier();
 });
 
-final upgradeCardDataProvider = Provider.family<Map<String, dynamic>, String>((ref, upgradeId) {
+final upgradeCardDataProvider =
+    Provider.family<Map<String, dynamic>, String>((ref, upgradeId) {
   final upgradeLevels = ref.watch(upgradeLevelsProvider);
   final rebirthData = ref.watch(rebirthDataProvider);
   final upgrade = allUpgrades.firstWhere((u) => u.id == upgradeId);
-  
+
   final currentLevel = upgradeLevels[upgradeId] ?? 0;
   final isMaxed = currentLevel >= upgrade.maxLevel;
   final isLocked = rebirthData.ascensionCount < upgrade.ascensionRequirement;
-  
+
   return {
     'currentLevel': currentLevel,
     'isMaxed': isMaxed,
@@ -149,38 +155,40 @@ final upgradeCardDataProvider = Provider.family<Map<String, dynamic>, String>((r
   };
 });
 
-final allUpgradesDataProvider = Provider<Map<String, Map<String, dynamic>>>((ref) {
+final allUpgradesDataProvider =
+    Provider<Map<String, Map<String, dynamic>>>((ref) {
   final upgradeLevels = ref.watch(upgradeLevelsProvider);
   final rebirthData = ref.watch(rebirthDataProvider);
-  
+
   final Map<String, Map<String, dynamic>> upgradesData = {};
-  
+
   for (final upgrade in allUpgrades) {
     final currentLevel = upgradeLevels[upgrade.id] ?? 0;
     final isMaxed = currentLevel >= upgrade.maxLevel;
     final isLocked = rebirthData.ascensionCount < upgrade.ascensionRequirement;
-    
+
     upgradesData[upgrade.id] = {
       'currentLevel': currentLevel,
       'isMaxed': isMaxed,
       'isLocked': isLocked,
     };
   }
-  
+
   return upgradesData;
 });
 
-final barrierProgressProvider = Provider.family<double, String>((ref, upgradeId) {
+final barrierProgressProvider =
+    Provider.family<double, String>((ref, upgradeId) {
   final fuba = ref.watch(fubaProvider);
   final generatorsOwned = ref.watch(generatorsProvider);
-  
+
   // Cache simples para evitar recálculos
   final upgrade = allUpgrades.firstWhere((u) => u.id == upgradeId);
-  
+
   // Determina qual barrier usar baseado no upgrade
   final barriers = DifficultyBarrierManager.getBarriersForCategory('upgrade');
   DifficultyBarrier? barrier;
-  
+
   switch (upgrade.id) {
     case 'auto_clicker':
     case 'click_power':
@@ -197,15 +205,14 @@ final barrierProgressProvider = Provider.family<double, String>((ref, upgradeId)
       barrier = barriers[2];
       break;
   }
-  
+
   if (barrier == null) return 0.0;
-  
+
   // Otimização: se já está desbloqueado, retorna 1.0 sem cálculos custosos
   if (barrier.isUnlocked(fuba, generatorsOwned)) {
     return 1.0;
   }
-  
+
   final result = barrier.getProgress(fuba, generatorsOwned);
   return result;
 });
-
