@@ -98,11 +98,11 @@ extension RebirthTierExtension on RebirthTier {
   double getLogarithmicGain(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return 1.15 * (1 + log(currentCount + 1) * 0.16);
+        return 1.5 + log(currentCount + 1) * 0.5;
       case RebirthTier.ascension:
-        return 2.5 * log(currentCount + 1) + 1.2;
-      case RebirthTier.transcendence:
         return 4.0 * log(currentCount + 1) + 1.5;
+      case RebirthTier.transcendence:
+        return 9.0 * log(currentCount + 1) + 3.0;
       case RebirthTier.furuborus:
         return 1.0;
     }
@@ -119,22 +119,22 @@ extension RebirthTierExtension on RebirthTier {
       case RebirthTier.rebirth:
         return base;
       case RebirthTier.ascension:
-        const softCap = 8.0;
-        const hardCap = 18.0;
+        const softCap = 20.0;
+        const hardCap = 50.0;
         if (base <= softCap) {
           return base;
         }
         final excess = base - softCap;
-        final withSoftCap = softCap + excess * 0.1;
+        final withSoftCap = softCap + excess * 0.25;
         return withSoftCap < hardCap ? withSoftCap : hardCap;
       case RebirthTier.transcendence:
-        const softCap = 12.0;
-        const hardCap = 30.0;
+        const softCap = 40.0;
+        const hardCap = 100.0;
         if (base <= softCap) {
           return base;
         }
         final excess = base - softCap;
-        final withSoftCap = softCap + excess * 0.1;
+        final withSoftCap = softCap + excess * 0.25;
         return withSoftCap < hardCap ? withSoftCap : hardCap;
       case RebirthTier.furuborus:
         return 1.0;
