@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +39,10 @@ import '../rebirth/rebirth_upgrades_page.dart';
 import '../achievements/components/achievement_popup.dart';
 import '../account/account_settings.dart';
 import '../ranking/ranking_page.dart';
+import '../campaign/campaign_page.dart';
+import '../../providers/random_event_provider.dart';
+import '../../providers/campaign_provider.dart';
+import '../../models/random_event.dart';
 
 class _MenuItemData {
   final IconData icon;
@@ -81,6 +86,10 @@ class _HomePageState extends ConsumerState<HomePage>
   double _totalClickFuba = 0;
   DateTime _lastClickTimeForZen = DateTime.now();
   final DateTime _appStartTime = DateTime.now();
+
+  // Eventos aleatórios
+  int _eventTickCounter = 0;
+  int _nextEventIn = 240; // first event in ~4 min
 
   @override
   void initState() {
@@ -181,9 +190,49 @@ class _HomePageState extends ConsumerState<HomePage>
                   context,
                 );
           }
+
+          // Auto-prestige
+          _checkAutoPrestige();
+
+          // Random events
+          _tickRandomEvent();
         }
       },
     );
+  }
+
+  void _checkAutoPrestige() {
+    final level =
+        ref.read(upgradeNotifierProvider).getAutoPrestigeLevel();
+    if (level <= 0) return;
+    final rebirthNotifier = ref.read(rebirthNotifierProvider);
+    if (level >= 3 &&
+        ref.read(canRebirthProvider(RebirthTier.transcendence))) {
+      rebirthNotifier.performRebirth(RebirthTier.transcendence);
+    } else if (level >= 2 &&
+        ref.read(canRebirthProvider(RebirthTier.ascension))) {
+      rebirthNotifier.performRebirth(RebirthTier.ascension);
+    } else if (level >= 1 &&
+        ref.read(canRebirthProvider(RebirthTier.rebirth))) {
+      rebirthNotifier.performRebirth(RebirthTier.rebirth);
+    }
+  }
+
+  void _tickRandomEvent() {
+    // Expire old events
+    final current = ref.read(randomEventProvider);
+    if (current != null && current.isDone) {
+      ref.read(randomEventProvider.notifier).state = null;
+    }
+
+    if (ref.read(randomEventProvider) != null) return;
+
+    _eventTickCounter++;
+    if (_eventTickCounter >= _nextEventIn) {
+      _eventTickCounter = 0;
+      _nextEventIn = 180 + Random().nextInt(180); // 3-6 min
+      ref.read(randomEventProvider.notifier).state = RandomEvent.random();
+    }
   }
 
   @override
@@ -436,6 +485,22 @@ class _HomePageState extends ConsumerState<HomePage>
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const RankingPage(),
+            ),
+          );
+        },
+      ),
+      _MenuItemData(
+        icon: Icons.sports_esports,
+        label: 'Campanha',
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEF4444), Color(0xFFB45309)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CampaignPage(),
             ),
           );
         },
@@ -1059,6 +1124,7 @@ class _HomePageState extends ConsumerState<HomePage>
             child: Column(
               children: [
                 const SizedBox(height: 8),
+                _buildEventBanner(),
                 _buildTitle(),
                 const SizedBox(height: 4),
                 _buildCounter(),
@@ -1266,13 +1332,16 @@ class _HomePageState extends ConsumerState<HomePage>
 
     final potionClickPowerEfficient =
         EfficientNumber.fromValues(potionClickPower, 0);
+    final eventClickMult = ref.read(eventClickMultiplierProvider);
+    final eventClickEfficient = EfficientNumber.fromValues(eventClickMult, 0);
 
     final totalClickMultiplier = clickMultiplier *
         achievementMultiplier *
         accessoryMultiplier *
         rebirthMultiplier *
         oneTimeMultiplier *
-        potionClickPowerEfficient;
+        potionClickPowerEfficient *
+        eventClickEfficient;
 
     final clickValue = totalClickMultiplier;
 
@@ -1425,6 +1494,74 @@ class _HomePageState extends ConsumerState<HomePage>
             .updateFubaPerClick(fubaPerClick, context);
       }
     }
+  }
+
+  Widget _buildEventBanner() {
+    final event = ref.watch(randomEventProvider);
+    if (event == null) return const SizedBox.shrink();
+
+    final isActive = event.activated && !event.isEffectExpired;
+    final isPending = !event.activated && !event.isClaimExpired;
+    if (!isActive && !isPending) return const SizedBox.shrink();
+
+    final color = isActive ? Colors.green.shade700 : Colors.amber.shade700;
+
+    return GestureDetector(
+      onTap: isPending
+          ? () {
+              event.activate();
+              ref.read(randomEventProvider.notifier).state = event;
+            }
+          : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.7), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Text(event.emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(event.title,
+                      style: TextStyle(
+                          color: isActive ? Colors.greenAccent : Colors.amber,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12)),
+                  Text(event.description,
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 10)),
+                ],
+              ),
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                isActive
+                    ? '${event.secondsRemaining}s'
+                    : 'TOQUE! ${event.secondsRemaining}s',
+                style: TextStyle(
+                    color: isActive ? Colors.greenAccent : Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildDetailedMultipliers(WidgetRef ref) {

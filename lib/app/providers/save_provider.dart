@@ -12,6 +12,7 @@ import 'forus_upgrade_provider.dart';
 import 'visual_settings_provider.dart';
 import 'sync_notifier.dart';
 import 'potion_provider.dart';
+import 'campaign_provider.dart';
 import '../models/potion_color.dart';
 import '../models/potion_effect.dart';
 
@@ -65,6 +66,11 @@ class SaveNotifier extends StateNotifier<bool> {
       final activeEffects = ref.read(activePotionEffectsProvider);
       final permanentMultiplier = ref.read(permanentPotionMultiplierProvider);
       final activePotionCount = ref.read(activePotionCountProvider);
+
+      final campaignMaxPhase = ref.read(campaignMaxPhaseProvider);
+      if (campaignMaxPhase > 0) {
+        upgradesWithForus['_campaign_max_phase'] = campaignMaxPhase;
+      }
 
       final cauldronJson = <String, int>{};
       cauldron.forEach((color, value) {
@@ -155,6 +161,8 @@ class SaveNotifier extends StateNotifier<bool> {
       data.upgrades.forEach((key, value) {
         if (key.startsWith('forus_')) {
           forusUpgradesOwned.add(key.substring(6));
+        } else if (key == '_campaign_max_phase') {
+          ref.read(campaignMaxPhaseProvider.notifier).state = value;
         } else {
           rebirthUpgrades[key] = value;
         }

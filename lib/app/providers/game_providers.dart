@@ -6,6 +6,7 @@ import 'rebirth_provider.dart';
 import 'rebirth_upgrade_provider.dart';
 import 'achievement_provider.dart';
 import 'potion_provider.dart';
+import 'random_event_provider.dart';
 import '../models/potion_effect.dart';
 
 
@@ -17,12 +18,24 @@ final generatorsProvider = StateProvider<List<int>>((ref) {
   return List.filled(availableGenerators.length, 0);
 });
 
+double _generatorEvolutionMultiplier(int owned) {
+  if (owned >= 1000) return 5.0;
+  if (owned >= 500) return 2.5;
+  if (owned >= 250) return 1.75;
+  if (owned >= 100) return 1.25;
+  return 1.0;
+}
+
 final baseAutoProductionProvider = Provider<EfficientNumber>((ref) {
   final generators = ref.watch(generatorsProvider);
   EfficientNumber totalProduction = const EfficientNumber.zero();
 
   for (int i = 0; i < availableGenerators.length; i++) {
-    totalProduction += availableGenerators[i].getProduction(generators[i]);
+    final owned = generators[i];
+    var prod = availableGenerators[i].getProduction(owned);
+    final evo = _generatorEvolutionMultiplier(owned);
+    if (evo > 1.0) prod *= EfficientNumber.fromValues(evo, 0);
+    totalProduction += prod;
   }
 
   return totalProduction;
@@ -64,20 +77,23 @@ EfficientNumber calculateEffectiveMultiplier(Ref ref) {
   final oneTimeMultiplier = ref.watch(oneTimeMultiplierProvider);
   final accessoryMultiplier = ref.watch(accessoryMultiplierProvider);
   final potionMultiplier = ref.watch(potionProductionMultiplierProvider);
-  
+  final eventMultiplier = ref.watch(eventProductionMultiplierProvider);
+
   final potionMultiplierEfficient = EfficientNumber.fromValues(potionMultiplier, 0);
-  
-  final totalMultiplier = rebirthMultiplier * 
-      upgradeMultiplier * 
-      achievementMultiplier * 
+  final eventMultiplierEfficient = EfficientNumber.fromValues(eventMultiplier, 0);
+
+  final totalMultiplier = rebirthMultiplier *
+      upgradeMultiplier *
+      achievementMultiplier *
       oneTimeMultiplier *
       accessoryMultiplier *
-      potionMultiplierEfficient;
-  
+      potionMultiplierEfficient *
+      eventMultiplierEfficient;
+
   if (totalMultiplier.mantissa < 1.0) {
     return const EfficientNumber.one();
   }
-  
+
   return totalMultiplier;
 }
 

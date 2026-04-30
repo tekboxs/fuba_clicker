@@ -119,6 +119,10 @@ class UpgradeNotifier {
   double getTokenMultiplier() {
     return getUpgradeEffect(UpgradeType.tokenMultiplier);
   }
+
+  int getAutoPrestigeLevel() {
+    return getUpgradeEffect(UpgradeType.autoPrestige).toInt();
+  }
 }
 
 final upgradeNotifierProvider = Provider<UpgradeNotifier>((ref) {

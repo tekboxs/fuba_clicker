@@ -595,17 +595,23 @@ class _GeneratorCardState extends State<_GeneratorCard>
                                         CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
-                                        widget.isUnlocked
-                                            ? widget.generator.name
-                                            : '? ? ?',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: widget.isUnlocked
-                                              ? AppColors.foreground
-                                              : Colors.grey,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            widget.isUnlocked
+                                                ? widget.generator.name
+                                                : '? ? ?',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: widget.isUnlocked
+                                                  ? AppColors.foreground
+                                                  : Colors.grey,
+                                            ),
+                                          ),
+                                          if (widget.isUnlocked)
+                                            _buildEvolutionBadge(widget.owned),
+                                        ],
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
@@ -713,6 +719,43 @@ class _GeneratorCardState extends State<_GeneratorCard>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEvolutionBadge(int owned) {
+    String emoji;
+    String label;
+    Color color;
+    if (owned >= 1000) {
+      emoji = '✨';
+      label = 'x5';
+      color = Colors.purpleAccent;
+    } else if (owned >= 500) {
+      emoji = '🌟';
+      label = 'x2.5';
+      color = Colors.orangeAccent;
+    } else if (owned >= 250) {
+      emoji = '💫';
+      label = 'x1.75';
+      color = Colors.cyanAccent;
+    } else if (owned >= 100) {
+      emoji = '⭐';
+      label = 'x1.25';
+      color = Colors.yellow;
+    } else {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      margin: const EdgeInsets.only(left: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text('$emoji $label',
+          style: TextStyle(
+              color: color, fontSize: 9, fontWeight: FontWeight.bold)),
     );
   }
 

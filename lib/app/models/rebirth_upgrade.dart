@@ -12,6 +12,7 @@ enum UpgradeType {
   keepItems,
   keepGenerators,
   tokenMultiplier,
+  autoPrestige,
 }
 
 class RebirthUpgrade {
@@ -68,6 +69,8 @@ class RebirthUpgrade {
         return level * 0.1;
       case UpgradeType.tokenMultiplier:
         return 1.0 + (level * 1.0);
+      case UpgradeType.autoPrestige:
+        return level.toDouble(); // 1=auto-rebirth, 2=+ascensão, 3=+transcendência
     }
   }
 
@@ -103,6 +106,11 @@ class RebirthUpgrade {
         return '+${(getEffectValue(level) * 100).toStringAsFixed(0)}% geradores mantidos';
       case UpgradeType.tokenMultiplier:
         return 'x${getEffectValue(level).toStringAsFixed(1)} tokens celestiais';
+      case UpgradeType.autoPrestige:
+        if (level == 0) return 'Inativo';
+        if (level == 1) return 'Auto-Rebirth ativo';
+        if (level == 2) return 'Auto-Rebirth + Auto-Ascensão';
+        return 'Auto-Rebirth + Ascensão + Transcendência';
     }
   }
 }
@@ -233,6 +241,17 @@ const List<RebirthUpgrade> allUpgrades = [
     baseTokenCost: 1000,
     maxLevel: 10,
     ascensionRequirement: 70,
+  ),
+  RebirthUpgrade(
+    id: 'auto_prestige',
+    name: 'Auto Prestígio',
+    emoji: '🤖',
+    description:
+        'Realiza prestige automaticamente ao atingir o requisito. Nv1=Rebirth, Nv2=+Ascensão, Nv3=+Transcendência',
+    type: UpgradeType.autoPrestige,
+    baseTokenCost: 2500,
+    maxLevel: 3,
+    ascensionRequirement: 20,
   ),
 ];
 

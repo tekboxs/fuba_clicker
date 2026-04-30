@@ -9,6 +9,7 @@ import 'save_provider.dart';
 import 'rebirth_upgrade_provider.dart';
 import 'forus_upgrade_provider.dart';
 import 'potion_provider.dart';
+import 'random_event_provider.dart';
 import '../models/potion_effect.dart';
  
 final rebirthDataProvider = StateProvider<RebirthData>((ref) {
@@ -107,7 +108,8 @@ class RebirthNotifier {
     }
     final tokenGainMultiplier = 1.0 + (potionTokenGain / 100.0);
     
-    final finalTokenReward = tokenReward * tokenMultiplier * tokenGainMultiplier;
+    final eventTokenMult = ref.read(eventTokenMultiplierProvider);
+    final finalTokenReward = tokenReward * tokenMultiplier * tokenGainMultiplier * eventTokenMult;
 
     _resetProgress(tier);
 
@@ -221,6 +223,20 @@ class RebirthNotifier {
         celestialTokens: currentData.celestialTokens - amount,
       );
     }
+  }
+
+  void addTokens(double amount) {
+    final currentData = ref.read(rebirthDataProvider);
+    ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+      celestialTokens: currentData.celestialTokens + amount,
+    );
+  }
+
+  void addForus(double amount) {
+    final currentData = ref.read(rebirthDataProvider);
+    ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
+      forus: currentData.forus + amount,
+    );
   }
 
   void addDebugRebirth(RebirthTier tier, int amount) {
