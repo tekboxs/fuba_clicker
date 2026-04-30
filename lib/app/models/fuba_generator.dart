@@ -51,26 +51,26 @@ class FubaGenerator {
 
   double _getLateGameCostMultiplier() {
     if (unlockRequirement >= 50) {
-      return 5.0;
-    } else if (unlockRequirement >= 40) {
-      return 4.0;
-    } else if (unlockRequirement >= 30) {
-      return 3.0;
-    } else if (unlockRequirement >= 25) {
       return 2.0;
+    } else if (unlockRequirement >= 40) {
+      return 1.7;
+    } else if (unlockRequirement >= 30) {
+      return 1.4;
+    } else if (unlockRequirement >= 25) {
+      return 1.2;
     }
     return 1.0;
   }
 
   double _getLateGameProductionMultiplier() {
     if (unlockRequirement >= 50) {
-      return 0.2;
+      return 0.55;
     } else if (unlockRequirement >= 40) {
-      return 0.3;
+      return 0.65;
     } else if (unlockRequirement >= 30) {
-      return 0.4;
+      return 0.75;
     } else if (unlockRequirement >= 25) {
-      return 0.5;
+      return 0.85;
     }
     return 1.0;
   }
@@ -78,27 +78,35 @@ class FubaGenerator {
   /// Calcula o custo baseado na quantidade já possuída (crescimento exponencial suavizado)
   EfficientNumber getCost(int owned) {
     final lateGameCostMultiplier = _getLateGameCostMultiplier();
-    final adjustedBaseCost = baseCost * EfficientNumber.fromValues(lateGameCostMultiplier, 0);
-    
+    final adjustedBaseCost =
+        baseCost * EfficientNumber.fromValues(lateGameCostMultiplier, 0);
+
     if (owned <= 50) {
-      return adjustedBaseCost * EfficientNumber.fromPower(1.20, owned.toDouble());
+      return adjustedBaseCost *
+          EfficientNumber.fromPower(1.20, owned.toDouble());
     } else if (owned <= 200) {
-      final baseCost50 = adjustedBaseCost * EfficientNumber.fromPower(1.20, 50.0);
+      final baseCost50 =
+          adjustedBaseCost * EfficientNumber.fromPower(1.20, 50.0);
       final excessOwned = owned - 50;
-      return baseCost50 * EfficientNumber.fromPower(1.18, excessOwned.toDouble());
+      return baseCost50 *
+          EfficientNumber.fromPower(1.18, excessOwned.toDouble());
     } else if (owned <= 500) {
-      final baseCost50 = adjustedBaseCost * EfficientNumber.fromPower(1.20, 50.0);
+      final baseCost50 =
+          adjustedBaseCost * EfficientNumber.fromPower(1.20, 50.0);
       final baseCost200 = baseCost50 * EfficientNumber.fromPower(1.18, 150.0);
       final excessOwned = owned - 200;
-      return baseCost200 * EfficientNumber.fromPower(1.15, excessOwned.toDouble());
+      return baseCost200 *
+          EfficientNumber.fromPower(1.15, excessOwned.toDouble());
     } else {
-      final baseCost50 = adjustedBaseCost * EfficientNumber.fromPower(1.20, 50.0);
+      final baseCost50 =
+          adjustedBaseCost * EfficientNumber.fromPower(1.20, 50.0);
       final baseCost200 = baseCost50 * EfficientNumber.fromPower(1.18, 150.0);
       final baseCost500 = baseCost200 * EfficientNumber.fromPower(1.15, 300.0);
       final excessOwned = owned - 500;
-      
+
       final rate = 1.12 - (excessOwned / 10000.0).clamp(0.0, 0.05);
-      return baseCost500 * EfficientNumber.fromPower(rate, excessOwned.toDouble());
+      return baseCost500 *
+          EfficientNumber.fromPower(rate, excessOwned.toDouble());
     }
   }
 
@@ -107,21 +115,27 @@ class FubaGenerator {
     if (owned <= 0) return const EfficientNumber.zero();
 
     final lateGameProductionMultiplier = _getLateGameProductionMultiplier();
-    final adjustedBaseProduction = baseProduction * EfficientNumber.fromValues(lateGameProductionMultiplier, 0);
+    final adjustedBaseProduction = baseProduction *
+        EfficientNumber.fromValues(lateGameProductionMultiplier, 0);
 
     if (owned <= 50) {
-      return adjustedBaseProduction * EfficientNumber.fromValues(owned.toDouble(), 0);
+      return adjustedBaseProduction *
+          EfficientNumber.fromValues(owned.toDouble(), 0);
     }
 
     if (owned <= 100) {
-      final linearBase = adjustedBaseProduction * EfficientNumber.fromValues(50.0, 0);
+      final linearBase =
+          adjustedBaseProduction * EfficientNumber.fromValues(50.0, 0);
       final excessOwned = owned - 50;
       final diminishingFactor = 1.0 - (excessOwned / 50.0) * 0.3;
-      return linearBase * EfficientNumber.fromValues(1.0 + (excessOwned * diminishingFactor / 50.0), 0);
+      return linearBase *
+          EfficientNumber.fromValues(
+              1.0 + (excessOwned * diminishingFactor / 50.0), 0);
     }
 
     if (owned <= 300) {
-      final tier1Max = adjustedBaseProduction * EfficientNumber.fromValues(100.0, 0);
+      final tier1Max =
+          adjustedBaseProduction * EfficientNumber.fromValues(100.0, 0);
       final excessOwned = owned - 100;
       final power = excessOwned / 200.0;
       return tier1Max * EfficientNumber.fromPower(1 + power * 0.5, 8.0);
@@ -138,11 +152,13 @@ class FubaGenerator {
     final excessOwned = owned - 700;
     final power = excessOwned / 700.0;
     final diminishingRate = 0.2 - (excessOwned / 50000.0).clamp(0.0, 0.1);
-    return tier3Value * EfficientNumber.fromPower(1 + power * diminishingRate, 50.0);
+    return tier3Value *
+        EfficientNumber.fromPower(1 + power * diminishingRate, 50.0);
   }
 
   EfficientNumber _calculateTier2Max(EfficientNumber adjustedBaseProduction) {
-    final linearBase = adjustedBaseProduction * EfficientNumber.fromValues(100.0, 0);
+    final linearBase =
+        adjustedBaseProduction * EfficientNumber.fromValues(100.0, 0);
     return linearBase * EfficientNumber.fromPower(2.0, 1.0);
   }
 
@@ -445,8 +461,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Paradoxo Temporal',
     emoji: '🔄',
-    baseCost: EfficientNumber.parse('720000000000000000'),
-    baseProduction: EfficientNumber.parse('2200000000000000'),
+    baseCost: EfficientNumber.parse('1e22'),
+    baseProduction: EfficientNumber.parse('1e19'),
     description: 'Cria fubá do nada através de paradoxos',
     unlockRequirement: 25,
     tier: GeneratorTier.celestial,
@@ -454,8 +470,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Mente Suprema',
     emoji: '🎯',
-    baseCost: EfficientNumber.parse('4800000000000000000'),
-    baseProduction: EfficientNumber.parse('14800000000000000'),
+    baseCost: EfficientNumber.parse('1e31'),
+    baseProduction: EfficientNumber.parse('1e28'),
     description: 'A consciência que sonhou todo o fubá',
     unlockRequirement: 26,
     tier: GeneratorTier.transcendent,
@@ -463,8 +479,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Nada Absoluto',
     emoji: '🕳️',
-    baseCost: EfficientNumber.parse('1e50'),
-    baseProduction: EfficientNumber.parse('1e30'),
+    baseCost: EfficientNumber.parse('1e40'),
+    baseProduction: EfficientNumber.parse('1e36'),
     description: 'Do nada absoluto, fubá emerge',
     unlockRequirement: 27,
     tier: GeneratorTier.transcendent,
@@ -472,8 +488,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Nexus Primordial',
     emoji: '🌟',
-    baseCost: EfficientNumber.parse('1e80'),
-    baseProduction: EfficientNumber.parse('1e50'),
+    baseCost: EfficientNumber.parse('1e48'),
+    baseProduction: EfficientNumber.parse('1e44'),
     description:
         'O ponto de convergência onde todas as realidades se encontram para gerar fubá',
     unlockRequirement: 28,
@@ -482,8 +498,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Eternidade',
     emoji: '⏳',
-    baseCost: EfficientNumber.parse('1e120'),
-    baseProduction: EfficientNumber.parse('1e70'),
+    baseCost: EfficientNumber.parse('1e57'),
+    baseProduction: EfficientNumber.parse('1e52'),
     description: 'O fubá que existe antes e depois do tempo',
     unlockRequirement: 29,
     tier: GeneratorTier.primordial,
@@ -491,8 +507,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A Verdade',
     emoji: '🔍',
-    baseCost: EfficientNumber.parse('1e170'),
-    baseProduction: EfficientNumber.parse('1e100'),
+    baseCost: EfficientNumber.parse('1e67'),
+    baseProduction: EfficientNumber.parse('1e61'),
     description: 'A verdade final: tudo sempre foi fubá',
     unlockRequirement: 30,
     tier: GeneratorTier.truth,
@@ -500,8 +516,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Bolo Desperto',
     emoji: '🧁',
-    baseCost: EfficientNumber.parse('1e220'),
-    baseProduction: EfficientNumber.parse('1e130'),
+    baseCost: EfficientNumber.parse('1e78'),
+    baseProduction: EfficientNumber.parse('1e71'),
     description: 'O bolo ganhou vida e produz fubá',
     unlockRequirement: 31,
     tier: GeneratorTier.infinity,
@@ -509,8 +525,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Padeiro Divino',
     emoji: '👨‍🍳',
-    baseCost: EfficientNumber.parse('1e280'),
-    baseProduction: EfficientNumber.parse('1e160'),
+    baseCost: EfficientNumber.parse('1e90'),
+    baseProduction: EfficientNumber.parse('1e82'),
     description: 'O padeiro dos deuses trabalha para você',
     unlockRequirement: 32,
     tier: GeneratorTier.omnipotent,
@@ -518,8 +534,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A grande barreira da realidade',
     emoji: '▓',
-    baseCost: EfficientNumber.parse('1e350'),
-    baseProduction: EfficientNumber.parse('1e200'),
+    baseCost: EfficientNumber.parse('1e103'),
+    baseProduction: EfficientNumber.parse('1e94'),
     description: 'O maior desafio para a produção de fubá inifita',
     unlockRequirement: 33,
     tier: GeneratorTier.supreme,
@@ -528,8 +544,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Fubá Ancestral',
     emoji: '🏺',
-    baseCost: EfficientNumber.parse('1e450'),
-    baseProduction: EfficientNumber.parse('1e220'),
+    baseCost: EfficientNumber.parse('1e117'),
+    baseProduction: EfficientNumber.parse('1e107'),
     description: 'O fubá dos primeiros tempos, guardado em ânforas sagradas',
     unlockRequirement: 34,
     tier: GeneratorTier.cosmic,
@@ -537,8 +553,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Moedor Cósmico',
     emoji: '⭐',
-    baseCost: EfficientNumber.parse('1e500'),
-    baseProduction: EfficientNumber.parse('1e250'),
+    baseCost: EfficientNumber.parse('1e132'),
+    baseProduction: EfficientNumber.parse('1e121'),
     description: 'Um moedor que tritura estrelas em fubá',
     unlockRequirement: 35,
     tier: GeneratorTier.stellar,
@@ -546,8 +562,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Memória do Fubá',
     emoji: '💾',
-    baseCost: EfficientNumber.parse('1e550'),
-    baseProduction: EfficientNumber.parse('1e280'),
+    baseCost: EfficientNumber.parse('1e148'),
+    baseProduction: EfficientNumber.parse('1e136'),
     description: 'A memória coletiva de todo fubá já produzido',
     unlockRequirement: 36,
     tier: GeneratorTier.divine,
@@ -555,8 +571,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Forno Primordial',
     emoji: '🔥',
-    baseCost: EfficientNumber.parse('1e600'),
-    baseProduction: EfficientNumber.parse('1e310'),
+    baseCost: EfficientNumber.parse('1e165'),
+    baseProduction: EfficientNumber.parse('1e151'),
     description: 'O primeiro forno que existiu, antes do tempo',
     unlockRequirement: 37,
     tier: GeneratorTier.celestial,
@@ -564,8 +580,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Receita Universal',
     emoji: '📜',
-    baseCost: EfficientNumber.parse('1e650'),
-    baseProduction: EfficientNumber.parse('1e340'),
+    baseCost: EfficientNumber.parse('1e183'),
+    baseProduction: EfficientNumber.parse('1e167'),
     description: 'A receita que criou o próprio fubá',
     unlockRequirement: 38,
     tier: GeneratorTier.eternal,
@@ -573,8 +589,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Sonho de Fubá',
     emoji: '💭',
-    baseCost: EfficientNumber.parse('1e700'),
-    baseProduction: EfficientNumber.parse('1e370'),
+    baseCost: EfficientNumber.parse('1e202'),
+    baseProduction: EfficientNumber.parse('1e184'),
     description: 'Onde os sonhos se tornam fubá tangível',
     unlockRequirement: 39,
     tier: GeneratorTier.transcendent,
@@ -582,8 +598,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Tempo do Fubá',
     emoji: '⏰',
-    baseCost: EfficientNumber.parse('1e750'),
-    baseProduction: EfficientNumber.parse('1e400'),
+    baseCost: EfficientNumber.parse('1e222'),
+    baseProduction: EfficientNumber.parse('1e203'),
     description: 'O tempo em si produz fubá em todas as direções',
     unlockRequirement: 40,
     tier: GeneratorTier.eternal,
@@ -591,8 +607,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Observador do Fubá',
     emoji: '👀',
-    baseCost: EfficientNumber.parse('1e800'),
-    baseProduction: EfficientNumber.parse('1e430'),
+    baseCost: EfficientNumber.parse('1e243'),
+    baseProduction: EfficientNumber.parse('1e223'),
     description: 'A consciência que observa e cria fubá pela observação',
     unlockRequirement: 41,
     tier: GeneratorTier.primordial,
@@ -600,8 +616,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Fubá do Vazio',
     emoji: '🌑',
-    baseCost: EfficientNumber.parse('1e850'),
-    baseProduction: EfficientNumber.parse('1e440'),
+    baseCost: EfficientNumber.parse('1e267'),
+    baseProduction: EfficientNumber.parse('1e245'),
     description: 'Do nada absoluto, fubá emerge espontaneamente',
     unlockRequirement: 42,
     tier: GeneratorTier.truth,
@@ -610,8 +626,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A Primeira Receita',
     emoji: '📋',
-    baseCost: EfficientNumber.parse('1e1100'),
-    baseProduction: EfficientNumber.parse('1e520'),
+    baseCost: EfficientNumber.parse('1e293'),
+    baseProduction: EfficientNumber.parse('1e269'),
     description: 'A primeira receita que criou o fubá no início de tudo',
     unlockRequirement: 43,
     tier: GeneratorTier.infinity,
@@ -619,8 +635,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'Fubá Infinito',
     emoji: '∞',
-    baseCost: EfficientNumber.parse('1e1250'),
-    baseProduction: EfficientNumber.parse('1e580'),
+    baseCost: EfficientNumber.parse('1e322'),
+    baseProduction: EfficientNumber.parse('1e296'),
     description: 'Um fubá que pode ser contado infinitamente',
     unlockRequirement: 44,
     tier: GeneratorTier.omnipotent,
@@ -628,8 +644,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Paradoxo do Fubá',
     emoji: '🌀',
-    baseCost: EfficientNumber.parse('1e1400'),
-    baseProduction: EfficientNumber.parse('1e640'),
+    baseCost: EfficientNumber.parse('1e354'),
+    baseProduction: EfficientNumber.parse('1e326'),
     description: 'Um paradoxo que se resolve em fubá puro',
     unlockRequirement: 45,
     tier: GeneratorTier.supreme,
@@ -637,8 +653,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A Última Pergunta do Fubá',
     emoji: '❔',
-    baseCost: EfficientNumber.parse('1e1600'),
-    baseProduction: EfficientNumber.parse('1e700'),
+    baseCost: EfficientNumber.parse('1e388'),
+    baseProduction: EfficientNumber.parse('1e357'),
     description: 'A pergunta cuja resposta é sempre fubá',
     unlockRequirement: 46,
     tier: GeneratorTier.ultimate,
@@ -646,8 +662,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Jogo do Fubá',
     emoji: '🎮',
-    baseCost: EfficientNumber.parse('1e1800'),
-    baseProduction: EfficientNumber.parse('1e760'),
+    baseCost: EfficientNumber.parse('1e425'),
+    baseProduction: EfficientNumber.parse('1e391'),
     description: 'O jogo que joga a si mesmo, gerando fubá',
     unlockRequirement: 47,
     tier: GeneratorTier.truth,
@@ -655,8 +671,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A Barreira do Fubá',
     emoji: '🚧',
-    baseCost: EfficientNumber.parse('1e2000'),
-    baseProduction: EfficientNumber.parse('1e820'),
+    baseCost: EfficientNumber.parse('1e465'),
+    baseProduction: EfficientNumber.parse('1e429'),
     description: 'A barreira final que protege o fubá supremo',
     unlockRequirement: 48,
     tier: GeneratorTier.truth,
@@ -665,8 +681,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Armazém do Fubá',
     emoji: '🏬',
-    baseCost: EfficientNumber.parse('1e1650'),
-    baseProduction: EfficientNumber.parse('1e770'),
+    baseCost: EfficientNumber.parse('1e508'),
+    baseProduction: EfficientNumber.parse('1e470'),
     description: 'O armazém que contém todo o fubá já produzido',
     unlockRequirement: 49,
     tier: GeneratorTier.truth,
@@ -674,8 +690,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A Variável do Fubá',
     emoji: '🌐',
-    baseCost: EfficientNumber.parse('1e1725'),
-    baseProduction: EfficientNumber.parse('1e820'),
+    baseCost: EfficientNumber.parse('1e554'),
+    baseProduction: EfficientNumber.parse('1e515'),
     description: 'A variável que controla todo o fubá do universo',
     unlockRequirement: 50,
     tier: GeneratorTier.truth,
@@ -683,8 +699,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Ciclo Eterno do Fubá',
     emoji: '♻️',
-    baseCost: EfficientNumber.parse('1e1800'),
-    baseProduction: EfficientNumber.parse('1e870'),
+    baseCost: EfficientNumber.parse('1e603'),
+    baseProduction: EfficientNumber.parse('1e563'),
     description: 'Um ciclo que nunca termina, gerando fubá eternamente',
     unlockRequirement: 51,
     tier: GeneratorTier.truth,
@@ -692,8 +708,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A Receita Recursiva',
     emoji: '📝',
-    baseCost: EfficientNumber.parse('1e1875'),
-    baseProduction: EfficientNumber.parse('1e910'),
+    baseCost: EfficientNumber.parse('1e660'),
+    baseProduction: EfficientNumber.parse('1e619'),
     description: 'Uma receita que se chama a si mesma, criando fubá',
     unlockRequirement: 52,
     tier: GeneratorTier.truth,
@@ -701,8 +717,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Coletor de Fubá',
     emoji: '🗑️',
-    baseCost: EfficientNumber.parse('1e1950'),
-    baseProduction: EfficientNumber.parse('1e950'),
+    baseCost: EfficientNumber.parse('1e722'),
+    baseProduction: EfficientNumber.parse('1e680'),
     description: 'Coleta restos e os transforma em fubá puro',
     unlockRequirement: 53,
     tier: GeneratorTier.truth,
@@ -711,8 +727,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Compilador de Fubá',
     emoji: '🔧',
-    baseCost: EfficientNumber.parse('1e2100'),
-    baseProduction: EfficientNumber.parse('1e900'),
+    baseCost: EfficientNumber.parse('1e790'),
+    baseProduction: EfficientNumber.parse('1e747'),
     description: 'Compila a realidade em fubá executável',
     unlockRequirement: 54,
     tier: GeneratorTier.infinity,
@@ -720,8 +736,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A Biblioteca do Fubá',
     emoji: '📖',
-    baseCost: EfficientNumber.parse('1e2200'),
-    baseProduction: EfficientNumber.parse('1e950'),
+    baseCost: EfficientNumber.parse('1e864'),
+    baseProduction: EfficientNumber.parse('1e821'),
     description: 'A biblioteca infinita de conhecimento sobre fubá',
     unlockRequirement: 55,
     tier: GeneratorTier.omnipotent,
@@ -729,8 +745,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Detector de Fubá',
     emoji: '🔎',
-    baseCost: EfficientNumber.parse('1e2300'),
-    baseProduction: EfficientNumber.parse('1e1000'),
+    baseCost: EfficientNumber.parse('1e945'),
+    baseProduction: EfficientNumber.parse('1e901'),
     description: 'Encontra e corrige problemas na produção de fubá',
     unlockRequirement: 56,
     tier: GeneratorTier.supreme,
@@ -738,8 +754,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A Exceção do Fubá',
     emoji: '🚨',
-    baseCost: EfficientNumber.parse('1e2450'),
-    baseProduction: EfficientNumber.parse('1e1050'),
+    baseCost: EfficientNumber.parse('1e1034'),
+    baseProduction: EfficientNumber.parse('1e990'),
     description: 'Uma exceção que quebra as regras e cria fubá',
     unlockRequirement: 57,
     tier: GeneratorTier.ultimate,
@@ -747,8 +763,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Ponto Nulo do Fubá',
     emoji: '📍',
-    baseCost: EfficientNumber.parse('1e2600'),
-    baseProduction: EfficientNumber.parse('1e1100'),
+    baseCost: EfficientNumber.parse('1e1132'),
+    baseProduction: EfficientNumber.parse('1e1089'),
     description: 'O ponto nulo que aponta para fubá infinito',
     unlockRequirement: 58,
     tier: GeneratorTier.truth,
@@ -756,8 +772,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'A Última Receita',
     emoji: '📄',
-    baseCost: EfficientNumber.parse('1e2800'),
-    baseProduction: EfficientNumber.parse('1e1150'),
+    baseCost: EfficientNumber.parse('1e1240'),
+    baseProduction: EfficientNumber.parse('1e1198'),
     description: 'A receita final que encerra e recria tudo em fubá',
     unlockRequirement: 59,
     tier: GeneratorTier.truth,
@@ -765,8 +781,8 @@ final availableGenerators = [
   FubaGenerator(
     name: 'O Fubá Absoluto',
     emoji: '🎂',
-    baseCost: EfficientNumber.parse('1e3000'),
-    baseProduction: EfficientNumber.parse('1e1200'),
+    baseCost: EfficientNumber.parse('1e1360'),
+    baseProduction: EfficientNumber.parse('1e1320'),
     description: 'O fubá que transcende a própria existência',
     unlockRequirement: 60,
     tier: GeneratorTier.absolute,

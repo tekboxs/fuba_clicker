@@ -54,51 +54,55 @@ extension RebirthTierExtension on RebirthTier {
   double getRequirement(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return _safeCalculateRequirement(1e16, 12, currentCount * 0.8);
+        return _safeCalculateRequirement(1e14, 8, currentCount * 0.72);
       case RebirthTier.ascension:
-        return _safeCalculateRequirement(500e28, 24, currentCount.toDouble() * 1.2);
+        return _safeCalculateRequirement(
+            1e28, 16, currentCount.toDouble() * 1.05);
       case RebirthTier.transcendence:
-        return _safeCalculateRequirement(1e46, 60, currentCount.toDouble() * 1.2);
+        return _safeCalculateRequirement(
+            1e42, 32, currentCount.toDouble() * 1.05);
       case RebirthTier.furuborus:
-        return _safeCalculateRequirement(1e60, 100, currentCount.toDouble());
+        return _safeCalculateRequirement(1e54, 64, currentCount.toDouble());
     }
   }
-  
-  double _safeCalculateRequirement(double base, double multiplier, double exponent) {
+
+  double _safeCalculateRequirement(
+      double base, double multiplier, double exponent) {
     // Evita overflow usando logaritmos para cálculos grandes
     if (exponent > 30) {
       // Para expoentes grandes, usa aproximação logarítmica
       final logBase = log(base);
       final logMultiplier = log(multiplier);
       final logResult = logBase + (logMultiplier * exponent);
-      
+
       // Se o resultado é muito grande, retorna um valor máximo seguro
-      if (logResult > 300) { // e^300 é aproximadamente 1e130
-        return 1e100; // Valor máximo seguro para double
+      if (logResult > 690) {
+        // e^690 fica próximo do limite seguro de double
+        return 1e300;
       }
-      
+
       return exp(logResult);
     }
-    
+
     // Para expoentes pequenos, usa cálculo direto
     final result = base * pow(multiplier, exponent);
-    
+
     // Verifica se o resultado é finito
     if (result.isInfinite || result.isNaN) {
-      return 1e100; // Valor máximo seguro
+      return 1e300;
     }
-    
+
     return result;
   }
 
   double getLogarithmicGain(int currentCount) {
     switch (this) {
       case RebirthTier.rebirth:
-        return 1.05 * (1 + log(currentCount + 1) * 0.1);
+        return 1.15 * (1 + log(currentCount + 1) * 0.16);
       case RebirthTier.ascension:
-        return 2.0 * log(currentCount + 1) + 1.0;
+        return 2.5 * log(currentCount + 1) + 1.2;
       case RebirthTier.transcendence:
-        return 3.0 * log(currentCount + 1) + 1.0;
+        return 4.0 * log(currentCount + 1) + 1.5;
       case RebirthTier.furuborus:
         return 1.0;
     }
@@ -110,13 +114,13 @@ extension RebirthTierExtension on RebirthTier {
     }
 
     final base = getLogarithmicGain(currentCount);
-    
+
     switch (this) {
       case RebirthTier.rebirth:
         return base;
       case RebirthTier.ascension:
-        const softCap = 5.0;
-        const hardCap = 10.0;
+        const softCap = 8.0;
+        const hardCap = 18.0;
         if (base <= softCap) {
           return base;
         }
@@ -124,8 +128,8 @@ extension RebirthTierExtension on RebirthTier {
         final withSoftCap = softCap + excess * 0.1;
         return withSoftCap < hardCap ? withSoftCap : hardCap;
       case RebirthTier.transcendence:
-        const softCap = 8.0;
-        const hardCap = 15.0;
+        const softCap = 12.0;
+        const hardCap = 30.0;
         if (base <= softCap) {
           return base;
         }
@@ -159,25 +163,25 @@ extension RebirthTierExtension on RebirthTier {
 class RebirthData {
   @HiveField(0)
   final int rebirthCount;
-  
+
   @HiveField(1)
   final int ascensionCount;
-  
+
   @HiveField(2)
   final int transcendenceCount;
-  
+
   @HiveField(3)
   final int furuborusCount;
-  
+
   @HiveField(4)
   final double celestialTokens;
-  
+
   @HiveField(5)
   final bool hasUsedOneTimeMultiplier;
-  
+
   @HiveField(6)
   final List<String> usedCoupons;
-  
+
   @HiveField(7)
   final double forus;
 
@@ -218,7 +222,8 @@ class RebirthData {
       transcendenceCount: transcendenceCount ?? this.transcendenceCount,
       furuborusCount: furuborusCount ?? this.furuborusCount,
       celestialTokens: celestialTokens ?? this.celestialTokens,
-      hasUsedOneTimeMultiplier: hasUsedOneTimeMultiplier ?? this.hasUsedOneTimeMultiplier,
+      hasUsedOneTimeMultiplier:
+          hasUsedOneTimeMultiplier ?? this.hasUsedOneTimeMultiplier,
       usedCoupons: usedCoupons ?? this.usedCoupons,
       forus: forus ?? this.forus,
       cauldronUnlocked: cauldronUnlocked ?? this.cauldronUnlocked,
@@ -231,21 +236,24 @@ class RebirthData {
 
     // Rebirth multiplier (logarítmico com base cumulativa)
     if (rebirthCount > 0) {
-      final rebirthGain = RebirthTier.rebirth.getEffectiveMultiplierGain(rebirthCount);
+      final rebirthGain =
+          RebirthTier.rebirth.getEffectiveMultiplierGain(rebirthCount);
       final rebirthMultiplier = EfficientNumber.fromValues(rebirthGain, 0);
       multiplier *= rebirthMultiplier;
     }
 
     // Ascension multiplier (logarítmico com caps)
     if (ascensionCount > 0) {
-      final gainValue = RebirthTier.ascension.getEffectiveMultiplierGain(ascensionCount);
+      final gainValue =
+          RebirthTier.ascension.getEffectiveMultiplierGain(ascensionCount);
       final ascensionMultiplier = EfficientNumber.fromValues(gainValue, 0);
       multiplier *= ascensionMultiplier;
     }
 
     // Transcendence multiplier (logarítmico com caps)
     if (transcendenceCount > 0) {
-      final gainValue = RebirthTier.transcendence.getEffectiveMultiplierGain(transcendenceCount);
+      final gainValue = RebirthTier.transcendence
+          .getEffectiveMultiplierGain(transcendenceCount);
       final transcendenceMultiplier = EfficientNumber.fromValues(gainValue, 0);
       multiplier *= transcendenceMultiplier;
     }
@@ -283,4 +291,3 @@ class RebirthData {
     );
   }
 }
-

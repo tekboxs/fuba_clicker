@@ -5,6 +5,34 @@ import '../models/rebirth_upgrade.dart';
 import 'rebirth_upgrade_provider.dart';
 import 'achievement_provider.dart';
 
+EfficientNumber calculateAccessoryProductionMultiplier(List<String> equipped) {
+  if (equipped.isEmpty) return const EfficientNumber.one();
+
+  double totalBonus = 0.0;
+  for (int i = 0; i < equipped.length; i++) {
+    final id = equipped[i];
+    final accessory = allAccessories.firstWhere((acc) => acc.id == id);
+    final baseBonus = accessory.productionMultiplier - 1.0;
+
+    double positionMultiplier;
+    if (i == 0) {
+      positionMultiplier = 1.0;
+    } else if (i == 1) {
+      positionMultiplier = 0.5;
+    } else if (i == 2) {
+      positionMultiplier = 0.25;
+    } else if (i == 3) {
+      positionMultiplier = 0.15;
+    } else {
+      positionMultiplier = 0.10;
+    }
+
+    totalBonus += baseBonus * positionMultiplier;
+  }
+
+  return EfficientNumber.fromValues(1.0 + totalBonus, 0);
+}
+
 final inventoryProvider = StateProvider<Map<String, int>>((ref) {
   return {};
 });
@@ -22,7 +50,7 @@ class AccessoryNotifier {
     final newInventory = Map<String, int>.from(inventory);
     newInventory[accessory.id] = (newInventory[accessory.id] ?? 0) + 1;
     ref.read(inventoryProvider.notifier).state = newInventory;
-    
+
     _updateInventoryStats();
   }
 
@@ -35,7 +63,7 @@ class AccessoryNotifier {
     final inventory = ref.read(inventoryProvider);
     final availableCount = inventory[accessoryId] ?? 0;
     final equippedCount = getEquippedCount(accessoryId);
-    
+
     if (availableCount <= equippedCount) {
       return;
     }
@@ -44,7 +72,7 @@ class AccessoryNotifier {
       ...equipped,
       accessoryId
     ];
-    
+
     _checkMythicalAchievement();
   }
 
@@ -56,7 +84,7 @@ class AccessoryNotifier {
       newEquipped.removeAt(index);
       ref.read(equippedAccessoriesProvider.notifier).state = newEquipped;
     }
-    
+
     _checkMythicalAchievement();
   }
 
@@ -64,7 +92,7 @@ class AccessoryNotifier {
     final equipped = ref.read(equippedAccessoriesProvider);
     ref.read(equippedAccessoriesProvider.notifier).state =
         equipped.where((id) => id != accessoryId).toList();
-    
+
     _checkMythicalAchievement();
   }
 
@@ -94,16 +122,7 @@ class AccessoryNotifier {
 
   EfficientNumber getTotalProductionMultiplier() {
     final equipped = ref.read(equippedAccessoriesProvider);
-    if (equipped.isEmpty) return const EfficientNumber.one();
-
-    EfficientNumber totalMultiplier = const EfficientNumber.one();
-    for (int i = 0; i < equipped.length; i++) {
-      final id = equipped[i];
-      final accessory = allAccessories.firstWhere((acc) => acc.id == id);
-      totalMultiplier *= EfficientNumber.fromValues(accessory.productionMultiplier, 0);
-    }
-    
-    return totalMultiplier;
+    return calculateAccessoryProductionMultiplier(equipped);
   }
 
   List<CakeAccessory> getActiveEffects() {
@@ -155,8 +174,8 @@ class AccessoryNotifier {
 
     if (allMythical) {
       ref.read(achievementNotifierProvider).updateAllMythicalEquipped(
-        equippedAccessories.length.toDouble(),
-      );
+            equippedAccessories.length.toDouble(),
+          );
     } else {
       ref.read(achievementNotifierProvider).updateAllMythicalEquipped(0);
     }
@@ -166,51 +185,51 @@ class AccessoryNotifier {
     final inventory = ref.read(inventoryProvider);
     final maxCapacity = ref.read(accessoryCapacityProvider);
     final equipped = ref.read(equippedAccessoriesProvider);
-    
+
     final availableAccessories = <CakeAccessory>[];
-    
+
     for (final entry in inventory.entries) {
       final accessory = allAccessories.firstWhere((acc) => acc.id == entry.key);
       final inventoryCount = entry.value;
       final equippedCount = getEquippedCount(entry.key);
       final availableCount = inventoryCount - equippedCount;
-      
+
       for (int i = 0; i < availableCount; i++) {
         availableAccessories.add(accessory);
       }
     }
-    
-    availableAccessories.sort((a, b) => 
-      b.productionMultiplier.compareTo(a.productionMultiplier)
-    );
-    
+
+    availableAccessories.sort(
+        (a, b) => b.productionMultiplier.compareTo(a.productionMultiplier));
+
     final slotsRemaining = maxCapacity - equipped.length;
     final itemsToEquip = availableAccessories.take(slotsRemaining).toList();
-    
+
     if (itemsToEquip.isEmpty) {
       return;
     }
-    
+
     final newEquipped = List<String>.from(equipped);
     for (final accessory in itemsToEquip) {
       newEquipped.add(accessory.id);
     }
-    
+
     ref.read(equippedAccessoriesProvider.notifier).state = newEquipped;
     ref.read(achievementNotifierProvider).updateStat(
-      'equipped_count',
-      newEquipped.length.toDouble(),
-      null,
-    );
+          'equipped_count',
+          newEquipped.length.toDouble(),
+          null,
+        );
     _checkMythicalAchievement();
   }
 
   void _updateInventoryStats() {
     final inventory = ref.read(inventoryProvider);
-    final totalAccessories = inventory.values.fold(0, (sum, count) => sum + count);
+    final totalAccessories =
+        inventory.values.fold(0, (sum, count) => sum + count);
     ref.read(achievementNotifierProvider).updateTotalInventoryAccessories(
-      totalAccessories.toDouble(),
-    );
+          totalAccessories.toDouble(),
+        );
   }
 }
 
@@ -220,21 +239,13 @@ final accessoryNotifierProvider = Provider<AccessoryNotifier>((ref) {
 
 final accessoryMultiplierProvider = Provider<EfficientNumber>((ref) {
   final equipped = ref.watch(equippedAccessoriesProvider);
-  if (equipped.isEmpty) return const EfficientNumber.one();
-
-  EfficientNumber totalMultiplier = const EfficientNumber.one();
-  for (int i = 0; i < equipped.length; i++) {
-    final id = equipped[i];
-    final accessory = allAccessories.firstWhere((acc) => acc.id == id);
-    totalMultiplier *= EfficientNumber.fromValues(accessory.productionMultiplier, 0);
-  }
-  
-  return totalMultiplier;
+  return calculateAccessoryProductionMultiplier(equipped);
 });
 
 final accessoryCapacityProvider = Provider<int>((ref) {
   final upgradeLevels = ref.watch(upgradesLevelProvider);
-  final upgrade = allUpgrades.firstWhere((u) => u.type == UpgradeType.accessoryCapacity);
+  final upgrade =
+      allUpgrades.firstWhere((u) => u.type == UpgradeType.accessoryCapacity);
   final level = upgradeLevels[upgrade.id] ?? 0;
   final effect = upgrade.getEffectValue(level);
   if (effect.isInfinite || effect.isNaN) {
@@ -242,4 +253,3 @@ final accessoryCapacityProvider = Provider<int>((ref) {
   }
   return effect.clamp(0, 1e6).toInt();
 });
-
