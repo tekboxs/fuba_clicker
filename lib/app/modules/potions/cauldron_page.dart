@@ -429,6 +429,43 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
                     ),
                   ),
                 ),
+                const SizedBox(width: AppSpacing.sm),
+                GestureDetector(
+                  onTap: () => _showRemovePotionDialog(context, activePotionCount, activeEffects, isMobile),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.destructive.withAlpha(30),
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
+                      border: Border.all(
+                        color: AppColors.destructive.withAlpha(100),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.delete_outline,
+                          color: AppColors.destructive,
+                          size: isMobile ? 14 : 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Remover',
+                          style: TextStyle(
+                            color: AppColors.destructive,
+                            fontSize: isMobile ? 10 : 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -550,6 +587,109 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showRemovePotionDialog(
+    BuildContext context,
+    Map<String, int> activePotionCount,
+    List activeEffects,
+    bool isMobile,
+  ) {
+    final entries = activePotionCount.entries.where((e) => e.value > 0).toList();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.card,
+        title: Row(
+          children: [
+            const Icon(Icons.delete_outline, color: AppColors.destructive, size: 22),
+            const SizedBox(width: AppSpacing.sm),
+            const Text('Remover Poção Ativa'),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: entries.length,
+            separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.border),
+            itemBuilder: (_, index) {
+              final entry = entries[index];
+              final potion = allPotions.firstWhere(
+                (p) => p.id == entry.key,
+                orElse: () => allPotions.first,
+              );
+              final count = entry.value;
+              final isPermanent = potion.effects.any((e) => e.isPermanent);
+
+              DateTime? expiresAt;
+              for (final effect in activeEffects) {
+                final pe = effect as PotionEffect;
+                if (!pe.isPermanent && !pe.isExpired) {
+                  if (potion.effects.any((e) => e.type == pe.type) &&
+                      pe.expiresAt != null) {
+                    if (expiresAt == null || pe.expiresAt!.isBefore(expiresAt)) {
+                      expiresAt = pe.expiresAt;
+                    }
+                  }
+                }
+              }
+
+              final remaining = expiresAt != null
+                  ? expiresAt.difference(DateTime.now())
+                  : null;
+
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                leading: Text(potion.emoji, style: const TextStyle(fontSize: 28)),
+                title: Text(
+                  potion.name,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.foreground,
+                      ),
+                ),
+                subtitle: Text(
+                  isPermanent
+                      ? 'Permanente • $count/10'
+                      : remaining != null
+                          ? '${_formatDuration(remaining)} restante • $count/10'
+                          : '$count/10',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isPermanent ? AppColors.amber500 : AppColors.mutedForeground,
+                  ),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppColors.destructive),
+                  tooltip: 'Remover efeito',
+                  onPressed: () {
+                    ref.read(potionNotifierProvider).removePotionEffect(potion.id);
+                    Navigator.of(dialogContext).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('🗑️ ${potion.name} removida!'),
+                        backgroundColor: AppColors.destructive,
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar'),
+          ),
+        ],
       ),
     );
   }

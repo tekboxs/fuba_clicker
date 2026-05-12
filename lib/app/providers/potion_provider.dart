@@ -227,6 +227,49 @@ class PotionNotifier {
   void clearAllEffects() {
     ref.read(activePotionEffectsProvider.notifier).state = [];
     ref.read(activePotionCountProvider.notifier).state = {};
+    ref.read(permanentPotionMultiplierProvider.notifier).state = 1.0;
+    ref.read(saveNotifierProvider.notifier).saveImmediate();
+  }
+
+  void removePotionEffect(String potionId) {
+    final potion = allPotions.firstWhere(
+      (p) => p.id == potionId,
+      orElse: () => allPotions.first,
+    );
+
+    final effectTypes = potion.effects.map((e) => e.type).toSet();
+    final isPermanent = potion.effects.any((e) => e.isPermanent);
+
+    // Remove matching effects from active list
+    final active = ref.read(activePotionEffectsProvider);
+    final remaining = active
+        .where((e) => !effectTypes.contains(e.type))
+        .toList();
+    ref.read(activePotionEffectsProvider.notifier).state = remaining;
+
+    // Clear the count for this potion
+    final counts = Map<String, int>.from(ref.read(activePotionCountProvider));
+    counts.remove(potionId);
+    ref.read(activePotionCountProvider.notifier).state = counts;
+
+    // For permanent potions, recalculate the permanent multiplier from remaining counts
+    if (isPermanent) {
+      double newPermanent = 1.0;
+      for (final entry in counts.entries) {
+        final p = allPotions.firstWhere(
+          (x) => x.id == entry.key,
+          orElse: () => allPotions.first,
+        );
+        if (p.effects.any((e) => e.isPermanent)) {
+          final baseValue = p.effects.firstWhere((e) => e.isPermanent).value;
+          for (int i = 0; i < entry.value; i++) {
+            newPermanent *= baseValue;
+          }
+        }
+      }
+      ref.read(permanentPotionMultiplierProvider.notifier).state = newPermanent;
+    }
+
     ref.read(saveNotifierProvider.notifier).saveImmediate();
   }
 
