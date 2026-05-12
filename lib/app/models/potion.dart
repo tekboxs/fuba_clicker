@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'potion_color.dart';
 import 'potion_effect.dart';
 import 'cake_accessory.dart';
@@ -216,4 +217,21 @@ final List<Potion> allPotions = [
     minTotalColors: 1000,
     maxTotalColors: 9999,
   ),
+  if (kDebugMode)
+    Potion(
+      id: 'debug_10s',
+      name: '[DEBUG] Poção de Teste 10s',
+      emoji: '🧪',
+      description: 'Expira em 10 segundos — só para testes',
+      colorComposition: {PotionColor.red: 1},
+      effects: [
+        PotionEffect(
+          type: PotionEffectType.productionMultiplier,
+          value: 2.0,
+          duration: const Duration(seconds: 10),
+        ),
+      ],
+      minTotalColors: 1,
+      maxTotalColors: 5,
+    ),
 ];
