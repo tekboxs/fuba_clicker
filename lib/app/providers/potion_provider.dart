@@ -175,12 +175,53 @@ class PotionNotifier {
   void updateActiveEffects() {
     final active = ref.read(activePotionEffectsProvider);
     final remaining = active.where((effect) => !effect.isExpired).toList();
-    
+
     if (remaining.length != active.length) {
+      final expiredTypes = active
+          .where((e) => e.isExpired && !e.isPermanent)
+          .map((e) => e.type)
+          .toSet();
+
       ref.read(activePotionEffectsProvider.notifier).state = remaining;
-      recalculatePotionCounts();
+      _clearCountsForExpiredTypes(expiredTypes);
       ref.read(saveNotifierProvider.notifier).saveImmediate();
     }
+  }
+
+  void _clearCountsForExpiredTypes(Set<PotionEffectType> expiredTypes) {
+    if (expiredTypes.isEmpty) return;
+    final activeCount = ref.read(activePotionCountProvider);
+    final newCount = Map<String, int>.from(activeCount);
+    for (final potion in allPotions) {
+      if (!potion.effects.any((e) => e.isPermanent) &&
+          potion.effects.any((e) => expiredTypes.contains(e.type))) {
+        newCount.remove(potion.id);
+      }
+    }
+    ref.read(activePotionCountProvider.notifier).state = newCount;
+  }
+
+  void syncCountsOnLoad(
+    List<Map<String, dynamic>> savedEffectsJson,
+    Map<String, int> savedCounts,
+  ) {
+    final allSaved = savedEffectsJson
+        .map((json) => PotionEffect.fromJson(json))
+        .toList();
+
+    final expiredTypes = allSaved
+        .where((e) => e.isExpired && !e.isPermanent)
+        .map((e) => e.type)
+        .toSet();
+
+    final counts = Map<String, int>.from(savedCounts);
+    for (final potion in allPotions) {
+      if (!potion.effects.any((e) => e.isPermanent) &&
+          potion.effects.any((e) => expiredTypes.contains(e.type))) {
+        counts.remove(potion.id);
+      }
+    }
+    ref.read(activePotionCountProvider.notifier).state = counts;
   }
 
   void clearAllEffects() {

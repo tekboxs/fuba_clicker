@@ -203,7 +203,10 @@ class SaveNotifier extends StateNotifier<bool> {
       ref.read(permanentPotionMultiplierProvider.notifier).state =
           data.permanentPotionMultiplier;
 
-      ref.read(potionNotifierProvider).recalculatePotionCounts();
+      ref.read(potionNotifierProvider).syncCountsOnLoad(
+        data.activePotionEffects,
+        data.activePotionCount,
+      );
 
       ref.read(potionNotifierProvider).updateActiveEffects();
 
