@@ -101,6 +101,7 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
     final availablePotions = potionNotifier.getAvailablePotions();
     final cauldronUnlocked = ref.watch(cauldronUnlockedProvider);
     final activeEffects = ref.watch(activePotionEffectsProvider);
+    final activePotionCount = ref.watch(activePotionCountProvider);
 
     if (!cauldronUnlocked) {
       return Scaffold(
@@ -212,6 +213,9 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
         padding: EdgeInsets.all(GameConstants.getDefaultPadding(context)),
         child: Column(
           children: [
+            if (activePotionCount.isNotEmpty)
+              _buildActivePotionsMenu(activePotionCount, activeEffects, isMobile),
+            if (activePotionCount.isNotEmpty) SizedBox(height: isMobile ? 16 : 24),
             if (activeEffects.isNotEmpty)
               _buildActiveEffects(activeEffects, isMobile),
             if (activeEffects.isNotEmpty) SizedBox(height: isMobile ? 16 : 24),
@@ -364,6 +368,181 @@ class _CauldronPageState extends ConsumerState<CauldronPage> {
                           ),
                         ),
                       ],
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivePotionsMenu(
+    Map<String, int> activePotionCount,
+    List activeEffects,
+    bool isMobile,
+  ) {
+    final activeEntries = activePotionCount.entries
+        .where((e) => e.value > 0)
+        .toList();
+    if (activeEntries.isEmpty) return const SizedBox.shrink();
+
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  color: AppColors.fuchsia500,
+                  size: isMobile ? 20 : 24,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Poções Ativas',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.foreground,
+                      ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.fuchsia500.withAlpha(40),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                  ),
+                  child: Text(
+                    '${activeEntries.length} tipo${activeEntries.length != 1 ? 's' : ''}',
+                    style: const TextStyle(
+                      color: AppColors.fuchsia500,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: activeEntries.map((entry) {
+                final potion = allPotions.firstWhere(
+                  (p) => p.id == entry.key,
+                  orElse: () => allPotions.first,
+                );
+                final count = entry.value;
+
+                DateTime? expiresAt;
+                for (final effect in activeEffects) {
+                  final pe = effect as PotionEffect;
+                  if (!pe.isPermanent && !pe.isExpired) {
+                    final matches = potion.effects.any((e) => e.type == pe.type);
+                    if (matches && pe.expiresAt != null) {
+                      if (expiresAt == null || pe.expiresAt!.isBefore(expiresAt)) {
+                        expiresAt = pe.expiresAt;
+                      }
+                    }
+                  }
+                }
+
+                final isPermanent = potion.effects.any((e) => e.isPermanent);
+                final remaining = expiresAt != null
+                    ? expiresAt.difference(DateTime.now())
+                    : null;
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.fuchsia500.withAlpha(35),
+                        AppColors.primary.withAlpha(25),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                    border: Border.all(
+                      color: AppColors.fuchsia500.withAlpha(130),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        potion.emoji,
+                        style: TextStyle(fontSize: isMobile ? 18 : 20),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            potion.name,
+                            style: TextStyle(
+                              color: AppColors.foreground,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? 11 : 12,
+                            ),
+                          ),
+                          if (isPermanent)
+                            const Text(
+                              'Permanente',
+                              style: TextStyle(
+                                color: AppColors.amber500,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            )
+                          else if (remaining != null)
+                            Text(
+                              _formatDuration(remaining),
+                              style: const TextStyle(
+                                color: AppColors.mutedForeground,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: count >= 10
+                              ? AppColors.destructive.withAlpha(60)
+                              : AppColors.fuchsia500.withAlpha(60),
+                          borderRadius: BorderRadius.circular(AppRadii.sm),
+                        ),
+                        child: Text(
+                          '$count/10',
+                          style: TextStyle(
+                            color: count >= 10
+                                ? AppColors.destructive
+                                : AppColors.fuchsia500,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 );

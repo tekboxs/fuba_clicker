@@ -41,6 +41,7 @@ final achievementStatsProvider = StateProvider<Map<String, double>>((ref) {
     'total_click_fuba': 0,
     'all_mythical_equipped': 0,
     'total_inventory_accessories': 0,
+    'total_rebirths': 0,
     'legendary_lootbox_streak': 0,
     'time_without_clicking': 0,
     'max_time_without_clicking': 0,
@@ -91,10 +92,7 @@ class AchievementNotifier {
           break;
         case AchievementCategory.accessories:
           if (achievement.id == 'first_accessory') {
-            shouldUnlock =
-                (stats['legendary_count'] ?? 0) + (stats['mythical_count'] ?? 0) +
-                (stats['primordial_count'] ?? 0) + (stats['cosmic_count'] ?? 0) +
-                (stats['infinite_count'] ?? 0) > 0;
+            shouldUnlock = (stats['total_inventory_accessories'] ?? 0) >= 1;
           } else if (achievement.id == 'accessory_legendary') {
             shouldUnlock = (stats['legendary_count'] ?? 0) >= 1;
           } else if (achievement.id == 'accessory_mythical') {
@@ -107,6 +105,8 @@ class AchievementNotifier {
             shouldUnlock = (stats['infinite_count'] ?? 0) >= 1;
           } else if (achievement.id == 'equip_8') {
             shouldUnlock = (stats['equipped_count'] ?? 0) >= 8;
+          } else if (achievement.id.endsWith('_daily')) {
+            shouldUnlock = (stats['total_inventory_accessories'] ?? 0) >= achievement.targetValue;
           }
           break;
         case AchievementCategory.lootBoxes:
@@ -122,6 +122,8 @@ class AchievementNotifier {
             shouldUnlock = rebirthData.ascensionCount >= 1;
           } else if (achievement.id == 'first_transcendence') {
             shouldUnlock = rebirthData.transcendenceCount >= 1;
+          } else if (achievement.id.endsWith('_daily')) {
+            shouldUnlock = (stats['total_rebirths'] ?? rebirthData.rebirthCount.toDouble()) >= achievement.targetValue;
           }
           break;
         case AchievementCategory.secret:

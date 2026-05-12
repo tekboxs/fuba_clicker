@@ -178,7 +178,7 @@ class PotionNotifier {
     
     if (remaining.length != active.length) {
       ref.read(activePotionEffectsProvider.notifier).state = remaining;
-      _recalculatePotionCounts();
+      recalculatePotionCounts();
       ref.read(saveNotifierProvider.notifier).saveImmediate();
     }
   }
@@ -189,7 +189,7 @@ class PotionNotifier {
     ref.read(saveNotifierProvider.notifier).saveImmediate();
   }
 
-  void _recalculatePotionCounts() {
+  void recalculatePotionCounts() {
     final active = ref.read(activePotionEffectsProvider);
     final newCount = <String, int>{};
     

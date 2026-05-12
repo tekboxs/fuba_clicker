@@ -149,6 +149,7 @@ class SaveNotifier extends StateNotifier<bool> {
         'total_click_fuba': 0,
         'all_mythical_equipped': 0,
         'total_inventory_accessories': 0,
+        'total_rebirths': 0,
         'legendary_lootbox_streak': 0,
         'time_without_clicking': 0,
         'max_time_without_clicking': 0,
@@ -157,6 +158,10 @@ class SaveNotifier extends StateNotifier<bool> {
       };
 
       final mergedStats = {...defaultStats, ...data.achievementStats};
+      // Migração: inicializa total_rebirths com rebirthCount para saves antigos
+      if ((mergedStats['total_rebirths'] ?? 0) == 0 && data.rebirthData.rebirthCount > 0) {
+        mergedStats['total_rebirths'] = data.rebirthData.rebirthCount.toDouble();
+      }
       ref.read(achievementStatsProvider.notifier).state =
           Map<String, double>.from(mergedStats);
 
@@ -198,8 +203,7 @@ class SaveNotifier extends StateNotifier<bool> {
       ref.read(permanentPotionMultiplierProvider.notifier).state =
           data.permanentPotionMultiplier;
 
-      ref.read(activePotionCountProvider.notifier).state =
-          data.activePotionCount;
+      ref.read(potionNotifierProvider).recalculatePotionCounts();
 
       ref.read(potionNotifierProvider).updateActiveEffects();
 

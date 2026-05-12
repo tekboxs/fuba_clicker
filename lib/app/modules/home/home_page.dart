@@ -252,17 +252,20 @@ class _HomePageState extends ConsumerState<HomePage>
       builder: (context) {
         try {
           final isMobile = GameConstants.isMobile(context);
-          return Scaffold(
-            body: AnimatedGradientBackground(
-              child: SafeArea(
-                child: isMobile
-                    ? Column(
-                        children: [
-                          _buildAccessToolbar(),
-                          Expanded(child: _buildMainContent()),
-                        ],
-                      )
-                    : _buildMainContent(),
+          return PopScope(
+            canPop: false,
+            child: Scaffold(
+              body: AnimatedGradientBackground(
+                child: SafeArea(
+                  child: isMobile
+                      ? Column(
+                          children: [
+                            _buildAccessToolbar(),
+                            Expanded(child: _buildMainContent()),
+                          ],
+                        )
+                      : _buildMainContent(),
+                ),
               ),
             ),
           );

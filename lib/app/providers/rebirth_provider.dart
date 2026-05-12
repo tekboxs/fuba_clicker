@@ -11,6 +11,7 @@ import 'forus_upgrade_provider.dart';
 import 'potion_provider.dart';
 import 'random_event_provider.dart';
 import '../models/potion_effect.dart';
+import 'achievement_provider.dart';
  
 final rebirthDataProvider = StateProvider<RebirthData>((ref) {
   return const RebirthData();
@@ -142,7 +143,7 @@ class RebirthNotifier {
             }
           }
           final forusGainMultiplier = 1.0 + (potionForusGain / 100.0);
-          
+
           ref.read(rebirthDataProvider.notifier).state = currentData.copyWith(
             rebirthCount: 0,
             ascensionCount: 0,
@@ -154,6 +155,11 @@ class RebirthNotifier {
         }
         break;
     }
+
+    if (tier == RebirthTier.rebirth) {
+      ref.read(achievementNotifierProvider).incrementStat('total_rebirths', 1);
+    }
+    ref.read(achievementNotifierProvider).checkAchievements();
   }
 
   void _resetProgress(RebirthTier tier) {
@@ -381,6 +387,11 @@ class RebirthNotifier {
       case RebirthTier.furuborus:
         break;
     }
+
+    if (tier == RebirthTier.rebirth) {
+      ref.read(achievementNotifierProvider).incrementStat('total_rebirths', actualCount.toDouble());
+    }
+    ref.read(achievementNotifierProvider).checkAchievements();
   }
 }
 

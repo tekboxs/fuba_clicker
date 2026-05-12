@@ -84,11 +84,11 @@ class AccessoryNotifier {
       return;
     }
 
-    ref.read(equippedAccessoriesProvider.notifier).state = [
-      ...equipped,
-      accessoryId
-    ];
+    final newEquipped = [...equipped, accessoryId];
+    ref.read(equippedAccessoriesProvider.notifier).state = newEquipped;
 
+    ref.read(achievementNotifierProvider).updateStat(
+      'equipped_count', newEquipped.length.toDouble(), null);
     _checkMythicalAchievement();
   }
 
@@ -99,6 +99,8 @@ class AccessoryNotifier {
       final newEquipped = List<String>.from(equipped);
       newEquipped.removeAt(index);
       ref.read(equippedAccessoriesProvider.notifier).state = newEquipped;
+      ref.read(achievementNotifierProvider).updateStat(
+        'equipped_count', newEquipped.length.toDouble(), null);
     }
 
     _checkMythicalAchievement();
@@ -106,9 +108,11 @@ class AccessoryNotifier {
 
   void unequipAllOfType(String accessoryId) {
     final equipped = ref.read(equippedAccessoriesProvider);
-    ref.read(equippedAccessoriesProvider.notifier).state =
-        equipped.where((id) => id != accessoryId).toList();
+    final newEquipped = equipped.where((id) => id != accessoryId).toList();
+    ref.read(equippedAccessoriesProvider.notifier).state = newEquipped;
 
+    ref.read(achievementNotifierProvider).updateStat(
+      'equipped_count', newEquipped.length.toDouble(), null);
     _checkMythicalAchievement();
   }
 
